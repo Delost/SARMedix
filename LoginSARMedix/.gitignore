@@ -3,3 +3,5 @@ bin/
 obj/
 
 appsettings.Production.json
+
+**/*.csproj.user

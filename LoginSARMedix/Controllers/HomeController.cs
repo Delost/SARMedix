@@ -7,11 +7,19 @@ namespace LoginSARMedix.Controllers
     public class HomeController : Controller
     {
         private readonly UsuarioRepository _usuarioRepository;
+        private readonly ProductoRepository _productoRepository;
+        private readonly LoteRepository _loteRepository;
 
-        public HomeController(UsuarioRepository usuarioRepository)
+        public HomeController(
+            UsuarioRepository usuarioRepository,
+            ProductoRepository productoRepository,
+            LoteRepository loteRepository)
         {
             _usuarioRepository = usuarioRepository;
+            _productoRepository = productoRepository;
+            _loteRepository = loteRepository;
         }
+
 
 
         //Iniciar sesion VISTA
@@ -221,5 +229,221 @@ namespace LoginSARMedix.Controllers
 
             return RedirectToAction("ListadoEliminarUsuarios");
         }
+
+
+
+
+
+
+
+        //PRODUCTOS
+
+
+
+
+
+
+        //CREAR PRODUCTO VISTA
+        [HttpGet]
+        public IActionResult CrearProducto()
+        {
+            return View();
+        }
+
+
+        //CREAR PRODUCTO POST
+        [HttpPost]
+        public async Task<IActionResult> NuevoProducto(Producto reg)
+        {
+            var resultado =
+                await _productoRepository.CrearProducto(reg);
+
+            if (resultado)
+            {
+                ViewBag.Mensaje = "Producto registrado correctamente";
+
+                return View("CrearProducto");
+            }
+            else
+            {
+                ViewBag.Mensaje =
+                    "No se pudo registrar el producto";
+
+                return View("CrearProducto", reg);
+            }
+        }
+
+
+
+
+
+        //LISTADO DE PRODUCTOS
+        [HttpGet]
+        public async Task<IActionResult> ListadoProductos2()
+        {
+            var listado =
+                await _productoRepository.ListadoProductos();
+
+            return View(listado);
+        }
+
+
+        //EDITAR PRODUCTO VISTA
+        [HttpGet]
+        public async Task<IActionResult> EditarProducto(int idProducto)
+        {
+            var producto =
+                await _productoRepository.ObtenerProductoPorId(idProducto);
+
+            if (producto == null)
+            {
+                return RedirectToAction("ListadoProductos2");
+            }
+
+            return View(producto);
+        }
+
+        //ACTUALIZAR PRODUCTO POST
+        [HttpPost]
+        public async Task<IActionResult> ActualizarProducto(Producto reg)
+        {
+            var resultado =
+                await _productoRepository.ActualizarProducto(reg);
+
+            if (resultado)
+            {
+                return RedirectToAction("ListadoProductos2");
+            }
+            else
+            {
+                ViewBag.Mensaje =
+                    "No se pudo actualizar el producto";
+
+                return View("EditarProducto", reg);
+            }
+        }
+
+
+
+
+
+
+        //LOTES
+
+
+        //CREAR LOTE VISTA
+        [HttpGet]
+        public async Task<IActionResult> CrearLote()
+        {
+            ViewBag.Productos =
+                await _loteRepository.ListadoProductos();
+
+            ViewBag.Ubicaciones =
+                await _loteRepository.ListadoUbicaciones();
+
+            return View();
+        }
+
+
+
+        //CREAR LOTE POST
+        [HttpPost]
+        public async Task<IActionResult> NuevoLote(Lote reg)
+        {
+            var resultado =
+                await _loteRepository.CrearLote(reg);
+
+            if (resultado)
+            {
+                ViewBag.Mensaje =
+                    "Lote registrado correctamente";
+
+                ViewBag.Productos =
+                    await _loteRepository.ListadoProductos();
+
+                ViewBag.Ubicaciones =
+                    await _loteRepository.ListadoUbicaciones();
+
+                return View("CrearLote");
+            }
+            else
+            {
+                ViewBag.Mensaje =
+                    "No se pudo registrar el lote";
+
+                ViewBag.Productos =
+                    await _loteRepository.ListadoProductos();
+
+                ViewBag.Ubicaciones =
+                    await _loteRepository.ListadoUbicaciones();
+
+                return View("CrearLote", reg);
+            }
+        }
+
+        //LISTADO DE LOTES
+        [HttpGet]
+        public async Task<IActionResult> Lotes()
+        {
+            var listado =
+                await _loteRepository.ListadoLotes();
+
+            return View(listado);
+        }
+
+
+
+
+        //EDITAR LOTE VISTA
+        [HttpGet]
+        public async Task<IActionResult> EditarLote(int idLote)
+        {
+            var lote =
+                await _loteRepository.ObtenerLotePorId(idLote);
+
+            if (lote == null)
+            {
+                return RedirectToAction("Lotes");
+            }
+
+            ViewBag.Productos =
+                await _loteRepository.ListadoProductos();
+
+            ViewBag.Ubicaciones =
+                await _loteRepository.ListadoUbicaciones();
+
+            return View(lote);
+        }
+
+
+
+        //ACTUALIZAR LOTE POST
+        [HttpPost]
+        public async Task<IActionResult> ActualizarLote(Lote reg)
+        {
+            var resultado =
+                await _loteRepository.ActualizarLote(reg);
+
+            if (resultado)
+            {
+                return RedirectToAction("Lotes");
+            }
+            else
+            {
+                ViewBag.Mensaje =
+                    "No se pudo actualizar el lote";
+
+                ViewBag.Productos =
+                    await _loteRepository.ListadoProductos();
+
+                ViewBag.Ubicaciones =
+                    await _loteRepository.ListadoUbicaciones();
+
+                return View("EditarLote", reg);
+            }
+        }
+
+
+
     }
 }

@@ -1,0 +1,153 @@
+﻿@model List<LoginSARMedix.Models.Producto>
+
+<h2>Productos</h2>
+
+<div class="usuarios-card">
+
+    <h3>Medicamentos</h3>
+
+    <table class="tabla-usuarios">
+
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Stock mínimo</th>
+                <th>Principio activo</th>
+                <th>Concentración</th>
+                <th>Controlado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @foreach (var producto in Model.Where(x => x.tipo == "Medicamento"))
+            {
+                <tr>
+
+                    <td>
+                        @producto.codigo_interno
+                    </td>
+
+                    <td>
+                        @producto.nombre
+                    </td>
+
+                    <td>
+                        @producto.stock_minimo
+                    </td>
+
+                    <td>
+                        @producto.principio_activo
+                    </td>
+
+                    <td>
+                        @producto.concentracion
+                    </td>
+
+                    <td>
+                        @if (producto.requiere_control)
+                        {
+                            <span>Sí</span>
+                        }
+                        else
+                        {
+                            <span>No</span>
+                        }
+                    </td>
+
+                    <td>
+
+                        <a asp-controller="Home"
+                           asp-action="EditarProducto"
+                           asp-route-idProducto="@producto.id_producto"
+                           class="btn-editar">
+
+                            Editar
+
+                        </a>
+
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+
+
+    <br />
+    <br />
+
+
+    <h3>Insumos</h3>
+
+    <table class="tabla-usuarios">
+
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Stock mínimo</th>
+                <th>Material</th>
+                <th>Estéril</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @foreach (var producto in Model.Where(x => x.tipo == "Insumo"))
+            {
+                <tr>
+
+                    <td>
+                        @producto.codigo_interno
+                    </td>
+
+                    <td>
+                        @producto.nombre
+                    </td>
+
+                    <td>
+                        @producto.stock_minimo
+                    </td>
+
+                    <td>
+                        @producto.material
+                    </td>
+
+                    <td>
+                        @if (producto.es_esteril)
+                        {
+                            <span>Sí</span>
+                        }
+                        else
+                        {
+                            <span>No</span>
+                        }
+                    </td>
+
+                    <td>
+
+                        <a asp-controller="Home"
+                           asp-action="EditarProducto"
+                           asp-route-idProducto="@producto.id_producto"
+                           class="btn-editar">
+
+                            Editar
+
+                        </a>
+
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+
+</div>

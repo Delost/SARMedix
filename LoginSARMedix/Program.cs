@@ -5,6 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<UsuarioRepository>();
+builder.Services.AddScoped<ProductoRepository>();
+builder.Services.AddScoped<LoteRepository>();
 
 builder.Services.AddSession();
 

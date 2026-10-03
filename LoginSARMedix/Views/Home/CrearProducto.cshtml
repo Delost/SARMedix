@@ -1,0 +1,158 @@
+﻿@model LoginSARMedix.Models.Producto
+
+<h2>Registrar producto</h2>
+
+<form asp-controller="Home"
+      asp-action="NuevoProducto"
+      method="post"
+      class="formulario-principal">
+
+    <div>
+        <label>Tipo de producto</label>
+
+        <select asp-for="tipo"
+                id="tipoProducto"
+                onchange="cambiarTipo()">
+
+            <option value="">Seleccione</option>
+            <option value="Medicamento">Medicamento</option>
+            <option value="Insumo">Insumo</option>
+
+        </select>
+    </div>
+
+
+    <div>
+        <label>Código interno</label>
+
+        <input asp-for="codigo_interno" />
+    </div>
+
+
+    <div>
+        <label>Nombre</label>
+
+        <input asp-for="nombre" />
+    </div>
+
+
+    <div>
+        <label>Stock mínimo</label>
+
+        <input asp-for="stock_minimo"
+               type="number"
+               min="0" />
+    </div>
+
+
+    <!-- MEDICAMENTO -->
+
+    <div id="camposMedicamento"
+         style="display:none;">
+
+        <div>
+            <label>Principio activo</label>
+
+            <input asp-for="principio_activo" />
+        </div>
+
+
+        <div>
+            <label>Concentración</label>
+
+            <input asp-for="concentracion" />
+        </div>
+
+
+        <div>
+            <label>¿Requiere control?</label>
+
+            <select asp-for="requiere_control">
+
+                <option value="false">No</option>
+                <option value="true">Sí</option>
+
+            </select>
+        </div>
+
+    </div>
+
+
+    <!-- INSUMO -->
+
+    <div id="camposInsumo"
+         style="display:none;">
+
+        <div>
+            <label>Material</label>
+
+            <input asp-for="material" />
+        </div>
+
+
+        <div>
+            <label>¿Es estéril?</label>
+
+            <select asp-for="es_esteril">
+
+                <option value="false">No</option>
+                <option value="true">Sí</option>
+
+            </select>
+        </div>
+
+    </div>
+
+
+    <button type="submit">
+        Registrar producto
+    </button>
+
+</form>
+
+
+@if (ViewBag.Mensaje != null)
+{
+    <script>
+        alert('@ViewBag.Mensaje');
+    </script>
+}
+
+
+<script>
+
+    function cambiarTipo() {
+
+        let tipo =
+            document.getElementById("tipoProducto").value;
+
+        let medicamento =
+            document.getElementById("camposMedicamento");
+
+        let insumo =
+            document.getElementById("camposInsumo");
+
+
+        if (tipo === "Medicamento") {
+
+            medicamento.style.display = "block";
+
+            insumo.style.display = "none";
+        }
+
+        else if (tipo === "Insumo") {
+
+            medicamento.style.display = "none";
+
+            insumo.style.display = "block";
+        }
+
+        else {
+
+            medicamento.style.display = "none";
+
+            insumo.style.display = "none";
+        }
+    }
+
+</script>

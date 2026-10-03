@@ -1,0 +1,102 @@
+﻿@model LoginSARMedix.Models.Lote
+
+<h2>Registrar lote</h2>
+
+<form asp-controller="Home"
+      asp-action="NuevoLote"
+      method="post"
+      class="formulario-principal">
+
+
+    <div>
+
+        <label>Producto</label>
+
+        <select asp-for="id_producto">
+
+            <option value="">
+                Seleccione un producto
+            </option>
+
+            @foreach (var producto in ViewBag.Productos)
+            {
+                <option value="@producto.id_producto">
+
+                    @producto.codigo_interno -
+                    @producto.nombre
+
+                </option>
+            }
+
+        </select>
+
+    </div>
+
+
+    <div>
+
+        <label>Número de lote</label>
+
+        <input asp-for="numero_lote" />
+
+    </div>
+
+
+    <div>
+
+        <label>Fecha de vencimiento</label>
+
+        <input asp-for="fecha_vencimiento"
+               type="date" />
+
+    </div>
+
+
+    <div>
+
+        <label>Cantidad inicial</label>
+
+        <input asp-for="cantidad_actual"
+               type="number"
+               min="0" />
+
+    </div>
+
+
+    <div>
+
+        <label>Ubicación</label>
+
+        <select asp-for="id_ubicacion">
+
+            <option value="">
+                Seleccione una ubicación
+            </option>
+
+            @foreach (var ubicacion in ViewBag.Ubicaciones)
+            {
+                <option value="@ubicacion.id_ubicacion">
+
+                    @ubicacion.nombre_sector
+
+                </option>
+            }
+
+        </select>
+
+    </div>
+
+
+    <button type="submit">
+        Registrar lote
+    </button>
+
+</form>
+
+
+@if (ViewBag.Mensaje != null)
+{
+    <script>
+        alert('@ViewBag.Mensaje');
+    </script>
+}

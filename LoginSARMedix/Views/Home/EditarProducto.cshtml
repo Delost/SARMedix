@@ -1,0 +1,123 @@
+﻿@model LoginSARMedix.Models.Producto
+
+<h2>Editar producto</h2>
+
+<form asp-controller="Home"
+      asp-action="ActualizarProducto"
+      method="post"
+      class="formulario-principal">
+
+    <input asp-for="id_producto"
+           type="hidden" />
+
+    <input asp-for="tipo"
+           type="hidden" />
+
+
+    <div>
+        <label>Tipo de producto</label>
+
+        <input value="@Model.tipo"
+               disabled />
+    </div>
+
+
+    <div>
+        <label>Código interno</label>
+
+        <input asp-for="codigo_interno" />
+    </div>
+
+
+    <div>
+        <label>Nombre</label>
+
+        <input asp-for="nombre" />
+    </div>
+
+
+    <div>
+        <label>Stock mínimo</label>
+
+        <input asp-for="stock_minimo"
+               type="number"
+               min="0" />
+    </div>
+
+
+    @if (Model.tipo == "Medicamento")
+    {
+        <div>
+
+            <label>Principio activo</label>
+
+            <input asp-for="principio_activo" />
+
+        </div>
+
+
+        <div>
+
+            <label>Concentración</label>
+
+            <input asp-for="concentracion" />
+
+        </div>
+
+
+        <div>
+
+            <label>¿Requiere control?</label>
+
+            <select asp-for="requiere_control">
+
+                <option value="false">No</option>
+
+                <option value="true">Sí</option>
+
+            </select>
+
+        </div>
+    }
+
+
+    @if (Model.tipo == "Insumo")
+    {
+        <div>
+
+            <label>Material</label>
+
+            <input asp-for="material" />
+
+        </div>
+
+
+        <div>
+
+            <label>¿Es estéril?</label>
+
+            <select asp-for="es_esteril">
+
+                <option value="false">No</option>
+
+                <option value="true">Sí</option>
+
+            </select>
+
+        </div>
+    }
+
+
+    <button type="submit">
+        Actualizar producto
+    </button>
+
+</form>
+
+
+@if (ViewBag.Mensaje != null)
+{
+    <script>
+        alert('@ViewBag.Mensaje');
+    </script>
+}

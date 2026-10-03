@@ -1,0 +1,66 @@
+﻿@model List<LoginSARMedix.Models.Lote>
+
+<h2>Listado de lotes</h2>
+
+<div class="usuarios-card">
+
+    <table class="tabla-usuarios">
+
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Número de lote</th>
+                <th>Fecha de vencimiento</th>
+                <th>Cantidad actual</th>
+                <th>Ubicación</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @foreach (var lote in Model)
+            {
+                <tr>
+
+                    <td>
+                        @lote.nombre_producto
+                    </td>
+
+                    <td>
+                        @lote.numero_lote
+                    </td>
+
+                    <td>
+                        @lote.fecha_vencimiento?.ToString("dd-MM-yyyy")
+                    </td>
+
+                    <td>
+                        @lote.cantidad_actual
+                    </td>
+
+                    <td>
+                        @lote.nombre_ubicacion
+                    </td>
+
+                    <td>
+
+                        <a asp-controller="Home"
+                           asp-action="EditarLote"
+                           asp-route-idLote="@lote.id_lote"
+                           class="btn-editar">
+
+                            Editar
+
+                        </a>
+
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+
+</div>
