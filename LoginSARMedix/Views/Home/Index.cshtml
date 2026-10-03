@@ -1,0 +1,31 @@
+﻿@model LoginSARMedix.Models.Usuario
+
+<h2>Inicio de sesión SARMedix</h2>
+
+<form asp-controller="Home" asp-action="InicioSesion" method="post">
+
+    <div>
+        <label>Nombre de usuario</label>
+        <input asp-for="nombre_usuario" />
+    </div>
+
+    <div>
+        <label>Contraseña</label>
+        <input asp-for="contrasena" type="password" />
+    </div>
+
+    <br />
+
+    <button type="submit">Iniciar sesión</button>
+
+    <a asp-controller="Home"
+       asp-action="NuevoUsuario" style="text-align center"> 
+        Nuevo usuario
+    </a>
+
+</form>
+
+@if (ViewBag.Mensaje != null)
+{
+    <p>@ViewBag.Mensaje</p>
+}

@@ -1,0 +1,452 @@
+html {
+    font-size: 16px;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    color: #17324d;
+
+    background:
+        linear-gradient(
+            rgba(225, 242, 247, 0.50),
+            rgba(225, 242, 247, 0.50)
+        ),
+        url('/images/fondo-clinico.png');
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+
+/* ============================= */
+/* BARRA SUPERIOR                */
+/* ============================= */
+
+header .navbar {
+    height: 82px;
+    margin: 0 !important;
+    padding: 0 55px;
+
+    background: linear-gradient(
+        90deg,
+        #073b64,
+        #0d5b82
+    ) !important;
+
+    border: none !important;
+
+    box-shadow:
+        0 3px 15px rgba(0, 0, 0, 0.16);
+}
+
+
+/* Oculta el texto original LoginSARMedix */
+
+.navbar-brand {
+    font-size: 0;
+    color: white !important;
+    text-decoration: none;
+}
+
+
+/* Nuevo nombre visual */
+
+.navbar-brand::after {
+    content: "SARMedix  |  SAR de Chiguay";
+
+    font-size: 26px;
+    font-weight: 700;
+
+    color: white;
+    letter-spacing: 0.4px;
+}
+
+
+/* Ocultar Home y Privacy */
+
+.navbar-nav {
+    display: none !important;
+}
+
+
+/* ============================= */
+/* ÁREA PRINCIPAL                */
+/* ============================= */
+
+.container {
+    max-width: 100% !important;
+}
+
+main {
+    min-height: calc(100vh - 145px);
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 40px 20px !important;
+}
+
+
+/* ============================= */
+/* CABECERA TARJETA              */
+/* ============================= */
+
+main h2 {
+    width: 100%;
+    max-width: 520px;
+
+    margin: 0;
+
+    padding:
+        42px
+        48px
+        18px;
+
+    box-sizing: border-box;
+
+    background:
+        rgba(255, 255, 255, 0.97);
+
+    text-align: center;
+
+    color: #093b62;
+
+    font-size: 31px;
+    font-weight: 700;
+
+    border-radius:
+        20px
+        20px
+        0
+        0;
+
+    box-shadow:
+        0 18px 45px rgba(16, 65, 95, 0.18);
+}
+
+
+/* Logo clínico */
+
+main h2::before {
+    content: "+";
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 76px;
+    height: 76px;
+
+    margin:
+        0
+        auto
+        22px;
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #075985,
+            #12a594
+        );
+
+    color: white;
+
+    font-size: 48px;
+    font-weight: 600;
+
+    line-height: 1;
+
+    box-shadow:
+        0 8px 18px
+        rgba(0, 93, 125, 0.20);
+}
+
+
+/* SAR de Chiguay debajo */
+
+main h2::after {
+    content: "SAR de Chiguay";
+
+    display: block;
+
+    margin-top: 10px;
+
+    font-size: 17px;
+
+    font-weight: 400;
+
+    color: #657d90;
+}
+
+
+/* ============================= */
+/* FORMULARIO                    */
+/* ============================= */
+
+main form {
+    width: 100%;
+    max-width: 520px;
+
+    box-sizing: border-box;
+
+    padding:
+        24px
+        48px
+        42px;
+
+    background:
+        rgba(255, 255, 255, 0.97);
+
+    border-radius:
+        0
+        0
+        20px
+        20px;
+
+    box-shadow:
+        0 22px 45px
+        rgba(16, 65, 95, 0.18);
+}
+
+
+main form > div {
+    margin-bottom: 22px;
+}
+
+
+main form label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    color: #173d5c;
+}
+
+
+/* Inputs */
+
+main form input[type="text"],
+main form input[type="password"] {
+    width: 100%;
+    height: 55px;
+
+    box-sizing: border-box;
+
+    padding:
+        0
+        18px;
+
+    border:
+        1px
+        solid
+        #bacdd9;
+
+    border-radius: 10px;
+
+    background: #fafdff;
+
+    font-size: 16px;
+
+    color: #17324d;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s,
+        background 0.2s;
+}
+
+
+main form input[type="text"]:focus,
+main form input[type="password"]:focus {
+
+    background: white;
+
+    border-color: #1187a5;
+
+    box-shadow:
+        0 0 0
+        4px
+        rgba(17, 135, 165, 0.12);
+}
+
+
+/* ============================= */
+/* BOTÓN                         */
+/* ============================= */
+
+main form button[type="submit"] {
+
+    width: 100%;
+
+    height: 56px;
+
+    margin-top: 4px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #075985,
+            #087ca0
+        );
+
+    color: white;
+
+    font-size: 17px;
+
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s,
+        box-shadow 0.15s;
+}
+
+
+main form button[type="submit"]:hover {
+
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 9px 20px
+        rgba(7, 89, 133, 0.25);
+}
+
+
+/* Texto inferior tarjeta */
+
+main form::after {
+
+    content:
+        "Plataforma de control y trazabilidad farmacéutica";
+
+    display: block;
+
+    margin-top: 26px;
+
+    padding-top: 20px;
+
+    border-top:
+        1px
+        solid
+        #dae5eb;
+
+    text-align: center;
+
+    font-size: 14px;
+
+    color: #718696;
+}
+
+
+/* ============================= */
+/* FOOTER                        */
+/* ============================= */
+
+.footer {
+
+    position: relative !important;
+
+    width: 100%;
+
+    height: 62px;
+
+    margin: 0;
+
+    padding: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    background:
+        rgba(255,255,255,0.96);
+
+    border: none !important;
+
+    line-height: normal !important;
+}
+
+
+.footer .container {
+
+    text-align: center;
+
+    font-size: 0;
+}
+
+
+.footer .container::after {
+
+    content:
+        "SARMedix · Sistema de Gestión Farmacéutica · SAR de Chiguay";
+
+    font-size: 14px;
+
+    color: #60798b;
+}
+
+
+.footer a {
+    display: none;
+}
+
+
+/* ============================= */
+/* CELULAR                       */
+/* ============================= */
+
+@media (max-width: 600px) {
+
+    header .navbar {
+        height: 70px;
+        padding: 0 20px;
+    }
+
+    .navbar-brand::after {
+        font-size: 20px;
+    }
+
+    main h2,
+    main form {
+        max-width: 94%;
+    }
+
+    main h2 {
+        padding:
+            30px
+            25px
+            15px;
+
+        font-size: 26px;
+    }
+
+    main form {
+        padding:
+            20px
+            25px
+            32px;
+    }
+}

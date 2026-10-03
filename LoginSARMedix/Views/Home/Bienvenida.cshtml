@@ -1,0 +1,23 @@
+﻿<h2>Bienvenido a SARMedix</h2>
+
+<p>@ViewBag.Mensaje</p>
+
+<p>
+    Usuario:
+    @ViewBag.Nombre
+    @ViewBag.Apellido
+</p>
+
+<p>
+    Rol:
+    @ViewBag.Rol
+</p>
+
+<h3>Permisos</h3>
+
+<ul>
+    @foreach (var permiso in ViewBag.Permisos)
+    {
+        <li>@permiso</li>
+    }
+</ul>
