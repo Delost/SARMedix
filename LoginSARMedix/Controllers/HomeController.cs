@@ -284,7 +284,7 @@ namespace LoginSARMedix.Controllers
             var listado =
                 await _productoRepository.ListadoProductos();
 
-            return View(listado);
+            return View("Productos", listado);
         }
 
 
