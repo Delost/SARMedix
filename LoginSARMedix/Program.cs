@@ -6,6 +6,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<UsuarioRepository>();
 
+builder.Services.AddSession();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -19,6 +21,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseSession();
 
 app.UseAuthorization();
 

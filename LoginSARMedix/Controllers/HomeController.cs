@@ -14,8 +14,6 @@ namespace LoginSARMedix.Controllers
         }
 
 
-
-
         //Iniciar sesion VISTA
         [HttpGet]
         public IActionResult Index()
@@ -23,8 +21,8 @@ namespace LoginSARMedix.Controllers
             return View();
         }
 
-        //Iniciar sesion POST
 
+        //Iniciar sesion POST
         [HttpPost]
         public async Task<IActionResult> InicioSesion(Usuario reg)
         {
@@ -36,34 +34,98 @@ namespace LoginSARMedix.Controllers
             if (usuario != null)
             {
                 var permisos = await _usuarioRepository.ObtenerPermisos(usuario.id_rol);
-                ViewBag.Mensaje = "Inicio de sesión exitoso";
-                ViewBag.Nombre = usuario.nombre;
-                ViewBag.Apellido = usuario.apellido;
-                ViewBag.Rol = usuario.rol;
-                
-                ViewBag.Permisos = permisos;
 
-                return View("Bienvenida");
+                HttpContext.Session.SetString("Nombre", usuario.nombre ?? "");
+                HttpContext.Session.SetString("Apellido", usuario.apellido ?? "");
+                HttpContext.Session.SetString("Rol", usuario.rol ?? "");
+
+                HttpContext.Session.SetString(
+                    "Permisos",
+                    string.Join("|", permisos)
+                );
+
+                return RedirectToAction("Modulos");
             }
             else
             {
                 ViewBag.Mensaje = "Usuario o contraseña incorrectos";
+
                 return View("Index");
             }
+        }
 
+
+        //MODULOS
+        [HttpGet]
+        public IActionResult Modulos()
+        {
+            string? nombre = HttpContext.Session.GetString("Nombre");
+
+            if (nombre == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            ViewBag.Nombre = nombre;
+
+            ViewBag.Apellido =
+                HttpContext.Session.GetString("Apellido");
+
+            ViewBag.Rol =
+                HttpContext.Session.GetString("Rol");
+
+            string permisosTexto =
+                HttpContext.Session.GetString("Permisos") ?? "";
+
+            ViewBag.Permisos = permisosTexto
+                .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                .ToList();
+
+            return View("Bienvenida");
+        }
+
+
+        //USUARIOS Y PERMISOS
+        [HttpGet]
+        public IActionResult UsuariosPermisos()
+        {
+            return View("~/Views/Home/Modulos/UsuariosPermisos.cshtml");
+        }
+
+
+        //PRODUCTOS
+        [HttpGet]
+        public IActionResult Productos()
+        {
+            return View("~/Views/Home/Modulos/Productos.cshtml");
+        }
+
+
+        //MOVIMIENTOS E HISTORIAL
+        [HttpGet]
+        public IActionResult MovimientoHistorial()
+        {
+            return View("~/Views/Home/Modulos/MovimientoHistorial.cshtml");
+        }
+
+
+        //MEDICAMENTOS CONTROLADOS
+        [HttpGet]
+        public IActionResult MedicamentosControlados()
+        {
+            return View("~/Views/Home/Modulos/MedicamentosControlados.cshtml");
         }
 
 
         //CREAR USUARIO VISTA
-
         [HttpGet]
         public IActionResult CrearUsuario()
         {
             return View();
         }
 
-        //CREAR USUARIO POST
 
+        //CREAR USUARIO POST
         [HttpPost]
         public async Task<IActionResult> NuevoUsuario(Usuario reg)
         {
@@ -72,19 +134,16 @@ namespace LoginSARMedix.Controllers
             if (resultado)
             {
                 ViewBag.Mensaje = "Usuario creado correctamente";
+
                 return View("Index");
             }
             else
             {
                 ViewBag.Mensaje = "No se pudo crear el usuario: nombre de usuario existente";
+
                 return View("CrearUsuario", reg);
             }
         }
-
-
-
-
-
 
 
         //LISTADO DE USUARIOS
@@ -96,6 +155,7 @@ namespace LoginSARMedix.Controllers
             return View(listado);
         }
 
+
         //DESACTIVAR USUARIO
         [HttpPost]
         public async Task<IActionResult> DesactivarUsuario(int idUsuario)
@@ -104,7 +164,6 @@ namespace LoginSARMedix.Controllers
 
             return RedirectToAction("Usuarios");
         }
-
 
 
         //EDITAR USUARIO VISTA
@@ -142,6 +201,7 @@ namespace LoginSARMedix.Controllers
             }
         }
 
+
         //LISTADO DE USUARIOS INACTIVOS
         [HttpGet]
         public async Task<IActionResult> ListadoEliminarUsuarios()
@@ -161,8 +221,5 @@ namespace LoginSARMedix.Controllers
 
             return RedirectToAction("ListadoEliminarUsuarios");
         }
-
-
-
     }
 }

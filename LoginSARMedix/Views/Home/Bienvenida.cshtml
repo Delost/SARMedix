@@ -1,23 +1,704 @@
-﻿<h2>Bienvenido a SARMedix</h2>
+﻿@{
+    Layout = null;
 
-<p>@ViewBag.Mensaje</p>
+    var permisos = ViewBag.Permisos as List<string> ?? new List<string>();
 
-<p>
-    Usuario:
-    @ViewBag.Nombre
-    @ViewBag.Apellido
-</p>
+    bool permisoUsuarios =
+        permisos.Any(p => p.Equals("Crear usuario", StringComparison.OrdinalIgnoreCase)) ||
+        permisos.Any(p => p.Equals("Gestionar usuarios y permisos", StringComparison.OrdinalIgnoreCase));
 
-<p>
-    Rol:
-    @ViewBag.Rol
-</p>
+    bool permisoProductos =
+        permisos.Any(p => p.Equals("Consultar productos", StringComparison.OrdinalIgnoreCase)) ||
+        permisos.Any(p => p.Equals("Registrar productos", StringComparison.OrdinalIgnoreCase)) ||
+        permisos.Any(p => p.Equals("Gestionar productos", StringComparison.OrdinalIgnoreCase));
 
-<h3>Permisos</h3>
+    bool permisoMovimientos =
+        permisos.Any(p => p.Equals("Registrar movimientos", StringComparison.OrdinalIgnoreCase)) ||
+        permisos.Any(p => p.Equals("Consultar historial", StringComparison.OrdinalIgnoreCase)) ||
+        permisos.Any(p => p.Equals("Gestionar movimientos", StringComparison.OrdinalIgnoreCase));
 
-<ul>
-    @foreach (var permiso in ViewBag.Permisos)
-    {
-        <li>@permiso</li>
-    }
-</ul>
+    bool permisoControlados =
+        permisos.Any(p => p.Equals("Gestionar medicamentos controlados", StringComparison.OrdinalIgnoreCase));
+
+    string nombreCompleto = ViewBag.Nombre + " " + ViewBag.Apellido;
+
+    string inicial = !string.IsNullOrEmpty(ViewBag.Nombre?.ToString())
+        ? ViewBag.Nombre.ToString().Substring(0, 1).ToUpper()
+        : "U";
+}
+s
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>SARMedix - Seleccione Módulo</title>
+
+    <style>
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                font-family: "Segoe UI", Arial, sans-serif;
+                background: #f1f5fb;
+                color: #17324d;
+            }
+
+
+            /* ================================= */
+            /* BARRA SUPERIOR                    */
+            /* ================================= */
+
+            .barra-superior {
+                height: 90px;
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                align-items: center;
+                padding: 0 60px;
+                background: linear-gradient( 90deg, #086fbf, #078bd4 );
+                color: white;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+            }
+
+
+            /* ================================= */
+            /* LOGO                              */
+            /* ================================= */
+
+            .logo {
+                display: flex;
+                align-items: center;
+                gap: 13px;
+            }
+
+            .logo-cruz {
+                width: 47px;
+                height: 47px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border-radius: 10px;
+                background: white;
+                color: #087fc8;
+                font-size: 37px;
+                font-weight: bold;
+                line-height: 1;
+            }
+
+            .logo-texto {
+                font-size: 31px;
+                font-weight: 700;
+                letter-spacing: 0.3px;
+            }
+
+
+            /* ================================= */
+            /* TITULO CENTRAL                    */
+            /* ================================= */
+
+            .titulo-superior {
+                text-align: center;
+                font-size: 25px;
+                font-weight: 600;
+            }
+
+
+            /* ================================= */
+            /* INFORMACION DEL USUARIO           */
+            /* ================================= */
+
+            .usuario-superior {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .usuario-datos {
+                text-align: right;
+            }
+
+            .usuario-nombre {
+                display: block;
+                font-size: 16px;
+                font-weight: 600;
+            }
+
+            .usuario-rol {
+                display: block;
+                margin-top: 2px;
+                font-size: 13px;
+                opacity: 0.85;
+            }
+
+            .usuario-circulo {
+                width: 48px;
+                height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.22);
+                font-size: 20px;
+                font-weight: 600;
+            }
+
+
+            /* ================================= */
+            /* CONTENEDOR PRINCIPAL              */
+            /* ================================= */
+
+            .contenido {
+                max-width: 1240px;
+                margin: 0 auto;
+                padding: 55px 40px 70px;
+            }
+
+
+            /* ================================= */
+            /* CUADRICULA DE MODULOS             */
+            /* ================================= */
+
+            .modulos {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 34px;
+            }
+
+
+            /* ================================= */
+            /* TARJETAS                          */
+            /* ================================= */
+
+            .modulo {
+                position: relative;
+                height: 300px;
+                overflow: hidden;
+                border-radius: 14px;
+                background: white;
+                box-shadow: 0 7px 20px rgba(28, 65, 95, 0.13);
+                transition: transform 0.22s ease, box-shadow 0.22s ease;
+                text-decoration: none;
+                color: inherit;
+            }
+
+
+                /* Cuando tiene permiso,
+                       la tarjeta crece al pasar el mouse */
+
+                .modulo.habilitado:hover {
+                    transform: scale(1.035);
+                    box-shadow: 0 15px 32px rgba(15, 91, 150, 0.25);
+                    z-index: 5;
+                    cursor: pointer;
+                }
+
+
+            /* ================================= */
+            /* TITULO DE CADA MODULO             */
+            /* ================================= */
+
+            .modulo-titulo {
+                height: 68px;
+                display: flex;
+                align-items: center;
+                padding: 0 25px;
+                background: white;
+                color: #087bc2;
+                font-size: 21px;
+                font-weight: 700;
+                text-transform: uppercase;
+            }
+
+
+            /* ================================= */
+            /* IMAGEN GENERAL                    */
+            /* ================================= */
+
+            .modulo-imagen {
+                position: relative;
+                height: calc(100% - 68px);
+                background-size: cover;
+                background-position: center center;
+                background-repeat: no-repeat;
+            }
+
+
+            /* ================================= */
+            /* AJUSTE PARA LAS IMAGENES DE ABAJO */
+            /* ================================= */
+
+            .imagen-movimientos {
+                background-position: center 78%;
+            }
+
+            .imagen-controlados {
+                background-position: center 78%;
+            }
+
+
+            /* ================================= */
+            /* TARJETA BLOQUEADA                 */
+            /* ================================= */
+
+            .modulo.bloqueado {
+                cursor: not-allowed;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.09);
+            }
+
+
+                /* Titulo gris cuando no tiene permiso */
+
+                .modulo.bloqueado
+                .modulo-titulo {
+                    background: #d7d9dc;
+                    color: #63717c;
+                }
+
+
+                /* Imagen en escala de grises */
+
+                .modulo.bloqueado
+                .modulo-imagen {
+                    filter: grayscale(100%);
+                }
+
+
+            /* Capa oscura encima de la imagen */
+
+            .modulo-bloqueo {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                background: rgba(80, 88, 95, 0.58);
+                color: white;
+                font-weight: 700;
+                z-index: 2;
+            }
+
+            .candado {
+                margin-bottom: 9px;
+                font-size: 38px;
+            }
+
+            .sin-permiso {
+                font-size: 19px;
+            }
+
+
+            /* ================================= */
+            /* RESPONSIVE                        */
+            /* ================================= */
+
+            @@media (max-width: 900px) {
+
+                .barra-superior {
+                    grid-template-columns: 1fr 1fr;
+                    height: auto;
+                    min-height: 85px;
+                    padding: 15px 25px;
+                }
+
+                .titulo-superior {
+                    display: none;
+                }
+
+                .modulos {
+                    grid-template-columns: 1fr;
+                }
+
+                .contenido {
+                    padding: 35px 20px;
+                }
+            }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- ================================= -->
+    <!-- BARRA SUPERIOR                    -->
+    <!-- ================================= -->
+
+    <header class="barra-superior">
+
+
+        <!-- LOGO -->
+
+        <div class="logo">
+
+            <div class="logo-cruz">
+                +
+            </div>
+
+            <div class="logo-texto">
+                SARMedix
+            </div>
+
+        </div>
+
+
+        <!-- TITULO -->
+
+        <div class="titulo-superior">
+
+            Seleccione Módulo
+
+        </div>
+
+
+        <!-- USUARIO -->
+
+        <div class="usuario-superior">
+
+
+            <div class="usuario-datos">
+
+                <span class="usuario-nombre">
+
+                    @nombreCompleto
+
+                </span>
+
+
+                <span class="usuario-rol">
+
+                    @ViewBag.Rol
+
+                </span>
+
+            </div>
+
+
+            <div class="usuario-circulo">
+
+                @inicial
+
+            </div>
+
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- ================================= -->
+    <!-- MODULOS                           -->
+    <!-- ================================= -->
+
+    <main class="contenido">
+
+
+        <div class="modulos">
+
+
+            <!-- ================================= -->
+            <!-- USUARIOS Y PERMISOS               -->
+            <!-- ================================= -->
+            @if (permisoUsuarios)
+            {
+                <a href="/Home/UsuariosPermisos"
+                   class="modulo habilitado">
+
+
+                    <div class="modulo-titulo">
+
+                        Usuarios y Permisos
+
+                    </div>
+
+
+                    <div class="modulo-imagen"
+                         style="
+                        background-image:
+                        url('/images/modulos/usuarios-permisos.jpg');
+                        ">
+                    </div>
+
+
+                </a>
+            }
+            else
+            {
+                <div class="modulo bloqueado">
+
+
+                    <div class="modulo-titulo">
+
+                        Usuarios y Permisos
+
+                    </div>
+
+
+                    <div class="modulo-imagen"
+                         style="
+                        background-image:
+                        url('/images/modulos/usuarios-permisos.jpg');
+                        ">
+
+
+                        <div class="modulo-bloqueo">
+
+                            <div class="candado">
+
+                                🔒
+
+                            </div>
+
+
+                            <div class="sin-permiso">
+
+                                Sin permiso
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+            }
+
+
+
+            <!-- ================================= -->
+            <!-- PRODUCTOS                         -->
+            <!-- ================================= -->
+            @if (permisoProductos)
+            {
+                <a href="/Home/Productos"
+                   class="modulo habilitado">
+
+
+                    <div class="modulo-titulo">
+
+                        Productos
+
+                    </div>
+
+
+                    <div class="modulo-imagen"
+                         style="
+                        background-image:
+                        url('/images/modulos/productos.jpg');
+                        ">
+                    </div>
+
+
+                </a>
+            }
+            else
+            {
+                <div class="modulo bloqueado">
+
+
+                    <div class="modulo-titulo">
+
+                        Productos
+
+                    </div>
+
+
+                    <div class="modulo-imagen"
+                         style="
+                        background-image:
+                        url('/images/modulos/productos.jpg');
+                        ">
+
+
+                        <div class="modulo-bloqueo">
+
+                            <div class="candado">
+
+                                🔒
+
+                            </div>
+
+
+                            <div class="sin-permiso">
+
+                                Sin permiso
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+            }
+
+
+
+            <!-- ================================= -->
+            <!-- MOVIMIENTOS E HISTORIAL           -->
+            <!-- ================================= -->
+            @if (permisoMovimientos)
+            {
+                <a href="/Home/MovimientoHistorial"
+                   class="modulo habilitado">
+
+
+                    <div class="modulo-titulo">
+
+                        Movimientos e Historial
+
+                    </div>
+
+
+                    <div class="modulo-imagen imagen-movimientos"
+                         style="
+                        background-image:
+                        url('/images/modulos/movimientos.jpg');
+                        ">
+                    </div>
+
+
+                </a>
+            }
+            else
+            {
+                <div class="modulo bloqueado">
+
+
+                    <div class="modulo-titulo">
+
+                        Movimientos e Historial
+
+                    </div>
+
+
+                    <div class="modulo-imagen imagen-movimientos"
+                         style="
+                        background-image:
+                        url('/images/modulos/movimientos.jpg');
+                        ">
+
+
+                        <div class="modulo-bloqueo">
+
+                            <div class="candado">
+
+                                🔒
+
+                            </div>
+
+
+                            <div class="sin-permiso">
+
+                                Sin permiso
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+            }
+
+
+
+            <!-- ================================= -->
+            <!-- MEDICAMENTOS CONTROLADOS          -->
+            <!-- ================================= -->
+            @if (permisoControlados)
+            {
+                <a href="/Home/MedicamentosControlados"
+                    class="modulo habilitado">
+
+
+                    <div class="modulo-titulo">
+
+                        Medicamentos Controlados
+
+                    </div>
+
+
+                    <div class="modulo-imagen imagen-controlados"
+                         style="
+                        background-image:
+                        url('/images/modulos/controlados.jpg');
+                        ">
+                    </div>
+
+
+                </a>
+            }
+            else
+            {
+                <div class="modulo bloqueado">
+
+
+                    <div class="modulo-titulo">
+
+                        Medicamentos Controlados
+
+                    </div>
+
+
+                    <div class="modulo-imagen imagen-controlados"
+                         style="
+                        background-image:
+                        url('/images/modulos/controlados.jpg');
+                        ">
+
+
+                        <div class="modulo-bloqueo">
+
+                            <div class="candado">
+
+                                🔒
+
+                            </div>
+
+
+                            <div class="sin-permiso">
+
+                                Sin permiso
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+            }
+
+
+        </div>
+
+
+    </main>
+
+
+</body>
+
+</html>
