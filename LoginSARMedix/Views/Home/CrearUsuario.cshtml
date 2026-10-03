@@ -1,0 +1,85 @@
+﻿@model LoginSARMedix.Models.Usuario
+
+<h2>Editar usuario</h2>
+<form asp-controller="Home"
+      asp-action="NuevoUsuario"
+      method="post"
+      class="formulario-principal">
+
+    <div>
+        <label>Nombre</label>
+        <input asp-for="nombre" />
+    </div>
+
+    <div>
+        <label>Apellido</label>
+        <input asp-for="apellido" />
+    </div>
+
+    <div>
+        <label>RUT</label>
+        <input asp-for="rut"
+               maxlength="10"
+               oninput="formatearRut(this)" />
+    </div>
+
+    <div>
+        <label>Rol</label>
+
+        <select asp-for="id_rol">
+            <option value="">Seleccione un rol</option>
+            <option value="1">Administrador</option>
+            <option value="2">TENS</option>
+            <option value="3">Enfermera</option>
+            <option value="4">Auxiliar</option>
+        </select>
+    </div>
+
+    <div>
+        <label>Nombre de usuario</label>
+        <input asp-for="nombre_usuario" />
+    </div>
+
+    <div>
+        <label>Contraseña</label>
+        <input asp-for="contrasena"
+               type="password" />
+    </div>
+
+    <br />
+
+    <button type="submit">
+        Crear usuario
+    </button>
+
+    <a asp-controller="Home"
+       asp-action="Index">
+        Volver al inicio
+    </a>
+
+</form>
+
+@if (ViewBag.Mensaje != null)
+{
+    <script>
+        alert('@ViewBag.Mensaje');
+    </script>
+}
+
+<script>
+    function formatearRut(input) {
+
+        let rut = input.value
+            .replace(/[^0-9kK]/g, '')
+            .toUpperCase();
+
+        // Máximo: 8 números + dígito verificador
+        rut = rut.substring(0, 9);
+
+        if (rut.length > 1) {
+            rut = rut.slice(0, -1) + "-" + rut.slice(-1);
+        }
+
+        input.value = rut;
+    }
+</script>

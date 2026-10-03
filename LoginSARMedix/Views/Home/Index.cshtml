@@ -2,7 +2,7 @@
 
 <h2>Inicio de sesión SARMedix</h2>
 
-<form asp-controller="Home" asp-action="InicioSesion" method="post">
+<form asp-controller="Home" asp-action="InicioSesion" method="post" class="formulario-principal">
 
     <div>
         <label>Nombre de usuario</label>
@@ -19,7 +19,7 @@
     <button type="submit">Iniciar sesión</button>
 
     <a asp-controller="Home"
-       asp-action="NuevoUsuario" style="text-align center"> 
+       asp-action="CrearUsuario" style="text-align: ce"> 
         Nuevo usuario
     </a>
 
@@ -27,5 +27,7 @@
 
 @if (ViewBag.Mensaje != null)
 {
-    <p>@ViewBag.Mensaje</p>
+    <script>
+        alert('@ViewBag.Mensaje');
+    </script>
 }

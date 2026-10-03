@@ -1,0 +1,115 @@
+﻿@model LoginSARMedix.Models.Usuario
+
+<h2>Editar usuario</h2>
+
+<form asp-controller="Home"
+      asp-action="ActualizarUsuario"
+      method="post"
+      class="formulario-principal">
+
+    <input asp-for="id_usuario" type="hidden" />
+
+
+    <div>
+        <label>Nombre</label>
+        <input asp-for="nombre" />
+    </div>
+
+
+    <div>
+        <label>Apellido</label>
+        <input asp-for="apellido" />
+    </div>
+
+
+    <div>
+        <label>RUT</label>
+
+        <input asp-for="rut"
+               maxlength="10"
+               oninput="formatearRut(this)" />
+    </div>
+
+
+    <div>
+        <label>Rol</label>
+
+        <select asp-for="id_rol">
+
+            <option value="1">
+                Administrador
+            </option>
+
+            <option value="2">
+                TENS
+            </option>
+
+            <option value="3">
+                Enfermera
+            </option>
+
+            <option value="4">
+                Auxiliar
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <div>
+        <label>Nombre de usuario</label>
+        <input asp-for="nombre_usuario" />
+    </div>
+
+
+    <button type="submit">
+        Actualizar usuario
+    </button>
+
+
+    <br />
+    <br />
+
+
+    <a asp-controller="Home"
+       asp-action="Usuarios">
+
+        Volver al listado
+
+    </a>
+
+</form>
+
+
+@if (ViewBag.Mensaje != null)
+{
+    <script>
+        alert('@ViewBag.Mensaje');
+    </script>
+}
+
+
+<script>
+
+    function formatearRut(input) {
+
+        let rut = input.value
+            .replace(/[^0-9kK]/g, '')
+            .toUpperCase();
+
+        rut = rut.substring(0, 9);
+
+        if (rut.length > 1) {
+
+            rut =
+                rut.slice(0, -1)
+                + "-"
+                + rut.slice(-1);
+
+        }
+
+        input.value = rut;
+    }
+
+</script>

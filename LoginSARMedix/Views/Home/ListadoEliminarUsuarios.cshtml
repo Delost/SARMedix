@@ -1,0 +1,123 @@
+﻿@model List<LoginSARMedix.Models.Usuario>
+
+<div class="usuarios-card">
+
+    <div class="usuarios-titulo">
+
+        <h1>Eliminar usuarios</h1>
+
+        <p>Usuarios inactivos</p>
+
+    </div>
+
+
+    <table class="tabla-usuarios">
+
+        <thead>
+
+            <tr>
+
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>RUT</th>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acción</th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            @foreach (var usuario in Model)
+            {
+                <tr>
+
+                    <td>
+                        @usuario.nombre
+                    </td>
+
+                    <td>
+                        @usuario.apellido
+                    </td>
+
+                    <td>
+                        @usuario.rut
+                    </td>
+
+                    <td>
+                        @usuario.nombre_usuario
+                    </td>
+
+                    <td>
+                        @usuario.rol
+                    </td>
+
+                    <td>
+
+                        <span class="estado-inactivo">
+                            Inactivo
+                        </span>
+
+                    </td>
+
+                    <td>
+
+                        <form asp-controller="Home"
+                              asp-action="EliminarUsuario"
+                              method="post"
+                              class="form-desactivar">
+
+                            <input type="hidden"
+                                   name="idUsuario"
+                                   value="@usuario.id_usuario" />
+
+
+                            <button type="submit"
+                                    class="btn-eliminar"
+                                    onclick="return confirmarEliminacion(this)">
+                                Eliminar
+                            </button>
+
+                        </form>
+
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+
+
+    <div class="usuarios-volver">
+
+        <a asp-controller="Home"
+           asp-action="Usuarios"
+           class="btn-volver">
+
+            Volver al listado
+
+        </a>
+
+    </div>
+
+</div>
+
+<script>
+    function confirmarEliminacion(boton) {
+
+        if (boton.dataset.confirmado === "true") {
+            return true;
+        }
+
+        boton.dataset.confirmado = "true";
+        boton.innerText = "Confirmar";
+
+        return false;
+    }
+</script>

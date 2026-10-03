@@ -1,0 +1,109 @@
+﻿@model List<LoginSARMedix.Models.Usuario>
+
+<div class="usuarios-card">
+
+    <div class="usuarios-titulo">
+        <h1>Listado de usuarios</h1>
+        <p>SAR de Chiguay</p>
+    </div>
+
+
+    <table class="tabla-usuarios">
+
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>RUT</th>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @foreach (var usuario in Model)
+            {
+                <tr>
+
+                    <td>@usuario.nombre</td>
+
+                    <td>@usuario.apellido</td>
+
+                    <td>@usuario.rut</td>
+
+                    <td>@usuario.nombre_usuario</td>
+
+                    <td>@usuario.rol</td>
+
+                    <td>
+                        @if (usuario.activo)
+                        {
+                            <span class="estado-activo">
+                                Activo
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="estado-inactivo">
+                                Inactivo
+                            </span>
+                        }
+                    </td>
+
+                    <td>
+
+                        <div class="acciones-contenido">
+
+                            <a asp-controller="Home"
+                               asp-action="EditarUsuario"
+                               asp-route-idUsuario="@usuario.id_usuario"
+                               class="btn-editar">
+                                Editar
+                            </a>
+
+
+                            @if (usuario.activo)
+                            {
+                                <form asp-controller="Home"
+                                      asp-action="DesactivarUsuario"
+                                      method="post"
+                                      class="form-desactivar">
+
+                                    <input type="hidden"
+                                           name="idUsuario"
+                                           value="@usuario.id_usuario" />
+
+                                    <button type="submit"
+                                            class="btn-desactivar">
+                                        Desactivar
+                                    </button>
+
+                                </form>
+                            }
+
+                        </div>
+
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+
+
+    <div class="usuarios-volver">
+
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="btn-volver">
+            Volver al inicio
+        </a>
+
+    </div>
+
+</div>
