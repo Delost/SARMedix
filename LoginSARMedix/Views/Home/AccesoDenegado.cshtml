@@ -1,0 +1,486 @@
+﻿@{
+    Layout = null;
+
+    string nombreCompleto =
+        ViewBag.Nombre + " " + ViewBag.Apellido;
+
+    string inicial =
+        !string.IsNullOrEmpty(ViewBag.Nombre?.ToString())
+        ? ViewBag.Nombre.ToString().Substring(0, 1).ToUpper()
+        : "U";
+}
+
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>Acceso Denegado - SARMedix</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            margin: 0;
+
+            font-family:
+                "Segoe UI",
+                Arial,
+                sans-serif;
+
+            color: #17324d;
+
+            background:
+                linear-gradient(
+                    rgba(235, 247, 252, 0.82),
+                    rgba(235, 247, 252, 0.82)
+                ),
+                url('/images/fondo-clinico.png');
+
+            background-size: cover;
+
+            background-position: center;
+
+            background-attachment: fixed;
+
+            min-height: 100vh;
+        }
+
+
+
+        /* BARRA SUPERIOR */
+
+        .barra-superior {
+            height: 82px;
+
+            display: grid;
+
+            grid-template-columns:
+                1fr
+                1fr
+                1fr;
+
+            align-items: center;
+
+            padding:
+                0 60px;
+
+            background: #0f5278;
+
+            color: white;
+
+            box-shadow:
+                0 3px 10px
+                rgba(0, 0, 0, 0.15);
+        }
+
+
+
+        /* LOGO */
+
+        .logo {
+            display: flex;
+
+            align-items: center;
+
+            gap: 14px;
+        }
+
+
+        .logo-cruz-medica {
+            width: 48px;
+            height: 48px;
+
+            background: white;
+
+            border-radius: 12px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+        }
+
+
+        .cruz {
+            position: relative;
+
+            width: 22px;
+            height: 22px;
+
+            display: block;
+        }
+
+
+        .cruz::before,
+        .cruz::after {
+            content: "";
+
+            position: absolute;
+
+            background: #0b6fb8;
+
+            border-radius: 3px;
+        }
+
+
+        .cruz::before {
+            width: 8px;
+            height: 22px;
+
+            left: 7px;
+            top: 0;
+        }
+
+
+        .cruz::after {
+            width: 22px;
+            height: 8px;
+
+            left: 0;
+            top: 7px;
+        }
+
+
+        .logo-texto {
+            font-size: 25px;
+
+            font-weight: 700;
+
+            white-space: nowrap;
+        }
+
+
+
+        /* TITULO SUPERIOR */
+
+        .titulo-superior {
+            text-align: center;
+
+            font-size: 25px;
+
+            font-weight: 600;
+        }
+
+
+
+        /* USUARIO */
+
+        .usuario-superior {
+            display: flex;
+
+            justify-content: flex-end;
+
+            align-items: center;
+
+            gap: 16px;
+        }
+
+
+        .usuario-datos {
+            text-align: right;
+        }
+
+
+        .usuario-nombre {
+            display: block;
+
+            font-size: 16px;
+
+            font-weight: 600;
+        }
+
+
+        .usuario-rol {
+            display: block;
+
+            margin-top: 2px;
+
+            font-size: 13px;
+
+            opacity: 0.85;
+        }
+
+
+        .usuario-circulo {
+            width: 48px;
+            height: 48px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background:
+                rgba(255, 255, 255, 0.22);
+
+            font-size: 20px;
+
+            font-weight: 600;
+        }
+
+
+
+        /* CONTENIDO */
+
+        .contenedor {
+            width: 90%;
+
+            max-width: 600px;
+
+            margin:
+                80px auto;
+
+            text-align: center;
+        }
+
+
+        .tarjeta {
+            padding: 45px;
+
+            background:
+                rgba(255, 255, 255, 0.96);
+
+            border-radius: 14px;
+
+            box-shadow:
+                0 7px 20px
+                rgba(28, 65, 95, 0.15);
+        }
+
+
+        .icono {
+            width: 75px;
+            height: 75px;
+
+            margin:
+                0 auto 20px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #fdecec;
+
+            color: #b43d3d;
+
+            font-size: 34px;
+
+            font-weight: bold;
+        }
+
+
+        .titulo {
+            margin-bottom: 12px;
+
+            color: #17324d;
+
+            font-size: 30px;
+        }
+
+
+        .descripcion {
+            margin-bottom: 30px;
+
+            color: #687b89;
+
+            font-size: 16px;
+
+            line-height: 1.5;
+        }
+
+
+        .btn-volver {
+            display: inline-block;
+
+            padding:
+                12px 22px;
+
+            background: #0b8f9c;
+
+            color: white;
+
+            text-decoration: none;
+
+            border-radius: 7px;
+
+            font-weight: 600;
+        }
+
+
+        .btn-volver:hover {
+            background: #087580;
+
+            color: white;
+        }
+
+
+
+        @@media (max-width: 900px) {
+
+            .barra-superior {
+                grid-template-columns:
+                    1fr
+                    1fr;
+
+                height: auto;
+
+                min-height: 82px;
+
+                padding:
+                    15px 25px;
+            }
+
+
+            .titulo-superior {
+                display: none;
+            }
+
+
+            .logo-texto {
+                font-size: 20px;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <header class="barra-superior">
+
+
+        <div class="logo">
+
+
+            <div class="logo-cruz-medica">
+
+                <span class="cruz"></span>
+
+            </div>
+
+
+            <div class="logo-texto">
+
+                SARMedix | SAR de Chiguay
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="titulo-superior">
+
+            Acceso Restringido
+
+        </div>
+
+
+
+        <div class="usuario-superior">
+
+
+            <div class="usuario-datos">
+
+
+                <span class="usuario-nombre">
+
+                    @nombreCompleto
+
+                </span>
+
+
+                <span class="usuario-rol">
+
+                    @ViewBag.Rol
+
+                </span>
+
+
+            </div>
+
+
+            <div class="usuario-circulo">
+
+                @inicial
+
+            </div>
+
+
+        </div>
+
+
+    </header>
+
+
+
+    <main class="contenedor">
+
+
+        <div class="tarjeta">
+
+
+            <div class="icono">
+
+                !
+
+            </div>
+
+
+            <h1 class="titulo">
+
+                Acceso denegado
+
+            </h1>
+
+
+            <p class="descripcion">
+
+                Su rol no posee los permisos necesarios
+                para acceder a esta función de SARMedix.
+
+            </p>
+
+
+            <a asp-controller="Home"
+               asp-action="Modulos"
+               class="btn-volver">
+
+                ← Volver a los módulos
+
+            </a>
+
+
+        </div>
+
+
+    </main>
+
+
+</body>
+
+</html>

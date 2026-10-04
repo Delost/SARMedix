@@ -2,32 +2,132 @@
 
 <h2>Inicio de sesión SARMedix</h2>
 
-<form asp-controller="Home" asp-action="InicioSesion" method="post" class="formulario-principal">
+
+<form asp-controller="Home"
+      asp-action="InicioSesion"
+      method="post"
+      class="formulario-principal">
+
+
+    <div class="espacio-mensaje">
+
+        @if (TempData["Mensaje"] != null)
+        {
+            <div class="mensaje-exito"
+                 id="mensajeExito">
+
+                @TempData["Mensaje"]
+
+            </div>
+        }
+
+    </div>
+
 
     <div>
+
         <label>Nombre de usuario</label>
+
         <input asp-for="nombre_usuario" />
+
     </div>
 
+
     <div>
+
         <label>Contraseña</label>
-        <input asp-for="contrasena" type="password" />
+
+        <input asp-for="contrasena"
+               type="password" />
+
     </div>
+
 
     <br />
 
-    <button type="submit">Iniciar sesión</button>
+
+    <button type="submit">
+
+        Iniciar sesión
+
+    </button>
+
 
     <a asp-controller="Home"
-       asp-action="CrearUsuario" style="text-align: ce"> 
+       asp-action="CrearUsuario">
+
         Nuevo usuario
+
     </a>
 
 </form>
 
+
 @if (ViewBag.Mensaje != null)
 {
     <script>
+
         alert('@ViewBag.Mensaje');
+
     </script>
 }
+
+
+<style>
+
+    /*
+        Reserva siempre el espacio del mensaje.
+        Así la tarjeta no cambia de tamaño.
+    */
+
+    .espacio-mensaje {
+        min-height: 48px;
+        margin-bottom: 8px;
+    }
+
+
+    .mensaje-exito {
+        width: 100%;
+        padding: 12px 15px;
+
+        background-color: #d1e7dd;
+        color: #0f5132;
+
+        border: 1px solid #badbcc;
+        border-radius: 7px;
+
+        text-align: center;
+        font-weight: 600;
+
+        opacity: 1;
+
+        transition: opacity 0.5s ease;
+    }
+
+</style>
+
+
+<script>
+
+    setTimeout(function () {
+
+        const mensaje =
+            document.getElementById(
+                "mensajeExito"
+            );
+
+        if (mensaje) {
+
+            mensaje.style.opacity = "0";
+
+            setTimeout(function () {
+
+                mensaje.style.visibility = "hidden";
+
+            }, 500);
+
+        }
+
+    }, 3000);
+
+</script>

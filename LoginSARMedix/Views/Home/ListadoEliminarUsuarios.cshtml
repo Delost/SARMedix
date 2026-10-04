@@ -4,120 +4,703 @@
 
     <div class="usuarios-titulo">
 
-        <h1>Eliminar usuarios</h1>
+        <h1>Usuarios inactivos</h1>
 
-        <p>Usuarios inactivos</p>
+        <p>Administración de usuarios desactivados</p>
 
     </div>
 
 
-    <table class="tabla-usuarios">
+    @if (TempData["Mensaje"] != null)
+    {
+        string tipoMensaje =
+            TempData["TipoMensaje"]?.ToString() ?? "";
 
-        <thead>
+        <div class="mensaje @(tipoMensaje == "exito" ? "mensaje-exito" : "mensaje-error")">
 
-            <tr>
+            @TempData["Mensaje"]
 
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>RUT</th>
-                <th>Usuario</th>
-                <th>Rol</th>
-                <th>Estado</th>
-                <th>Acción</th>
-
-            </tr>
-
-        </thead>
+        </div>
+    }
 
 
-        <tbody>
+    @if (Model != null && Model.Count > 0)
+    {
+        <div class="tabla-contenedor">
 
-            @foreach (var usuario in Model)
-            {
-                <tr>
+            <table class="tabla-usuarios">
 
-                    <td>
-                        @usuario.nombre
-                    </td>
+                <thead>
 
-                    <td>
-                        @usuario.apellido
-                    </td>
+                    <tr>
 
-                    <td>
-                        @usuario.rut
-                    </td>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>RUT</th>
+                        <th>Usuario</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
 
-                    <td>
-                        @usuario.nombre_usuario
-                    </td>
+                    </tr>
 
-                    <td>
-                        @usuario.rol
-                    </td>
-
-                    <td>
-
-                        <span class="estado-inactivo">
-                            Inactivo
-                        </span>
-
-                    </td>
-
-                    <td>
-
-                        <form asp-controller="Home"
-                              asp-action="EliminarUsuario"
-                              method="post"
-                              class="form-desactivar">
-
-                            <input type="hidden"
-                                   name="idUsuario"
-                                   value="@usuario.id_usuario" />
+                </thead>
 
 
-                            <button type="submit"
-                                    class="btn-eliminar"
-                                    onclick="return confirmarEliminacion(this)">
-                                Eliminar
-                            </button>
+                <tbody>
 
-                        </form>
+                    @foreach (var usuario in Model)
+                    {
+                        <tr>
 
-                    </td>
+                            <td>
+                                @usuario.nombre
+                            </td>
 
-                </tr>
-            }
+                            <td>
+                                @usuario.apellido
+                            </td>
 
-        </tbody>
+                            <td>
+                                @usuario.rut
+                            </td>
 
-    </table>
+                            <td>
+                                @usuario.nombre_usuario
+                            </td>
+
+                            <td>
+                                @usuario.rol
+                            </td>
+
+                            <td>
+
+                                <span class="estado-inactivo">
+
+                                    Inactivo
+
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                <div class="acciones-usuario">
 
 
-    <div class="usuarios-volver">
+                                    <form asp-controller="Home"
+                                          asp-action="ReactivarUsuario"
+                                          method="post"
+                                          onsubmit="return confirmarReactivar(this)">
 
-        <a asp-controller="Home"
-           asp-action="Usuarios"
-           class="btn-volver">
+                                        <input type="hidden"
+                                               name="idUsuario"
+                                               value="@usuario.id_usuario" />
 
-            Volver al listado
 
-        </a>
+                                        <button type="submit"
+                                                class="btn-reactivar">
+
+                                            Reactivar
+
+                                        </button>
+
+                                    </form>
+
+
+                                    <form asp-controller="Home"
+                                          asp-action="EliminarUsuario"
+                                          method="post"
+                                          onsubmit="return confirmarEliminar(this)">
+
+                                        <input type="hidden"
+                                               name="idUsuario"
+                                               value="@usuario.id_usuario" />
+
+
+                                        <button type="submit"
+                                                class="btn-eliminar">
+
+                                            Eliminar
+
+                                        </button>
+
+                                    </form>
+
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    }
+    else
+    {
+        <div class="sin-usuarios">
+
+            No existen usuarios inactivos.
+
+        </div>
+    }
+
+</div>
+
+
+<div class="contenedor-navegacion">
+
+    <a asp-controller="Home"
+       asp-action="Usuarios"
+       class="btn-listado">
+
+        ← Volver al Listado de Usuarios
+
+    </a>
+
+
+    <a asp-controller="Home"
+       asp-action="UsuariosPermisos"
+       class="btn-volver-usuarios">
+
+        ← Volver a Usuarios y Permisos
+
+    </a>
+
+</div>
+
+
+
+<!-- ================================= -->
+<!-- VENTANA DE CONFIRMACIÓN           -->
+<!-- ================================= -->
+
+<div id="modalConfirmacion"
+     class="modal-fondo">
+
+    <div class="modal-contenido">
+
+        <div class="modal-icono"
+             id="modalIcono">
+
+            ?
+
+        </div>
+
+
+        <h2>
+
+            Confirmar acción
+
+        </h2>
+
+
+        <p id="textoConfirmacion">
+
+        </p>
+
+
+        <div class="modal-botones">
+
+            <button type="button"
+                    class="btn-modal-si"
+                    onclick="realizarAccion()">
+
+                Sí
+
+            </button>
+
+
+            <button type="button"
+                    class="btn-modal-no"
+                    onclick="cerrarConfirmacion()">
+
+                No
+
+            </button>
+
+
+            <button type="button"
+                    class="btn-modal-cancelar"
+                    onclick="cancelarAccion()">
+
+                Cancelar
+
+            </button>
+
+        </div>
 
     </div>
 
 </div>
 
+
+
+<style>
+
+    .usuarios-card {
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+
+    .tabla-contenedor {
+        width: 100%;
+        max-width: 100%;
+
+        overflow-x: auto;
+
+        box-sizing: border-box;
+    }
+
+
+    .tabla-usuarios {
+        width: 100%;
+        max-width: 100%;
+
+        box-sizing: border-box;
+    }
+
+
+    .acciones-usuario {
+        display: flex;
+
+        gap: 8px;
+
+        align-items: center;
+        justify-content: center;
+
+        flex-wrap: wrap;
+    }
+
+
+    .acciones-usuario form {
+        margin: 0;
+    }
+
+
+    .btn-reactivar {
+        background-color: #198754;
+
+        color: white;
+
+        border: none;
+
+        border-radius: 6px;
+
+        padding: 8px 14px;
+
+        cursor: pointer;
+
+        font-weight: 600;
+    }
+
+
+    .btn-reactivar:hover {
+        background-color: #157347;
+    }
+
+
+    .mensaje {
+        padding: 12px;
+
+        margin-bottom: 20px;
+
+        border-radius: 6px;
+
+        font-weight: 600;
+    }
+
+
+    .mensaje-exito {
+        background-color: #d1e7dd;
+
+        color: #0f5132;
+
+        border: 1px solid #badbcc;
+    }
+
+
+    .mensaje-error {
+        background-color: #f8d7da;
+
+        color: #842029;
+
+        border: 1px solid #f5c2c7;
+    }
+
+
+    .sin-usuarios {
+        padding: 25px;
+
+        text-align: center;
+
+        color: #666;
+
+        font-size: 16px;
+    }
+
+
+
+    /* ================================= */
+    /* BOTONES DE NAVEGACIÓN             */
+    /* ================================= */
+
+    .contenedor-navegacion {
+        display: flex;
+
+        justify-content: center;
+        align-items: center;
+
+        gap: 12px;
+
+        margin-top: 30px;
+        margin-bottom: 30px;
+
+        flex-wrap: wrap;
+    }
+
+
+    .btn-listado {
+        display: inline-block;
+
+        padding: 12px 22px;
+
+        background-color: #59636b;
+
+        color: white;
+
+        border-radius: 7px;
+
+        text-decoration: none;
+
+        font-weight: 600;
+    }
+
+
+    .btn-listado:hover {
+        background-color: #474f55;
+
+        color: white;
+    }
+
+
+    .btn-volver-usuarios {
+        display: inline-block;
+
+        padding: 12px 22px;
+
+        background-color: #1198a5;
+
+        color: white;
+
+        border-radius: 7px;
+
+        text-decoration: none;
+
+        font-weight: 600;
+    }
+
+
+    .btn-volver-usuarios:hover {
+        background-color: #0d8490;
+
+        color: white;
+    }
+
+
+
+    /* ================================= */
+    /* VENTANA DE CONFIRMACIÓN           */
+    /* ================================= */
+
+    .modal-fondo {
+        display: none;
+
+        position: fixed;
+
+        top: 0;
+        left: 0;
+
+        width: 100%;
+        height: 100%;
+
+        background-color:
+            rgba(0, 0, 0, 0.45);
+
+        align-items: center;
+        justify-content: center;
+
+        z-index: 9999;
+    }
+
+
+    .modal-contenido {
+        width: 90%;
+
+        max-width: 430px;
+
+        background-color: white;
+
+        border-radius: 15px;
+
+        padding: 30px;
+
+        text-align: center;
+
+        box-shadow:
+            0 12px 35px
+            rgba(0, 0, 0, 0.25);
+    }
+
+
+    .modal-icono {
+        width: 55px;
+        height: 55px;
+
+        margin:
+            0 auto 15px auto;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        background-color: #1198a5;
+
+        color: white;
+
+        border-radius: 50%;
+
+        font-size: 30px;
+
+        font-weight: bold;
+    }
+
+
+    .modal-contenido h2 {
+        margin-top: 0;
+
+        color: #003b64;
+    }
+
+
+    .modal-contenido p {
+        margin-top: 15px;
+
+        margin-bottom: 25px;
+
+        font-size: 17px;
+
+        color: #444;
+    }
+
+
+    .modal-botones {
+        display: flex;
+
+        justify-content: center;
+
+        gap: 10px;
+
+        flex-wrap: wrap;
+    }
+
+
+    .modal-botones button {
+        min-width: 90px;
+
+        padding: 10px 18px;
+
+        border: none;
+
+        border-radius: 7px;
+
+        color: white;
+
+        font-weight: 600;
+
+        cursor: pointer;
+    }
+
+
+    .btn-modal-si {
+        background-color: #198754;
+    }
+
+
+    .btn-modal-si:hover {
+        background-color: #157347;
+    }
+
+
+    .btn-modal-no {
+        background-color: #c82333;
+    }
+
+
+    .btn-modal-no:hover {
+        background-color: #a91d2a;
+    }
+
+
+    .btn-modal-cancelar {
+        background-color: #59636b;
+    }
+
+
+    .btn-modal-cancelar:hover {
+        background-color: #474f55;
+    }
+
+</style>
+
+
+
 <script>
-    function confirmarEliminacion(boton) {
 
-        if (boton.dataset.confirmado === "true") {
-            return true;
-        }
+    let formularioPendiente = null;
 
-        boton.dataset.confirmado = "true";
-        boton.innerText = "Confirmar";
+    let accionPendiente = "";
+
+
+
+    // =================================
+    // CONFIRMAR REACTIVAR
+    // =================================
+
+    function confirmarReactivar(formulario) {
+
+        formularioPendiente =
+            formulario;
+
+
+        accionPendiente =
+            "reactivar";
+
+
+        document.getElementById(
+            "textoConfirmacion"
+        ).innerText =
+            "¿Quieres reactivar este usuario?";
+
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display =
+            "flex";
+
 
         return false;
     }
+
+
+
+    // =================================
+    // CONFIRMAR ELIMINAR
+    // =================================
+
+    function confirmarEliminar(formulario) {
+
+        formularioPendiente =
+            formulario;
+
+
+        accionPendiente =
+            "eliminar";
+
+
+        document.getElementById(
+            "textoConfirmacion"
+        ).innerText =
+            "¿Quieres eliminar definitivamente este usuario?";
+
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display =
+            "flex";
+
+
+        return false;
+    }
+
+
+
+    // =================================
+    // BOTÓN SÍ
+    // =================================
+
+    function realizarAccion() {
+
+        if (formularioPendiente == null) {
+
+            return;
+        }
+
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display =
+            "none";
+
+
+        /*
+            Aquí usamos submit()
+            para enviar directamente
+            el formulario seleccionado.
+        */
+
+        formularioPendiente.submit();
+    }
+
+
+
+    // =================================
+    // BOTÓN NO
+    // =================================
+
+    function cerrarConfirmacion() {
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display =
+            "none";
+
+
+        formularioPendiente =
+            null;
+
+
+        accionPendiente =
+            "";
+    }
+
+
+
+    // =================================
+    // BOTÓN CANCELAR
+    // =================================
+
+    function cancelarAccion() {
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display =
+            "none";
+
+
+        formularioPendiente =
+            null;
+
+
+        accionPendiente =
+            "";
+    }
+
 </script>

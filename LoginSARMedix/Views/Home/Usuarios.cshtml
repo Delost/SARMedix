@@ -3,107 +3,542 @@
 <div class="usuarios-card">
 
     <div class="usuarios-titulo">
+
         <h1>Listado de usuarios</h1>
+
         <p>SAR de Chiguay</p>
+
     </div>
 
 
-    <table class="tabla-usuarios">
+    <div class="tabla-contenedor">
 
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>RUT</th>
-                <th>Usuario</th>
-                <th>Rol</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
+        <table class="tabla-usuarios">
 
-        <tbody>
+            <thead>
 
-            @foreach (var usuario in Model)
-            {
                 <tr>
 
-                    <td>@usuario.nombre</td>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>RUT</th>
+                    <th>Usuario</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
 
-                    <td>@usuario.apellido</td>
+                </tr>
 
-                    <td>@usuario.rut</td>
+            </thead>
 
-                    <td>@usuario.nombre_usuario</td>
 
-                    <td>@usuario.rol</td>
+            <tbody>
 
-                    <td>
-                        @if (usuario.activo)
-                        {
-                            <span class="estado-activo">
-                                Activo
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="estado-inactivo">
-                                Inactivo
-                            </span>
-                        }
-                    </td>
+                @foreach (var usuario in Model)
+                {
+                    <tr>
 
-                    <td>
+                        <td>
+                            @usuario.nombre
+                        </td>
 
-                        <div class="acciones-contenido">
 
-                            <a asp-controller="Home"
-                               asp-action="EditarUsuario"
-                               asp-route-idUsuario="@usuario.id_usuario"
-                               class="btn-editar">
-                                Editar
-                            </a>
+                        <td>
+                            @usuario.apellido
+                        </td>
 
+
+                        <td>
+                            @usuario.rut
+                        </td>
+
+
+                        <td>
+                            @usuario.nombre_usuario
+                        </td>
+
+
+                        <td>
+                            @usuario.rol
+                        </td>
+
+
+                        <td>
 
                             @if (usuario.activo)
                             {
-                                <form asp-controller="Home"
-                                      asp-action="DesactivarUsuario"
-                                      method="post"
-                                      class="form-desactivar">
+                                <span class="estado-activo">
 
-                                    <input type="hidden"
-                                           name="idUsuario"
-                                           value="@usuario.id_usuario" />
+                                    Activo
 
-                                    <button type="submit"
-                                            class="btn-desactivar">
-                                        Desactivar
-                                    </button>
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="estado-inactivo">
 
-                                </form>
+                                    Inactivo
+
+                                </span>
                             }
 
-                        </div>
-
-                    </td>
-
-                </tr>
-            }
-
-        </tbody>
-
-    </table>
+                        </td>
 
 
-    <div class="usuarios-volver">
+                        <td>
 
-        <a asp-controller="Home"
-           asp-action="Index"
-           class="btn-volver">
-            Volver al inicio
-        </a>
+                            <div class="acciones-contenido">
+
+                                <a asp-controller="Home"
+                                   asp-action="EditarUsuario"
+                                   asp-route-idUsuario="@usuario.id_usuario"
+                                   class="btn-editar"
+                                   onclick="return confirmarEditar(this)">
+
+                                    Editar
+
+                                </a>
+
+
+                                @if (usuario.activo)
+                                {
+                                    <form asp-controller="Home"
+                                          asp-action="DesactivarUsuario"
+                                          method="post"
+                                          class="form-desactivar"
+                                          onsubmit="return confirmarDesactivar(this)">
+
+                                        <input type="hidden"
+                                               name="idUsuario"
+                                               value="@usuario.id_usuario" />
+
+
+                                        <button type="submit"
+                                                class="btn-desactivar">
+
+                                            Desactivar
+
+                                        </button>
+
+                                    </form>
+                                }
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
 
     </div>
 
 </div>
+
+
+<div class="contenedor-navegacion">
+
+    <a asp-controller="Home"
+       asp-action="ListadoEliminarUsuarios"
+       class="btn-inactivos">
+
+        → Ir a usuarios inactivos
+
+    </a>
+
+
+    <a asp-controller="Home"
+       asp-action="UsuariosPermisos"
+       class="btn-volver-usuarios">
+
+        ← Volver a Usuarios y Permisos
+
+    </a>
+
+</div>
+
+
+<!-- VENTANA DE CONFIRMACIÓN -->
+
+<div id="modalConfirmacion"
+     class="modal-fondo">
+
+    <div class="modal-contenido">
+
+        <div class="modal-icono">
+            ?
+        </div>
+
+        <h2>
+            Confirmar acción
+        </h2>
+
+        <p id="textoConfirmacion">
+        </p>
+
+
+        <div class="modal-botones">
+
+            <button type="button"
+                    class="btn-modal-si"
+                    onclick="realizarAccion()">
+
+                Sí
+
+            </button>
+
+
+            <button type="button"
+                    class="btn-modal-no"
+                    onclick="cerrarConfirmacion()">
+
+                No
+
+            </button>
+
+
+            <button type="button"
+                    class="btn-modal-cancelar"
+                    onclick="cerrarConfirmacion()">
+
+                Cancelar
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<style>
+
+    .usuarios-card {
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+
+    .tabla-contenedor {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        box-sizing: border-box;
+    }
+
+
+    .tabla-usuarios {
+        width: 100%;
+        max-width: 100%;
+        table-layout: fixed;
+        box-sizing: border-box;
+    }
+
+
+    .tabla-usuarios th,
+    .tabla-usuarios td {
+        box-sizing: border-box;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+    }
+
+
+    .tabla-usuarios th:last-child,
+    .tabla-usuarios td:last-child {
+        width: 170px;
+    }
+
+
+    .acciones-contenido {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        flex-wrap: wrap;
+    }
+
+
+    .contenedor-navegacion {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+
+        margin-top: 30px;
+        margin-bottom: 30px;
+
+        flex-wrap: wrap;
+    }
+
+
+    .btn-inactivos {
+        display: inline-block;
+
+        padding: 12px 22px;
+
+        background-color: #59636b;
+        color: white;
+
+        border-radius: 7px;
+
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+
+    .btn-inactivos:hover {
+        background-color: #474f55;
+        color: white;
+    }
+
+
+    .btn-volver-usuarios {
+        display: inline-block;
+
+        padding: 12px 22px;
+
+        background-color: #1198a5;
+        color: white;
+
+        border-radius: 7px;
+
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+
+    .btn-volver-usuarios:hover {
+        background-color: #0d8490;
+        color: white;
+    }
+
+
+    /* =========================================
+       VENTANA DE CONFIRMACIÓN
+       ========================================= */
+
+    .modal-fondo {
+        display: none;
+
+        position: fixed;
+
+        top: 0;
+        left: 0;
+
+        width: 100%;
+        height: 100%;
+
+        background-color: rgba(0, 0, 0, 0.45);
+
+        align-items: center;
+        justify-content: center;
+
+        z-index: 9999;
+    }
+
+
+    .modal-contenido {
+        width: 90%;
+        max-width: 430px;
+
+        background-color: white;
+
+        border-radius: 15px;
+
+        padding: 30px;
+
+        text-align: center;
+
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+    }
+
+
+    .modal-icono {
+        width: 55px;
+        height: 55px;
+
+        margin: 0 auto 15px auto;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background-color: #1198a5;
+        color: white;
+
+        border-radius: 50%;
+
+        font-size: 30px;
+        font-weight: bold;
+    }
+
+
+    .modal-contenido h2 {
+        margin-top: 0;
+
+        color: #003b64;
+    }
+
+
+    .modal-contenido p {
+        margin-top: 15px;
+        margin-bottom: 25px;
+
+        font-size: 17px;
+        color: #444;
+    }
+
+
+    .modal-botones {
+        display: flex;
+        justify-content: center;
+
+        gap: 10px;
+
+        flex-wrap: wrap;
+    }
+
+
+    .modal-botones button {
+        min-width: 90px;
+
+        padding: 10px 18px;
+
+        border: none;
+        border-radius: 7px;
+
+        color: white;
+
+        font-weight: 600;
+
+        cursor: pointer;
+    }
+
+
+    .btn-modal-si {
+        background-color: #198754;
+    }
+
+
+    .btn-modal-si:hover {
+        background-color: #157347;
+    }
+
+
+    .btn-modal-no {
+        background-color: #c82333;
+    }
+
+
+    .btn-modal-no:hover {
+        background-color: #a91d2a;
+    }
+
+
+    .btn-modal-cancelar {
+        background-color: #59636b;
+    }
+
+
+    .btn-modal-cancelar:hover {
+        background-color: #474f55;
+    }
+
+</style>
+
+
+<script>
+
+    let accionPendiente = null;
+
+
+    function confirmarEditar(enlace) {
+
+        accionPendiente = {
+            tipo: "editar",
+            url: enlace.href
+        };
+
+
+        document.getElementById(
+            "textoConfirmacion"
+        ).innerText =
+            "¿Quieres editar este usuario?";
+
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display = "flex";
+
+
+        return false;
+    }
+
+
+
+    function confirmarDesactivar(formulario) {
+
+        accionPendiente = {
+            tipo: "desactivar",
+            formulario: formulario
+        };
+
+
+        document.getElementById(
+            "textoConfirmacion"
+        ).innerText =
+            "¿Quieres desactivar este usuario?";
+
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display = "flex";
+
+
+        return false;
+    }
+
+
+
+    function realizarAccion() {
+
+        if (accionPendiente == null) {
+            return;
+        }
+
+
+        if (accionPendiente.tipo === "editar") {
+
+            window.location.href =
+                accionPendiente.url;
+
+        }
+
+
+        if (accionPendiente.tipo === "desactivar") {
+
+            accionPendiente
+                .formulario
+                .submit();
+
+        }
+
+    }
+
+
+
+    function cerrarConfirmacion() {
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display = "none";
+
+
+        accionPendiente = null;
+    }
+
+</script>

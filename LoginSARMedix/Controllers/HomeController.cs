@@ -9,20 +9,27 @@ namespace LoginSARMedix.Controllers
         private readonly UsuarioRepository _usuarioRepository;
         private readonly ProductoRepository _productoRepository;
         private readonly LoteRepository _loteRepository;
+        private readonly PermisoRepository _permisoRepository;
+
 
         public HomeController(
             UsuarioRepository usuarioRepository,
             ProductoRepository productoRepository,
-            LoteRepository loteRepository)
+            LoteRepository loteRepository,
+            PermisoRepository permisoRepository)
         {
             _usuarioRepository = usuarioRepository;
             _productoRepository = productoRepository;
             _loteRepository = loteRepository;
+            _permisoRepository = permisoRepository;
         }
 
 
 
-        //Iniciar sesion VISTA
+        //==================================================
+        // INICIO DE SESION
+        //==================================================
+
         [HttpGet]
         public IActionResult Index()
         {
@@ -30,204 +37,1155 @@ namespace LoginSARMedix.Controllers
         }
 
 
-        //Iniciar sesion POST
         [HttpPost]
-        public async Task<IActionResult> InicioSesion(Usuario reg)
+        public async Task<IActionResult> InicioSesion(
+            Usuario reg)
         {
-            var usuario = await _usuarioRepository.IniciarSesion(
-                reg.nombre_usuario,
-                reg.contrasena
-            );
+            var usuario =
+                await _usuarioRepository.IniciarSesion(
+                    reg.nombre_usuario,
+                    reg.contrasena
+                );
+
 
             if (usuario != null)
             {
-                var permisos = await _usuarioRepository.ObtenerPermisos(usuario.id_rol);
+                var permisos =
+                    await _usuarioRepository.ObtenerPermisos(
+                        usuario.id_rol
+                    );
 
-                HttpContext.Session.SetString("Nombre", usuario.nombre ?? "");
-                HttpContext.Session.SetString("Apellido", usuario.apellido ?? "");
-                HttpContext.Session.SetString("Rol", usuario.rol ?? "");
+
+                HttpContext.Session.SetString(
+                    "Nombre",
+                    usuario.nombre ?? ""
+                );
+
+
+                HttpContext.Session.SetString(
+                    "Apellido",
+                    usuario.apellido ?? ""
+                );
+
+
+                HttpContext.Session.SetString(
+                    "Rol",
+                    usuario.rol ?? ""
+                );
+
 
                 HttpContext.Session.SetString(
                     "Permisos",
                     string.Join("|", permisos)
                 );
 
+
                 return RedirectToAction("Modulos");
             }
             else
             {
-                ViewBag.Mensaje = "Usuario o contraseña incorrectos";
+                ViewBag.Mensaje =
+                    "Usuario o contraseña incorrectos";
 
                 return View("Index");
             }
         }
 
 
-        //MODULOS
+
+        //==================================================
+        // CERRAR SESION
+        //==================================================
+
+        [HttpPost]
+        public IActionResult CerrarSesion()
+        {
+            HttpContext.Session.Clear();
+
+            TempData["Mensaje"] =
+                "Sesión cerrada correctamente";
+
+            TempData["TipoMensaje"] =
+                "exito";
+
+            return RedirectToAction("Index");
+        }
+
+
+
+        //==================================================
+        // PANTALLA PRINCIPAL DE MODULOS
+        //==================================================
+
         [HttpGet]
         public IActionResult Modulos()
         {
-            string? nombre = HttpContext.Session.GetString("Nombre");
+            string? nombre =
+                HttpContext.Session.GetString(
+                    "Nombre"
+                );
+
 
             if (nombre == null)
             {
                 return RedirectToAction("Index");
             }
 
+
             ViewBag.Nombre = nombre;
 
+
             ViewBag.Apellido =
-                HttpContext.Session.GetString("Apellido");
+                HttpContext.Session.GetString(
+                    "Apellido"
+                );
+
 
             ViewBag.Rol =
-                HttpContext.Session.GetString("Rol");
+                HttpContext.Session.GetString(
+                    "Rol"
+                );
+
 
             string permisosTexto =
-                HttpContext.Session.GetString("Permisos") ?? "";
+                HttpContext.Session.GetString(
+                    "Permisos"
+                ) ?? "";
 
-            ViewBag.Permisos = permisosTexto
-                .Split('|', StringSplitOptions.RemoveEmptyEntries)
-                .ToList();
+
+            ViewBag.Permisos =
+                permisosTexto
+                    .Split(
+                        '|',
+                        StringSplitOptions.RemoveEmptyEntries
+                    )
+                    .ToList();
+
 
             return View("Bienvenida");
         }
 
 
-        //USUARIOS Y PERMISOS
+
+        //==================================================
+        // ACCESO DENEGADO
+        //==================================================
+
         [HttpGet]
-        public IActionResult UsuariosPermisos()
+        public IActionResult AccesoDenegado()
         {
-            return View("~/Views/Home/Modulos/UsuariosPermisos.cshtml");
-        }
+            string? nombre =
+                HttpContext.Session.GetString(
+                    "Nombre"
+                );
 
 
-        //PRODUCTOS
-        [HttpGet]
-        public IActionResult Productos()
-        {
-            return View("~/Views/Home/Modulos/Productos.cshtml");
-        }
+            if (nombre == null)
+            {
+                return RedirectToAction("Index");
+            }
 
 
-        //MOVIMIENTOS E HISTORIAL
-        [HttpGet]
-        public IActionResult MovimientoHistorial()
-        {
-            return View("~/Views/Home/Modulos/MovimientoHistorial.cshtml");
-        }
+            ViewBag.Nombre = nombre;
+
+            ViewBag.Apellido =
+                HttpContext.Session.GetString(
+                    "Apellido"
+                );
+
+            ViewBag.Rol =
+                HttpContext.Session.GetString(
+                    "Rol"
+                );
 
 
-        //MEDICAMENTOS CONTROLADOS
-        [HttpGet]
-        public IActionResult MedicamentosControlados()
-        {
-            return View("~/Views/Home/Modulos/MedicamentosControlados.cshtml");
-        }
-
-
-        //CREAR USUARIO VISTA
-        [HttpGet]
-        public IActionResult CrearUsuario()
-        {
             return View();
         }
 
 
-        //CREAR USUARIO POST
-        [HttpPost]
-        public async Task<IActionResult> NuevoUsuario(Usuario reg)
+
+        //==================================================
+        // MODULO USUARIOS Y PERMISOS
+        //==================================================
+
+        [HttpGet]
+        public IActionResult UsuariosPermisos()
         {
-            var resultado = await _usuarioRepository.CrearUsuario(reg);
+            if (!TieneAlgunPermiso(
+                    "Crear usuario",
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            ViewBag.Nombre =
+                HttpContext.Session.GetString(
+                    "Nombre"
+                );
+
+            ViewBag.Apellido =
+                HttpContext.Session.GetString(
+                    "Apellido"
+                );
+
+            ViewBag.Rol =
+                HttpContext.Session.GetString(
+                    "Rol"
+                );
+
+
+            return View(
+                "~/Views/Home/Modulos/UsuariosPermisos.cshtml"
+            );
+        }
+
+
+
+        //==================================================
+        // PRODUCTOS
+        //==================================================
+
+        [HttpGet]
+        public IActionResult Productos()
+        {
+            if (!TieneAlgunPermiso(
+                    "Consultar productos",
+                    "Registrar productos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            return View(
+                "~/Views/Home/Modulos/Productos.cshtml"
+            );
+        }
+
+
+
+        //==================================================
+        // MOVIMIENTOS E HISTORIAL
+        //==================================================
+
+        [HttpGet]
+        public IActionResult MovimientoHistorial()
+        {
+            if (!TieneAlgunPermiso(
+                    "Registrar movimientos",
+                    "Consultar historial"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            return View(
+                "~/Views/Home/Modulos/MovimientoHistorial.cshtml"
+            );
+        }
+
+
+
+        //==================================================
+        // MEDICAMENTOS CONTROLADOS
+        //==================================================
+
+        [HttpGet]
+        public IActionResult MedicamentosControlados()
+        {
+            if (!TienePermiso(
+                    "Gestionar medicamentos controlados"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            return View(
+                "~/Views/Home/Modulos/MedicamentosControlados.cshtml"
+            );
+        }
+
+
+
+        //==================================================
+        // CREAR USUARIO
+        //==================================================
+
+        [HttpGet]
+        public IActionResult CrearUsuario()
+        {
+            if (!TienePermiso(
+                    "Crear usuario"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            return View();
+        }
+
+
+
+        //==================================================
+        // NUEVO USUARIO
+        //==================================================
+
+        [HttpPost]
+        public async Task<IActionResult> NuevoUsuario(
+            Usuario reg)
+        {
+            if (!TienePermiso(
+                    "Crear usuario"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var resultado =
+                await _usuarioRepository
+                    .CrearUsuario(
+                        reg
+                    );
+
 
             if (resultado)
             {
-                ViewBag.Mensaje = "Usuario creado correctamente";
+                TempData["Mensaje"] =
+                    "Usuario creado correctamente";
 
-                return View("Index");
+                TempData["TipoMensaje"] =
+                    "exito";
+
+
+                return RedirectToAction(
+                    "CrearUsuario"
+                );
             }
             else
             {
-                ViewBag.Mensaje = "No se pudo crear el usuario: nombre de usuario existente";
+                ViewBag.Mensaje =
+                    "No se pudo crear el usuario: RUT o nombre de usuario existente";
 
-                return View("CrearUsuario", reg);
+
+                return View(
+                    "CrearUsuario",
+                    reg
+                );
             }
         }
 
 
-        //LISTADO DE USUARIOS
+
+        //==================================================
+        // LISTADO DE USUARIOS
+        //==================================================
+
         [HttpGet]
         public async Task<IActionResult> Usuarios()
         {
-            var listado = await _usuarioRepository.ListadoUsuarios();
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var listado =
+                await _usuarioRepository
+                    .ListadoUsuarios();
+
 
             return View(listado);
         }
 
 
-        //DESACTIVAR USUARIO
-        [HttpPost]
-        public async Task<IActionResult> DesactivarUsuario(int idUsuario)
-        {
-            await _usuarioRepository.DesactivarUsuario(idUsuario);
 
-            return RedirectToAction("Usuarios");
+        //==================================================
+        // DESACTIVAR USUARIO
+        //==================================================
+
+        [HttpPost]
+        public async Task<IActionResult> DesactivarUsuario(
+            int idUsuario)
+        {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var resultado =
+                await _usuarioRepository
+                    .DesactivarUsuario(
+                        idUsuario
+                    );
+
+
+            if (resultado)
+            {
+                TempData["Mensaje"] =
+                    "Usuario desactivado correctamente";
+
+                TempData["TipoMensaje"] =
+                    "exito";
+            }
+            else
+            {
+                TempData["Mensaje"] =
+                    "No se pudo desactivar el usuario";
+
+                TempData["TipoMensaje"] =
+                    "error";
+            }
+
+
+            return RedirectToAction(
+                "Usuarios"
+            );
         }
 
 
-        //EDITAR USUARIO VISTA
+
+        //==================================================
+        // EDITAR USUARIO
+        //==================================================
+
         [HttpGet]
-        public async Task<IActionResult> EditarUsuario(int idUsuario)
+        public async Task<IActionResult> EditarUsuario(
+            int idUsuario)
         {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
             var usuario =
-                await _usuarioRepository.ObtenerUsuarioPorId(idUsuario);
+                await _usuarioRepository
+                    .ObtenerUsuarioPorId(
+                        idUsuario
+                    );
+
 
             if (usuario == null)
             {
-                return RedirectToAction("Usuarios");
+                return RedirectToAction(
+                    "Usuarios"
+                );
             }
+
 
             return View(usuario);
         }
 
 
-        //ACTUALIZAR USUARIO POST
+
+        //==================================================
+        // ACTUALIZAR USUARIO
+        //==================================================
+
         [HttpPost]
-        public async Task<IActionResult> ActualizarUsuario(Usuario reg)
+        public async Task<IActionResult> ActualizarUsuario(
+            Usuario reg)
         {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
             var resultado =
-                await _usuarioRepository.ActualizarUsuario(reg);
+                await _usuarioRepository
+                    .ActualizarUsuario(
+                        reg
+                    );
+
 
             if (resultado)
             {
-                return RedirectToAction("Usuarios");
+                return RedirectToAction(
+                    "Usuarios"
+                );
             }
             else
             {
-                ViewBag.Mensaje = "No se pudo actualizar el usuario";
+                ViewBag.Mensaje =
+                    "No se pudo actualizar el usuario";
 
-                return View("EditarUsuario", reg);
+
+                return View(
+                    "EditarUsuario",
+                    reg
+                );
             }
         }
 
 
-        //LISTADO DE USUARIOS INACTIVOS
+
+        //==================================================
+        // USUARIOS INACTIVOS
+        //==================================================
+
         [HttpGet]
-        public async Task<IActionResult> ListadoEliminarUsuarios()
+        public async Task<IActionResult>
+            ListadoEliminarUsuarios()
         {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
             var listado =
-                await _usuarioRepository.ListadoEliminarUsuarios();
+                await _usuarioRepository
+                    .ListadoEliminarUsuarios();
+
 
             return View(listado);
         }
 
 
-        //ELIMINAR USUARIO
-        [HttpPost]
-        public async Task<IActionResult> EliminarUsuario(int idUsuario)
-        {
-            await _usuarioRepository.EliminarUsuario(idUsuario);
 
-            return RedirectToAction("ListadoEliminarUsuarios");
+        //==================================================
+        // REACTIVAR USUARIO
+        //==================================================
+
+        [HttpPost]
+        public async Task<IActionResult> ReactivarUsuario(
+            int idUsuario)
+        {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var resultado =
+                await _usuarioRepository
+                    .ReactivarUsuario(
+                        idUsuario
+                    );
+
+
+            if (resultado)
+            {
+                TempData["Mensaje"] =
+                    "Usuario reactivado correctamente";
+
+                TempData["TipoMensaje"] =
+                    "exito";
+            }
+            else
+            {
+                TempData["Mensaje"] =
+                    "No se pudo reactivar el usuario";
+
+                TempData["TipoMensaje"] =
+                    "error";
+            }
+
+
+            return RedirectToAction(
+                "ListadoEliminarUsuarios"
+            );
+        }
+
+
+
+        //==================================================
+        // ELIMINAR USUARIO
+        //==================================================
+
+        [HttpPost]
+        public async Task<IActionResult> EliminarUsuario(
+            int idUsuario)
+        {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            await _usuarioRepository
+                .EliminarUsuario(
+                    idUsuario
+                );
+
+
+            return RedirectToAction(
+                "ListadoEliminarUsuarios"
+            );
+        }
+
+
+
+        //==================================================
+        // ROLES Y PERMISOS
+        //==================================================
+
+        [HttpGet]
+        public async Task<IActionResult> RolesPermisos(
+            int? idRol)
+        {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            ViewBag.Nombre =
+                HttpContext.Session.GetString(
+                    "Nombre"
+                );
+
+            ViewBag.Apellido =
+                HttpContext.Session.GetString(
+                    "Apellido"
+                );
+
+            ViewBag.Rol =
+                HttpContext.Session.GetString(
+                    "Rol"
+                );
+
+
+            var roles =
+                await _permisoRepository
+                    .ListadoRoles();
+
+
+            var permisos =
+                await _permisoRepository
+                    .ListadoPermisos();
+
+
+            List<int> permisosRol =
+                new List<int>();
+
+
+            if (idRol.HasValue)
+            {
+                permisosRol =
+                    await _permisoRepository
+                        .PermisosPorRol(
+                            idRol.Value
+                        );
+            }
+
+
+            ViewBag.Roles = roles;
+            ViewBag.Permisos = permisos;
+            ViewBag.PermisosRol = permisosRol;
+            ViewBag.IdRol = idRol;
+
+
+            return View();
+        }
+
+
+
+        //==================================================
+        // GUARDAR PERMISOS
+        //==================================================
+
+        [HttpPost]
+        public async Task<IActionResult> GuardarPermisos(
+            int idRol,
+            List<int>? permisosSeleccionados)
+        {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            permisosSeleccionados ??=
+                new List<int>();
+
+
+            var resultado =
+                await _permisoRepository
+                    .ActualizarPermisosRol(
+                        idRol,
+                        permisosSeleccionados
+                    );
+
+
+            if (resultado)
+            {
+                TempData["Mensaje"] =
+                    "Permisos actualizados correctamente";
+
+                TempData["TipoMensaje"] =
+                    "exito";
+            }
+            else
+            {
+                TempData["Mensaje"] =
+                    "No se pudieron actualizar los permisos";
+
+                TempData["TipoMensaje"] =
+                    "error";
+            }
+
+
+            return RedirectToAction(
+                "RolesPermisos",
+                new
+                {
+                    idRol = idRol
+                }
+            );
+        }
+
+
+
+        //==================================================
+        // CREAR ROL
+        //==================================================
+
+        [HttpGet]
+        public IActionResult CrearRol()
+        {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            ViewBag.Nombre =
+                HttpContext.Session.GetString(
+                    "Nombre"
+                );
+
+            ViewBag.Apellido =
+                HttpContext.Session.GetString(
+                    "Apellido"
+                );
+
+            ViewBag.Rol =
+                HttpContext.Session.GetString(
+                    "Rol"
+                );
+
+
+            return View();
+        }
+
+
+
+        //==================================================
+        // NUEVO ROL
+        //==================================================
+
+        [HttpPost]
+        public async Task<IActionResult> NuevoRol(
+            Rol reg)
+        {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var resultado =
+                await _permisoRepository
+                    .CrearRol(
+                        reg
+                    );
+
+
+            if (resultado)
+            {
+                TempData["Mensaje"] =
+                    "Rol creado correctamente";
+
+                TempData["TipoMensaje"] =
+                    "exito";
+
+
+                return RedirectToAction(
+                    "RolesPermisos"
+                );
+            }
+            else
+            {
+                ViewBag.Nombre =
+                    HttpContext.Session.GetString(
+                        "Nombre"
+                    );
+
+                ViewBag.Apellido =
+                    HttpContext.Session.GetString(
+                        "Apellido"
+                    );
+
+                ViewBag.Rol =
+                    HttpContext.Session.GetString(
+                        "Rol"
+                    );
+
+                ViewBag.Mensaje =
+                    "No se pudo crear el rol. El nombre ya existe.";
+
+
+                return View(
+                    "CrearRol",
+                    reg
+                );
+            }
+        }
+
+
+
+        //==================================================
+        // EDITAR ROL
+        //==================================================
+
+        [HttpGet]
+        public async Task<IActionResult> EditarRol(
+            int idRol)
+        {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var rol =
+                await _permisoRepository
+                    .ObtenerRolPorId(
+                        idRol
+                    );
+
+
+            if (rol == null)
+            {
+                TempData["Mensaje"] =
+                    "No se encontró el rol seleccionado";
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "RolesPermisos"
+                );
+            }
+
+
+            ViewBag.Nombre =
+                HttpContext.Session.GetString(
+                    "Nombre"
+                );
+
+            ViewBag.Apellido =
+                HttpContext.Session.GetString(
+                    "Apellido"
+                );
+
+            ViewBag.Rol =
+                HttpContext.Session.GetString(
+                    "Rol"
+                );
+
+
+            return View(rol);
+        }
+
+
+
+        //==================================================
+        // ACTUALIZAR ROL
+        //==================================================
+
+        [HttpPost]
+        public async Task<IActionResult> ActualizarRol(
+            Rol reg)
+        {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var resultado =
+                await _permisoRepository
+                    .ActualizarRol(
+                        reg
+                    );
+
+
+            if (resultado)
+            {
+                TempData["Mensaje"] =
+                    "Rol actualizado correctamente";
+
+                TempData["TipoMensaje"] =
+                    "exito";
+
+
+                return RedirectToAction(
+                    "RolesPermisos",
+                    new
+                    {
+                        idRol = reg.id_rol
+                    }
+                );
+            }
+            else
+            {
+                ViewBag.Nombre =
+                    HttpContext.Session.GetString(
+                        "Nombre"
+                    );
+
+                ViewBag.Apellido =
+                    HttpContext.Session.GetString(
+                        "Apellido"
+                    );
+
+                ViewBag.Rol =
+                    HttpContext.Session.GetString(
+                        "Rol"
+                    );
+
+                ViewBag.Mensaje =
+                    "No se pudo actualizar el rol. El nombre ya existe.";
+
+
+                return View(
+                    "EditarRol",
+                    reg
+                );
+            }
+        }
+
+
+
+        //==================================================
+        // DESACTIVAR ROL
+        //==================================================
+
+        [HttpPost]
+        public async Task<IActionResult> DesactivarRol(
+            int idRol)
+        {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var resultado =
+                await _permisoRepository
+                    .DesactivarRol(
+                        idRol
+                    );
+
+
+            if (resultado)
+            {
+                TempData["Mensaje"] =
+                    "Rol desactivado correctamente";
+
+                TempData["TipoMensaje"] =
+                    "exito";
+            }
+            else
+            {
+                TempData["Mensaje"] =
+                    "No se pudo desactivar el rol";
+
+                TempData["TipoMensaje"] =
+                    "error";
+            }
+
+
+            return RedirectToAction(
+                "RolesPermisos"
+            );
+        }
+
+
+
+        //==================================================
+        // ROLES INACTIVOS
+        //==================================================
+
+        [HttpGet]
+        public async Task<IActionResult> RolesInactivos()
+        {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            ViewBag.Nombre =
+                HttpContext.Session.GetString(
+                    "Nombre"
+                );
+
+            ViewBag.Apellido =
+                HttpContext.Session.GetString(
+                    "Apellido"
+                );
+
+            ViewBag.Rol =
+                HttpContext.Session.GetString(
+                    "Rol"
+                );
+
+
+            var listado =
+                await _permisoRepository
+                    .ListadoRolesInactivos();
+
+
+            return View(listado);
+        }
+
+
+
+        //==================================================
+        // REACTIVAR ROL
+        //==================================================
+
+        [HttpPost]
+        public async Task<IActionResult> ReactivarRol(
+            int idRol)
+        {
+            if (!TienePermiso(
+                    "Gestionar usuarios y permisos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var resultado =
+                await _permisoRepository
+                    .ReactivarRol(
+                        idRol
+                    );
+
+
+            if (resultado)
+            {
+                TempData["Mensaje"] =
+                    "Rol reactivado correctamente";
+
+                TempData["TipoMensaje"] =
+                    "exito";
+            }
+            else
+            {
+                TempData["Mensaje"] =
+                    "No se pudo reactivar el rol";
+
+                TempData["TipoMensaje"] =
+                    "error";
+            }
+
+
+            return RedirectToAction(
+                "RolesInactivos"
+            );
+        }
+
+
+
+        //==================================================
+        // VERIFICAR UN PERMISO
+        //==================================================
+
+        private bool TienePermiso(
+            string permiso)
+        {
+            string permisosTexto =
+                HttpContext.Session.GetString(
+                    "Permisos"
+                ) ?? "";
+
+
+            var permisos =
+                permisosTexto
+                    .Split(
+                        '|',
+                        StringSplitOptions.RemoveEmptyEntries
+                    );
+
+
+            return permisos.Any(
+                p => p.Equals(
+                    permiso,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            );
+        }
+
+
+
+        //==================================================
+        // VERIFICAR VARIOS PERMISOS
+        //==================================================
+
+        private bool TieneAlgunPermiso(
+            params string[] permisosRequeridos)
+        {
+            foreach (
+                string permiso
+                in permisosRequeridos)
+            {
+                if (TienePermiso(permiso))
+                {
+                    return true;
+                }
+            }
+
+
+            return false;
+        }
+
+
+
+        //==================================================
+        // ACCESO NO AUTORIZADO
+        //==================================================
+
+        private IActionResult AccesoNoAutorizado()
+        {
+            string? nombre =
+                HttpContext.Session.GetString(
+                    "Nombre"
+                );
+
+
+            if (nombre == null)
+            {
+                return RedirectToAction(
+                    "Index"
+                );
+            }
+
+
+            return RedirectToAction(
+                "AccesoDenegado"
+            );
         }
 
 
@@ -260,7 +1218,8 @@ namespace LoginSARMedix.Controllers
 
             if (resultado)
             {
-                ViewBag.Mensaje = "Producto registrado correctamente";
+                ViewBag.Mensaje =
+                    "Producto registrado correctamente";
 
                 return View("CrearProducto");
             }
@@ -269,7 +1228,10 @@ namespace LoginSARMedix.Controllers
                 ViewBag.Mensaje =
                     "No se pudo registrar el producto";
 
-                return View("CrearProducto", reg);
+                return View(
+                    "CrearProducto",
+                    reg
+                );
             }
         }
 
@@ -284,42 +1246,61 @@ namespace LoginSARMedix.Controllers
             var listado =
                 await _productoRepository.ListadoProductos();
 
-            return View("Productos", listado);
+            return View(
+                "Productos",
+                listado
+            );
         }
 
 
         //EDITAR PRODUCTO VISTA
         [HttpGet]
-        public async Task<IActionResult> EditarProducto(int idProducto)
+        public async Task<IActionResult> EditarProducto(
+            int idProducto)
         {
             var producto =
-                await _productoRepository.ObtenerProductoPorId(idProducto);
+                await _productoRepository
+                    .ObtenerProductoPorId(
+                        idProducto
+                    );
 
             if (producto == null)
             {
-                return RedirectToAction("ListadoProductos2");
+                return RedirectToAction(
+                    "ListadoProductos2"
+                );
             }
 
             return View(producto);
         }
 
+
         //ACTUALIZAR PRODUCTO POST
         [HttpPost]
-        public async Task<IActionResult> ActualizarProducto(Producto reg)
+        public async Task<IActionResult> ActualizarProducto(
+            Producto reg)
         {
             var resultado =
-                await _productoRepository.ActualizarProducto(reg);
+                await _productoRepository
+                    .ActualizarProducto(
+                        reg
+                    );
 
             if (resultado)
             {
-                return RedirectToAction("ListadoProductos2");
+                return RedirectToAction(
+                    "ListadoProductos2"
+                );
             }
             else
             {
                 ViewBag.Mensaje =
                     "No se pudo actualizar el producto";
 
-                return View("EditarProducto", reg);
+                return View(
+                    "EditarProducto",
+                    reg
+                );
             }
         }
 
@@ -336,10 +1317,12 @@ namespace LoginSARMedix.Controllers
         public async Task<IActionResult> CrearLote()
         {
             ViewBag.Productos =
-                await _loteRepository.ListadoProductos();
+                await _loteRepository
+                    .ListadoProductos();
 
             ViewBag.Ubicaciones =
-                await _loteRepository.ListadoUbicaciones();
+                await _loteRepository
+                    .ListadoUbicaciones();
 
             return View();
         }
@@ -348,10 +1331,14 @@ namespace LoginSARMedix.Controllers
 
         //CREAR LOTE POST
         [HttpPost]
-        public async Task<IActionResult> NuevoLote(Lote reg)
+        public async Task<IActionResult> NuevoLote(
+            Lote reg)
         {
             var resultado =
-                await _loteRepository.CrearLote(reg);
+                await _loteRepository
+                    .CrearLote(
+                        reg
+                    );
 
             if (resultado)
             {
@@ -359,10 +1346,12 @@ namespace LoginSARMedix.Controllers
                     "Lote registrado correctamente";
 
                 ViewBag.Productos =
-                    await _loteRepository.ListadoProductos();
+                    await _loteRepository
+                        .ListadoProductos();
 
                 ViewBag.Ubicaciones =
-                    await _loteRepository.ListadoUbicaciones();
+                    await _loteRepository
+                        .ListadoUbicaciones();
 
                 return View("CrearLote");
             }
@@ -372,21 +1361,28 @@ namespace LoginSARMedix.Controllers
                     "No se pudo registrar el lote";
 
                 ViewBag.Productos =
-                    await _loteRepository.ListadoProductos();
+                    await _loteRepository
+                        .ListadoProductos();
 
                 ViewBag.Ubicaciones =
-                    await _loteRepository.ListadoUbicaciones();
+                    await _loteRepository
+                        .ListadoUbicaciones();
 
-                return View("CrearLote", reg);
+                return View(
+                    "CrearLote",
+                    reg
+                );
             }
         }
+
 
         //LISTADO DE LOTES
         [HttpGet]
         public async Task<IActionResult> Lotes()
         {
             var listado =
-                await _loteRepository.ListadoLotes();
+                await _loteRepository
+                    .ListadoLotes();
 
             return View(listado);
         }
@@ -396,21 +1392,29 @@ namespace LoginSARMedix.Controllers
 
         //EDITAR LOTE VISTA
         [HttpGet]
-        public async Task<IActionResult> EditarLote(int idLote)
+        public async Task<IActionResult> EditarLote(
+            int idLote)
         {
             var lote =
-                await _loteRepository.ObtenerLotePorId(idLote);
+                await _loteRepository
+                    .ObtenerLotePorId(
+                        idLote
+                    );
 
             if (lote == null)
             {
-                return RedirectToAction("Lotes");
+                return RedirectToAction(
+                    "Lotes"
+                );
             }
 
             ViewBag.Productos =
-                await _loteRepository.ListadoProductos();
+                await _loteRepository
+                    .ListadoProductos();
 
             ViewBag.Ubicaciones =
-                await _loteRepository.ListadoUbicaciones();
+                await _loteRepository
+                    .ListadoUbicaciones();
 
             return View(lote);
         }
@@ -419,14 +1423,20 @@ namespace LoginSARMedix.Controllers
 
         //ACTUALIZAR LOTE POST
         [HttpPost]
-        public async Task<IActionResult> ActualizarLote(Lote reg)
+        public async Task<IActionResult> ActualizarLote(
+            Lote reg)
         {
             var resultado =
-                await _loteRepository.ActualizarLote(reg);
+                await _loteRepository
+                    .ActualizarLote(
+                        reg
+                    );
 
             if (resultado)
             {
-                return RedirectToAction("Lotes");
+                return RedirectToAction(
+                    "Lotes"
+                );
             }
             else
             {
@@ -434,16 +1444,18 @@ namespace LoginSARMedix.Controllers
                     "No se pudo actualizar el lote";
 
                 ViewBag.Productos =
-                    await _loteRepository.ListadoProductos();
+                    await _loteRepository
+                        .ListadoProductos();
 
                 ViewBag.Ubicaciones =
-                    await _loteRepository.ListadoUbicaciones();
+                    await _loteRepository
+                        .ListadoUbicaciones();
 
-                return View("EditarLote", reg);
+                return View(
+                    "EditarLote",
+                    reg
+                );
             }
         }
-
-
-
     }
 }

@@ -1,0 +1,1321 @@
+﻿@model List<LoginSARMedix.Models.Rol>
+
+@{
+    Layout = null;
+
+    string nombreCompleto =
+        ViewBag.Nombre + " " + ViewBag.Apellido;
+
+    string inicial =
+        !string.IsNullOrEmpty(ViewBag.Nombre?.ToString())
+        ? ViewBag.Nombre.ToString().Substring(0, 1).ToUpper()
+        : "U";
+}
+
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>Roles Inactivos - SARMedix</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            margin: 0;
+
+            font-family: "Segoe UI", Arial, sans-serif;
+
+            color: #17324d;
+
+            background:
+                linear-gradient(
+                    rgba(235, 247, 252, 0.82),
+                    rgba(235, 247, 252, 0.82)
+                ),
+                url('/images/fondo-clinico.png');
+
+            background-size: cover;
+
+            background-position: center;
+
+            background-attachment: fixed;
+
+            min-height: 100vh;
+
+            display: flex;
+
+            flex-direction: column;
+        }
+
+
+
+        /* ================================= */
+        /* BARRA SUPERIOR                    */
+        /* ================================= */
+
+        .barra-superior {
+            height: 82px;
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr 1fr;
+
+            align-items: center;
+
+            padding: 0 60px;
+
+            background: #0f5278;
+
+            color: white;
+
+            box-shadow:
+                0 3px 10px
+                rgba(0, 0, 0, 0.15);
+        }
+
+
+
+        /* ================================= */
+        /* LOGO                              */
+        /* ================================= */
+
+        .logo {
+            display: flex;
+
+            align-items: center;
+
+            gap: 14px;
+        }
+
+
+        .logo-cruz-medica {
+            width: 48px;
+            height: 48px;
+
+            background: white;
+
+            border-radius: 12px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            box-shadow:
+                0 4px 10px
+                rgba(0, 0, 0, 0.15);
+        }
+
+
+        .cruz {
+            position: relative;
+
+            width: 22px;
+            height: 22px;
+
+            display: block;
+        }
+
+
+        .cruz::before,
+        .cruz::after {
+            content: "";
+
+            position: absolute;
+
+            background: #0b6fb8;
+
+            border-radius: 3px;
+        }
+
+
+        .cruz::before {
+            width: 8px;
+            height: 22px;
+
+            left: 7px;
+            top: 0;
+        }
+
+
+        .cruz::after {
+            width: 22px;
+            height: 8px;
+
+            left: 0;
+            top: 7px;
+        }
+
+
+        .logo-texto {
+            font-size: 25px;
+
+            font-weight: 700;
+
+            color: white;
+
+            letter-spacing: 0.3px;
+
+            white-space: nowrap;
+        }
+
+
+
+        /* ================================= */
+        /* TITULO SUPERIOR                   */
+        /* ================================= */
+
+        .titulo-superior {
+            text-align: center;
+
+            font-size: 25px;
+
+            font-weight: 600;
+        }
+
+
+
+        /* ================================= */
+        /* USUARIO                           */
+        /* ================================= */
+
+        .usuario-superior {
+            display: flex;
+
+            justify-content: flex-end;
+
+            align-items: center;
+
+            gap: 16px;
+        }
+
+
+        .usuario-datos {
+            text-align: right;
+        }
+
+
+        .usuario-nombre {
+            display: block;
+
+            font-size: 16px;
+
+            font-weight: 600;
+        }
+
+
+        .usuario-rol {
+            display: block;
+
+            margin-top: 2px;
+
+            font-size: 13px;
+
+            opacity: 0.85;
+        }
+
+
+        .usuario-circulo {
+            width: 48px;
+            height: 48px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background:
+                rgba(255, 255, 255, 0.22);
+
+            font-size: 20px;
+
+            font-weight: 600;
+        }
+
+
+
+        /* ================================= */
+        /* CONTENIDO                         */
+        /* ================================= */
+
+        .contenedor {
+            width: 90%;
+
+            max-width: 1000px;
+
+            margin: 45px auto;
+
+            flex: 1;
+        }
+
+
+        .titulo {
+            text-align: center;
+
+            color: #087bc2;
+
+            font-size: 32px;
+
+            margin-bottom: 8px;
+        }
+
+
+        .descripcion {
+            text-align: center;
+
+            color: #687b89;
+
+            margin-bottom: 30px;
+
+            font-size: 16px;
+        }
+
+
+
+        /* ================================= */
+        /* MENSAJES                          */
+        /* ================================= */
+
+        .mensaje {
+            width: 100%;
+
+            margin-bottom: 22px;
+
+            padding: 14px 18px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            border-radius: 9px;
+
+            font-size: 15px;
+
+            font-weight: 600;
+
+            box-shadow:
+                0 4px 12px
+                rgba(0, 0, 0, 0.08);
+
+            transition:
+                opacity 0.4s ease,
+                transform 0.4s ease;
+        }
+
+
+        .mensaje.exito {
+            background: #e8f7ef;
+
+            border: 1px solid #9fd8b7;
+
+            color: #176b3a;
+        }
+
+
+        .mensaje.error {
+            background: #fdecec;
+
+            border: 1px solid #e5aaaa;
+
+            color: #a12828;
+        }
+
+
+        .mensaje-icono {
+            width: 28px;
+            height: 28px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: currentColor;
+
+            color: white;
+
+            font-weight: bold;
+        }
+
+
+
+        /* ================================= */
+        /* TARJETA                           */
+        /* ================================= */
+
+        .tarjeta {
+            background:
+                rgba(255, 255, 255, 0.96);
+
+            padding: 30px;
+
+            border-radius: 14px;
+
+            box-shadow:
+                0 7px 20px
+                rgba(28, 65, 95, 0.15);
+        }
+
+
+
+        /* ================================= */
+        /* TABLA                             */
+        /* ================================= */
+
+        .tabla-contenedor {
+            overflow-x: auto;
+        }
+
+
+        table {
+            width: 100%;
+
+            border-collapse: collapse;
+
+            background: white;
+        }
+
+
+        thead {
+            background: #0f5278;
+
+            color: white;
+        }
+
+
+        th,
+        td {
+            padding: 14px;
+
+            text-align: left;
+
+            border-bottom:
+                1px solid #dce6ec;
+        }
+
+
+        th {
+            font-size: 14px;
+
+            font-weight: 600;
+        }
+
+
+        td {
+            font-size: 14px;
+
+            color: #425d70;
+        }
+
+
+        tbody tr:hover {
+            background: #f5fafc;
+        }
+
+
+
+        /* ================================= */
+        /* ESTADO                            */
+        /* ================================= */
+
+        .estado-inactivo {
+            display: inline-block;
+
+            padding: 5px 10px;
+
+            background: #fdecec;
+
+            color: #a12828;
+
+            border-radius: 20px;
+
+            font-size: 12px;
+
+            font-weight: 600;
+        }
+
+
+
+        /* ================================= */
+        /* BOTON REACTIVAR                   */
+        /* ================================= */
+
+        .btn-reactivar {
+            padding: 9px 15px;
+
+            background: #0b8f9c;
+
+            color: white;
+
+            border: none;
+
+            border-radius: 6px;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition:
+                background 0.2s ease,
+                transform 0.2s ease;
+        }
+
+
+        .btn-reactivar:hover {
+            background: #087580;
+
+            transform: translateY(-1px);
+        }
+
+
+
+        /* ================================= */
+        /* SIN ROLES                         */
+        /* ================================= */
+
+        .sin-registros {
+            padding: 35px;
+
+            text-align: center;
+
+            color: #687b89;
+
+            background: #f8fbfd;
+
+            border: 1px dashed #c5d5df;
+
+            border-radius: 8px;
+        }
+
+
+
+        /* ================================= */
+        /* VOLVER                            */
+        /* ================================= */
+
+        .volver {
+            margin-top: 30px;
+
+            text-align: center;
+        }
+
+
+        .btn-volver {
+            display: inline-block;
+
+            padding: 11px 20px;
+
+            background: #0b8f9c;
+
+            color: white;
+
+            text-decoration: none;
+
+            border-radius: 7px;
+
+            font-weight: 600;
+        }
+
+
+        .btn-volver:hover {
+            background: #087580;
+
+            color: white;
+        }
+
+
+
+        /* ================================= */
+        /* VENTANA DE CONFIRMACION           */
+        /* ================================= */
+
+        .modal-fondo {
+            display: none;
+
+            position: fixed;
+
+            top: 0;
+            left: 0;
+
+            width: 100%;
+            height: 100%;
+
+            background:
+                rgba(0, 0, 0, 0.45);
+
+            align-items: center;
+
+            justify-content: center;
+
+            z-index: 9999;
+        }
+
+
+        .modal-contenido {
+            width: 90%;
+
+            max-width: 430px;
+
+            background: white;
+
+            border-radius: 15px;
+
+            padding: 30px;
+
+            text-align: center;
+
+            box-shadow:
+                0 12px 35px
+                rgba(0, 0, 0, 0.25);
+        }
+
+
+        .modal-icono {
+            width: 55px;
+            height: 55px;
+
+            margin:
+                0 auto 15px auto;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background: #1198a5;
+
+            color: white;
+
+            border-radius: 50%;
+
+            font-size: 30px;
+
+            font-weight: bold;
+        }
+
+
+        .modal-contenido h2 {
+            margin-top: 0;
+
+            color: #003b64;
+        }
+
+
+        .modal-contenido p {
+            margin-top: 15px;
+
+            margin-bottom: 25px;
+
+            font-size: 17px;
+
+            color: #444;
+        }
+
+
+        .modal-botones {
+            display: flex;
+
+            justify-content: center;
+
+            gap: 10px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .modal-botones button {
+            min-width: 90px;
+
+            padding: 10px 18px;
+
+            border: none;
+
+            border-radius: 7px;
+
+            color: white;
+
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+
+        .btn-modal-si {
+            background: #198754;
+        }
+
+
+        .btn-modal-si:hover {
+            background: #157347;
+        }
+
+
+        .btn-modal-no {
+            background: #c82333;
+        }
+
+
+        .btn-modal-no:hover {
+            background: #a91d2a;
+        }
+
+
+        .btn-modal-cancelar {
+            background: #59636b;
+        }
+
+
+        .btn-modal-cancelar:hover {
+            background: #474f55;
+        }
+
+
+
+        /* ================================= */
+        /* FOOTER                            */
+        /* ================================= */
+
+        .footer {
+            margin-top: auto;
+
+            padding: 18px;
+
+            background:
+                rgba(255, 255, 255, 0.90);
+
+            text-align: center;
+
+            color: #668092;
+
+            font-size: 13px;
+        }
+
+
+
+        /* ================================= */
+        /* RESPONSIVE                        */
+        /* ================================= */
+
+        @@media (max-width: 900px) {
+
+            .barra-superior {
+                grid-template-columns: 1fr 1fr;
+
+                height: auto;
+
+                min-height: 82px;
+
+                padding: 15px 25px;
+            }
+
+
+            .titulo-superior {
+                display: none;
+            }
+
+
+            .logo-texto {
+                font-size: 20px;
+            }
+
+
+            .contenedor {
+                width: 94%;
+
+                margin-top: 30px;
+            }
+        }
+
+
+        @@media (max-width: 600px) {
+
+            .barra-superior {
+                padding: 12px 15px;
+            }
+
+
+            .logo-cruz-medica {
+                width: 42px;
+
+                height: 42px;
+            }
+
+
+            .logo-texto {
+                font-size: 17px;
+            }
+
+
+            .usuario-nombre {
+                font-size: 14px;
+            }
+
+
+            .usuario-rol {
+                font-size: 11px;
+            }
+
+
+            .usuario-circulo {
+                width: 42px;
+
+                height: 42px;
+            }
+
+
+            .tarjeta {
+                padding: 18px;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- ================================= -->
+    <!-- BARRA SUPERIOR                    -->
+    <!-- ================================= -->
+
+    <header class="barra-superior">
+
+
+        <div class="logo">
+
+
+            <div class="logo-cruz-medica">
+
+                <span class="cruz"></span>
+
+            </div>
+
+
+            <div class="logo-texto">
+
+                SARMedix | SAR de Chiguay
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="titulo-superior">
+
+            Roles Inactivos
+
+        </div>
+
+
+
+        <div class="usuario-superior">
+
+
+            <div class="usuario-datos">
+
+
+                <span class="usuario-nombre">
+
+                    @nombreCompleto
+
+                </span>
+
+
+                <span class="usuario-rol">
+
+                    @ViewBag.Rol
+
+                </span>
+
+
+            </div>
+
+
+            <div class="usuario-circulo">
+
+                @inicial
+
+            </div>
+
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- ================================= -->
+    <!-- CONTENIDO                         -->
+    <!-- ================================= -->
+
+    <main class="contenedor">
+
+
+        <h1 class="titulo">
+
+            Roles Inactivos
+
+        </h1>
+
+
+        <p class="descripcion">
+
+            Aquí puede consultar los roles desactivados y reactivarlos cuando sea necesario.
+
+        </p>
+
+
+
+        <!-- ================================= -->
+        <!-- MENSAJE                           -->
+        <!-- ================================= -->
+
+        @if (TempData["Mensaje"] != null)
+        {
+            string tipo =
+                TempData["TipoMensaje"]?.ToString() ?? "exito";
+
+
+            <div class="mensaje @tipo"
+                 id="mensaje">
+
+
+                @if (tipo == "exito")
+                {
+                    <span class="mensaje-icono">
+
+                        ✓
+
+                    </span>
+                }
+                else
+                {
+                    <span class="mensaje-icono">
+
+                        !
+
+                    </span>
+                }
+
+
+                <span>
+
+                    @TempData["Mensaje"]
+
+                </span>
+
+
+            </div>
+        }
+
+
+
+        <!-- ================================= -->
+        <!-- TARJETA                           -->
+        <!-- ================================= -->
+
+        <div class="tarjeta">
+
+
+            @if (Model != null && Model.Count > 0)
+            {
+
+                <div class="tabla-contenedor">
+
+
+                    <table>
+
+
+                        <thead>
+
+
+                            <tr>
+
+                                <th>ID</th>
+
+                                <th>Nombre</th>
+
+                                <th>Descripción</th>
+
+                                <th>Estado</th>
+
+                                <th>Acción</th>
+
+                            </tr>
+
+
+                        </thead>
+
+
+
+                        <tbody>
+
+
+                            @foreach (var rol in Model)
+                            {
+
+                                <tr>
+
+
+                                    <td>
+
+                                        @rol.id_rol
+
+                                    </td>
+
+
+                                    <td>
+
+                                        @rol.nombre
+
+                                    </td>
+
+
+                                    <td>
+
+                                        @rol.descripcion
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span class="estado-inactivo">
+
+                                            Inactivo
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+
+                                        <form asp-controller="Home"
+                                              asp-action="ReactivarRol"
+                                              method="post"
+                                              onsubmit="return confirmarReactivacionRol(this)">
+
+
+                                            <input type="hidden"
+                                                   name="idRol"
+                                                   value="@rol.id_rol" />
+
+
+                                            <button type="submit"
+                                                    class="btn-reactivar">
+
+                                                Reactivar rol
+
+                                            </button>
+
+
+                                        </form>
+
+
+                                    </td>
+
+
+                                </tr>
+
+                            }
+
+
+                        </tbody>
+
+
+                    </table>
+
+
+                </div>
+
+            }
+            else
+            {
+
+                <div class="sin-registros">
+
+                    No existen roles inactivos actualmente.
+
+                </div>
+
+            }
+
+
+        </div>
+
+
+
+        <!-- ================================= -->
+        <!-- VOLVER                            -->
+        <!-- ================================= -->
+
+        <div class="volver">
+
+
+            <a asp-controller="Home"
+               asp-action="RolesPermisos"
+               class="btn-volver">
+
+                ← Volver a Roles y Permisos
+
+            </a>
+
+
+        </div>
+
+
+    </main>
+
+
+
+    <!-- ================================= -->
+    <!-- VENTANA DE CONFIRMACION           -->
+    <!-- ================================= -->
+
+    <div id="modalConfirmacion"
+         class="modal-fondo">
+
+
+        <div class="modal-contenido">
+
+
+            <div class="modal-icono">
+
+                ?
+
+            </div>
+
+
+            <h2>
+
+                Confirmar acción
+
+            </h2>
+
+
+            <p>
+
+                ¿Quieres reactivar este rol?
+
+            </p>
+
+
+            <div class="modal-botones">
+
+
+                <button type="button"
+                        class="btn-modal-si"
+                        onclick="reactivarRol()">
+
+                    Sí
+
+                </button>
+
+
+                <button type="button"
+                        class="btn-modal-no"
+                        onclick="cerrarConfirmacion()">
+
+                    No
+
+                </button>
+
+
+                <button type="button"
+                        class="btn-modal-cancelar"
+                        onclick="cancelarReactivacion()">
+
+                    Cancelar
+
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- ================================= -->
+    <!-- FOOTER                            -->
+    <!-- ================================= -->
+
+    <footer class="footer">
+
+        SARMedix · Sistema de Gestión Farmacéutica · SAR de Chiguay
+
+    </footer>
+
+
+
+    <script>
+
+        /*
+            Guarda el formulario correspondiente
+            al rol que se quiere reactivar.
+        */
+
+        let formularioRolPendiente = null;
+
+
+
+        // =================================
+        // PREGUNTAR ANTES DE REACTIVAR
+        // =================================
+
+        function confirmarReactivacionRol(formulario) {
+
+            formularioRolPendiente =
+                formulario;
+
+
+            document.getElementById(
+                "modalConfirmacion"
+            ).style.display =
+                "flex";
+
+
+            return false;
+        }
+
+
+
+        // =================================
+        // BOTON SI
+        // =================================
+
+        function reactivarRol() {
+
+            if (formularioRolPendiente == null) {
+
+                return;
+            }
+
+
+            document.getElementById(
+                "modalConfirmacion"
+            ).style.display =
+                "none";
+
+
+            /*
+                Envía el formulario del rol
+                seleccionado.
+            */
+
+            formularioRolPendiente.submit();
+        }
+
+
+
+        // =================================
+        // BOTON NO
+        // =================================
+
+        function cerrarConfirmacion() {
+
+            document.getElementById(
+                "modalConfirmacion"
+            ).style.display =
+                "none";
+
+
+            formularioRolPendiente =
+                null;
+        }
+
+
+
+        // =================================
+        // BOTON CANCELAR
+        // =================================
+
+        function cancelarReactivacion() {
+
+            document.getElementById(
+                "modalConfirmacion"
+            ).style.display =
+                "none";
+
+
+            formularioRolPendiente =
+                null;
+        }
+
+
+
+        // =================================
+        // OCULTAR MENSAJE
+        // =================================
+
+        setTimeout(function () {
+
+            let mensaje =
+                document.getElementById(
+                    "mensaje"
+                );
+
+
+            if (mensaje) {
+
+                mensaje.style.opacity =
+                    "0";
+
+
+                mensaje.style.transform =
+                    "translateY(-5px)";
+
+
+                setTimeout(function () {
+
+                    mensaje.style.display =
+                        "none";
+
+                }, 400);
+
+            }
+
+        }, 4000);
+
+    </script>
+
+
+</body>
+
+</html>

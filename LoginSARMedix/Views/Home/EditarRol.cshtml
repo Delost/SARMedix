@@ -1,0 +1,728 @@
+﻿@model LoginSARMedix.Models.Rol
+
+@{
+    Layout = null;
+
+    string nombreCompleto =
+        ViewBag.Nombre + " " + ViewBag.Apellido;
+
+    string inicial =
+        !string.IsNullOrEmpty(ViewBag.Nombre?.ToString())
+        ? ViewBag.Nombre.ToString().Substring(0, 1).ToUpper()
+        : "U";
+}
+
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>Editar Rol - SARMedix</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            margin: 0;
+
+            font-family: "Segoe UI", Arial, sans-serif;
+
+            color: #17324d;
+
+            background:
+                linear-gradient(
+                    rgba(235, 247, 252, 0.82),
+                    rgba(235, 247, 252, 0.82)
+                ),
+                url('/images/fondo-clinico.png');
+
+            background-size: cover;
+
+            background-position: center;
+
+            background-attachment: fixed;
+
+            min-height: 100vh;
+
+            display: flex;
+
+            flex-direction: column;
+        }
+
+
+
+        /* ================================= */
+        /* BARRA SUPERIOR                    */
+        /* ================================= */
+
+        .barra-superior {
+            height: 82px;
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr 1fr;
+
+            align-items: center;
+
+            padding: 0 60px;
+
+            background: #0f5278;
+
+            color: white;
+
+            box-shadow:
+                0 3px 10px
+                rgba(0, 0, 0, 0.15);
+        }
+
+
+
+        /* ================================= */
+        /* LOGO                              */
+        /* ================================= */
+
+        .logo {
+            display: flex;
+
+            align-items: center;
+
+            gap: 14px;
+        }
+
+
+        .logo-cruz-medica {
+            width: 48px;
+            height: 48px;
+
+            background: white;
+
+            border-radius: 12px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            box-shadow:
+                0 4px 10px
+                rgba(0, 0, 0, 0.15);
+        }
+
+
+        .cruz {
+            position: relative;
+
+            width: 22px;
+            height: 22px;
+
+            display: block;
+        }
+
+
+        .cruz::before,
+        .cruz::after {
+            content: "";
+
+            position: absolute;
+
+            background: #0b6fb8;
+
+            border-radius: 3px;
+        }
+
+
+        .cruz::before {
+            width: 8px;
+            height: 22px;
+
+            left: 7px;
+            top: 0;
+        }
+
+
+        .cruz::after {
+            width: 22px;
+            height: 8px;
+
+            left: 0;
+            top: 7px;
+        }
+
+
+        .logo-texto {
+            font-size: 25px;
+
+            font-weight: 700;
+
+            color: white;
+
+            white-space: nowrap;
+        }
+
+
+
+        /* ================================= */
+        /* TITULO SUPERIOR                   */
+        /* ================================= */
+
+        .titulo-superior {
+            text-align: center;
+
+            font-size: 25px;
+
+            font-weight: 600;
+        }
+
+
+
+        /* ================================= */
+        /* USUARIO                           */
+        /* ================================= */
+
+        .usuario-superior {
+            display: flex;
+
+            justify-content: flex-end;
+
+            align-items: center;
+
+            gap: 16px;
+        }
+
+
+        .usuario-datos {
+            text-align: right;
+        }
+
+
+        .usuario-nombre {
+            display: block;
+
+            font-size: 16px;
+
+            font-weight: 600;
+        }
+
+
+        .usuario-rol {
+            display: block;
+
+            margin-top: 2px;
+
+            font-size: 13px;
+
+            opacity: 0.85;
+        }
+
+
+        .usuario-circulo {
+            width: 48px;
+            height: 48px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background:
+                rgba(255, 255, 255, 0.22);
+
+            font-size: 20px;
+
+            font-weight: 600;
+        }
+
+
+
+        /* ================================= */
+        /* CONTENIDO                         */
+        /* ================================= */
+
+        .contenedor {
+            width: 90%;
+
+            max-width: 650px;
+
+            margin: 50px auto;
+
+            flex: 1;
+        }
+
+
+        .titulo {
+            text-align: center;
+
+            color: #087bc2;
+
+            font-size: 32px;
+
+            margin-bottom: 8px;
+        }
+
+
+        .descripcion {
+            text-align: center;
+
+            color: #687b89;
+
+            margin-bottom: 30px;
+
+            font-size: 16px;
+        }
+
+
+
+        /* ================================= */
+        /* TARJETA                           */
+        /* ================================= */
+
+        .tarjeta {
+            background:
+                rgba(255, 255, 255, 0.96);
+
+            padding: 35px;
+
+            border-radius: 14px;
+
+            box-shadow:
+                0 7px 20px
+                rgba(28, 65, 95, 0.15);
+        }
+
+
+
+        /* ================================= */
+        /* FORMULARIO                        */
+        /* ================================= */
+
+        .grupo {
+            margin-bottom: 22px;
+        }
+
+
+        .grupo label {
+            display: block;
+
+            margin-bottom: 8px;
+
+            font-weight: 600;
+
+            color: #17324d;
+        }
+
+
+        .grupo input,
+        .grupo textarea {
+            width: 100%;
+
+            padding: 12px;
+
+            border: 1px solid #b9cbd7;
+
+            border-radius: 7px;
+
+            font-family: inherit;
+
+            font-size: 15px;
+
+            color: #17324d;
+
+            background: white;
+        }
+
+
+        .grupo input:focus,
+        .grupo textarea:focus {
+            outline: none;
+
+            border-color: #087bc2;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(8, 123, 194, 0.10);
+        }
+
+
+        .grupo textarea {
+            min-height: 120px;
+
+            resize: vertical;
+        }
+
+
+
+        /* ================================= */
+        /* BOTON GUARDAR                     */
+        /* ================================= */
+
+        .btn-guardar {
+            width: 100%;
+
+            padding: 13px;
+
+            background: #0b8f9c;
+
+            color: white;
+
+            border: none;
+
+            border-radius: 7px;
+
+            font-size: 15px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+
+        .btn-guardar:hover {
+            background: #087580;
+        }
+
+
+
+        /* ================================= */
+        /* MENSAJE ERROR                     */
+        /* ================================= */
+
+        .mensaje-error {
+            margin-bottom: 22px;
+
+            padding: 14px 18px;
+
+            background: #fdecec;
+
+            border: 1px solid #e5aaaa;
+
+            color: #a12828;
+
+            border-radius: 9px;
+
+            font-size: 15px;
+
+            font-weight: 600;
+        }
+
+
+
+        /* ================================= */
+        /* VOLVER                            */
+        /* ================================= */
+
+        .volver {
+            margin-top: 30px;
+
+            text-align: center;
+        }
+
+
+        .btn-volver {
+            display: inline-block;
+
+            padding: 11px 20px;
+
+            background: #0b8f9c;
+
+            color: white;
+
+            text-decoration: none;
+
+            border-radius: 7px;
+
+            font-weight: 600;
+        }
+
+
+        .btn-volver:hover {
+            background: #087580;
+
+            color: white;
+        }
+
+
+
+        /* ================================= */
+        /* FOOTER                            */
+        /* ================================= */
+
+        .footer {
+            margin-top: auto;
+
+            padding: 18px;
+
+            background:
+                rgba(255, 255, 255, 0.90);
+
+            text-align: center;
+
+            color: #668092;
+
+            font-size: 13px;
+        }
+
+
+
+        /* ================================= */
+        /* RESPONSIVE                        */
+        /* ================================= */
+
+        @@media (max-width: 900px) {
+
+            .barra-superior {
+                grid-template-columns: 1fr 1fr;
+
+                height: auto;
+
+                min-height: 82px;
+
+                padding: 15px 25px;
+            }
+
+
+            .titulo-superior {
+                display: none;
+            }
+
+
+            .logo-texto {
+                font-size: 20px;
+            }
+
+
+            .contenedor {
+                width: 94%;
+
+                margin-top: 30px;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- ================================= -->
+    <!-- BARRA SUPERIOR                    -->
+    <!-- ================================= -->
+
+    <header class="barra-superior">
+
+
+        <div class="logo">
+
+
+            <div class="logo-cruz-medica">
+
+                <span class="cruz"></span>
+
+            </div>
+
+
+            <div class="logo-texto">
+
+                SARMedix | SAR de Chiguay
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="titulo-superior">
+
+            Editar Rol
+
+        </div>
+
+
+
+        <div class="usuario-superior">
+
+
+            <div class="usuario-datos">
+
+                <span class="usuario-nombre">
+
+                    @nombreCompleto
+
+                </span>
+
+
+                <span class="usuario-rol">
+
+                    @ViewBag.Rol
+
+                </span>
+
+            </div>
+
+
+            <div class="usuario-circulo">
+
+                @inicial
+
+            </div>
+
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- ================================= -->
+    <!-- CONTENIDO                         -->
+    <!-- ================================= -->
+
+    <main class="contenedor">
+
+
+        <h1 class="titulo">
+
+            Editar Rol
+
+        </h1>
+
+
+        <p class="descripcion">
+
+            Modifique el nombre o la descripción del rol seleccionado.
+
+        </p>
+
+
+
+        <div class="tarjeta">
+
+
+            @if (ViewBag.Mensaje != null)
+            {
+                <div class="mensaje-error">
+
+                    @ViewBag.Mensaje
+
+                </div>
+            }
+
+
+
+            <form asp-controller="Home"
+                  asp-action="ActualizarRol"
+                  method="post">
+
+
+                <input type="hidden"
+                       asp-for="id_rol" />
+
+
+
+                <div class="grupo">
+
+
+                    <label asp-for="nombre">
+
+                        Nombre del rol
+
+                    </label>
+
+
+                    <input asp-for="nombre"
+                           required />
+
+
+                </div>
+
+
+
+                <div class="grupo">
+
+
+                    <label asp-for="descripcion">
+
+                        Descripción
+
+                    </label>
+
+
+                    <textarea asp-for="descripcion"
+                              required></textarea>
+
+
+                </div>
+
+
+
+                <button type="submit"
+                        class="btn-guardar">
+
+                    Guardar cambios
+
+                </button>
+
+
+            </form>
+
+
+        </div>
+
+
+
+        <!-- ================================= -->
+        <!-- VOLVER                            -->
+        <!-- ================================= -->
+
+        <div class="volver">
+
+
+            <a asp-controller="Home"
+               asp-action="RolesPermisos"
+               asp-route-idRol="@Model.id_rol"
+               class="btn-volver">
+
+                ← Volver a Roles y Permisos
+
+            </a>
+
+
+        </div>
+
+
+    </main>
+
+
+
+    <!-- ================================= -->
+    <!-- FOOTER                            -->
+    <!-- ================================= -->
+
+    <footer class="footer">
+
+        SARMedix · Sistema de Gestión Farmacéutica · SAR de Chiguay
+
+    </footer>
+
+
+</body>
+
+</html>

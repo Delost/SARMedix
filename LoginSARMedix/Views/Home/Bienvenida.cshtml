@@ -42,287 +42,534 @@
 
     <style>
 
-            * {
-                box-sizing: border-box;
-            }
-
-            body {
-                margin: 0;
-                font-family: "Segoe UI", Arial, sans-serif;
-                background: #f1f5fb;
-                color: #17324d;
-            }
+        * {
+            box-sizing: border-box;
+        }
 
 
-            /* ================================= */
-            /* BARRA SUPERIOR                    */
-            /* ================================= */
+        body {
+            margin: 0;
+
+            min-height: 100vh;
+
+            display: flex;
+
+            flex-direction: column;
+
+            font-family: "Segoe UI", Arial, sans-serif;
+
+            background: #f1f5fb;
+
+            color: #17324d;
+        }
+
+
+
+        /* ================================= */
+        /* BARRA SUPERIOR                    */
+        /* ================================= */
+
+        .barra-superior {
+            height: 82px;
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr 1fr;
+
+            align-items: center;
+
+            padding: 0 60px;
+
+            background: #0f5278;
+
+            color: white;
+
+            box-shadow:
+                0 3px 10px
+                rgba(0,0,0,0.15);
+        }
+
+
+
+        /* ================================= */
+        /* LOGO                              */
+        /* ================================= */
+
+        .logo {
+            display: flex;
+
+            align-items: center;
+
+            gap: 14px;
+        }
+
+
+        .logo-cruz-medica {
+            width: 48px;
+
+            height: 48px;
+
+            background: white;
+
+            border-radius: 12px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            box-shadow:
+                0 4px 10px
+                rgba(0, 0, 0, 0.15);
+        }
+
+
+        .cruz {
+            position: relative;
+
+            width: 22px;
+
+            height: 22px;
+
+            display: block;
+        }
+
+
+        .cruz::before,
+        .cruz::after {
+            content: "";
+
+            position: absolute;
+
+            background: #0b6fb8;
+
+            border-radius: 3px;
+        }
+
+
+        .cruz::before {
+            width: 8px;
+
+            height: 22px;
+
+            left: 7px;
+
+            top: 0;
+        }
+
+
+        .cruz::after {
+            width: 22px;
+
+            height: 8px;
+
+            left: 0;
+
+            top: 7px;
+        }
+
+
+        .logo-texto {
+            font-size: 25px;
+
+            font-weight: 700;
+
+            color: white;
+
+            letter-spacing: 0.3px;
+        }
+
+
+
+        /* ================================= */
+        /* TITULO CENTRAL                    */
+        /* ================================= */
+
+        .titulo-superior {
+            text-align: center;
+
+            font-size: 25px;
+
+            font-weight: 600;
+        }
+
+
+
+        /* ================================= */
+        /* INFORMACION DEL USUARIO           */
+        /* ================================= */
+
+        .usuario-superior {
+            display: flex;
+
+            justify-content: flex-end;
+
+            align-items: center;
+
+            gap: 16px;
+        }
+
+
+        .usuario-datos {
+            text-align: right;
+        }
+
+
+        .usuario-nombre {
+            display: block;
+
+            font-size: 16px;
+
+            font-weight: 600;
+        }
+
+
+        .usuario-rol {
+            display: block;
+
+            margin-top: 2px;
+
+            font-size: 13px;
+
+            opacity: 0.85;
+        }
+
+
+        .usuario-circulo {
+            width: 48px;
+
+            height: 48px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background:
+                rgba(255,255,255,0.22);
+
+            font-size: 20px;
+
+            font-weight: 600;
+        }
+
+
+
+        /* ================================= */
+        /* CERRAR SESION                     */
+        /* ================================= */
+
+        .form-cerrar-sesion {
+            margin: 0;
+        }
+
+
+        .btn-cerrar-sesion {
+            padding: 9px 13px;
+
+            border:
+                1px solid
+                rgba(255,255,255,0.65);
+
+            border-radius: 7px;
+
+            background: transparent;
+
+            color: white;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition:
+                background 0.2s ease;
+        }
+
+
+        .btn-cerrar-sesion:hover {
+            background:
+                rgba(255,255,255,0.16);
+        }
+
+
+
+        /* ================================= */
+        /* CONTENEDOR PRINCIPAL              */
+        /* ================================= */
+
+        .contenido {
+            width: 100%;
+
+            max-width: 1240px;
+
+            margin: 0 auto;
+
+            padding:
+                55px 40px 70px;
+
+            flex: 1;
+        }
+
+
+
+        /* ================================= */
+        /* CUADRICULA DE MODULOS             */
+        /* ================================= */
+
+        .modulos {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 34px;
+        }
+
+
+
+        /* ================================= */
+        /* TARJETAS                          */
+        /* ================================= */
+
+        .modulo {
+            position: relative;
+
+            height: 300px;
+
+            overflow: hidden;
+
+            border-radius: 14px;
+
+            background: white;
+
+            box-shadow:
+                0 7px 20px
+                rgba(28, 65, 95, 0.13);
+
+            transition:
+                transform 0.22s ease,
+                box-shadow 0.22s ease;
+
+            text-decoration: none;
+
+            color: inherit;
+        }
+
+
+
+        /*
+            Cuando tiene permiso,
+            la tarjeta crece al pasar el mouse
+        */
+
+        .modulo.habilitado:hover {
+            transform:
+                scale(1.035);
+
+            box-shadow:
+                0 15px 32px
+                rgba(15, 91, 150, 0.25);
+
+            z-index: 5;
+
+            cursor: pointer;
+        }
+
+
+
+        /* ================================= */
+        /* TITULO DE CADA MODULO             */
+        /* ================================= */
+
+        .modulo-titulo {
+            display: none;
+        }
+
+
+
+        /* ================================= */
+        /* IMAGEN GENERAL                    */
+        /* ================================= */
+
+        .modulo-imagen {
+            position: relative;
+
+            height: 100%;
+
+            background-size: cover;
+
+            background-position:
+                center center;
+
+            background-repeat:
+                no-repeat;
+        }
+
+
+
+        /* ================================= */
+        /* AJUSTE PARA LAS IMAGENES DE ABAJO */
+        /* ================================= */
+
+        .imagen-movimientos {
+            background-position:
+                center 78%;
+        }
+
+
+        .imagen-controlados {
+            background-position:
+                center 78%;
+        }
+
+
+
+        /* ================================= */
+        /* TARJETA BLOQUEADA                 */
+        /* ================================= */
+
+        .modulo.bloqueado {
+            cursor: not-allowed;
+
+            box-shadow:
+                0 5px 15px
+                rgba(0,0,0,0.09);
+        }
+
+
+
+        /* Titulo gris cuando no tiene permiso */
+
+        .modulo.bloqueado
+        .modulo-titulo {
+            background: #d7d9dc;
+
+            color: #63717c;
+        }
+
+
+
+        /* Imagen en escala de grises */
+
+        .modulo.bloqueado
+        .modulo-imagen {
+            filter:
+                grayscale(100%);
+        }
+
+
+
+        /* Capa oscura encima de la imagen */
+
+        .modulo-bloqueo {
+            position: absolute;
+
+            inset: 0;
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+            align-items: center;
+
+            background:
+                rgba(80, 88, 95, 0.58);
+
+            color: white;
+
+            font-weight: 700;
+
+            z-index: 2;
+        }
+
+
+        .candado {
+            margin-bottom: 9px;
+
+            font-size: 38px;
+        }
+
+
+        .sin-permiso {
+            font-size: 19px;
+        }
+
+
+
+        /* ================================= */
+        /* FOOTER                            */
+        /* ================================= */
+
+        .footer {
+            width: 100%;
+
+            margin-top: auto;
+
+            padding: 18px;
+
+            background:
+                rgba(255, 255, 255, 0.90);
+
+            text-align: center;
+
+            color: #668092;
+
+            font-size: 13px;
+        }
+
+
+
+        /* ================================= */
+        /* RESPONSIVE                        */
+        /* ================================= */
+
+        @@media (max-width: 1200px) {
 
             .barra-superior {
-                height: 90px;
-                display: grid;
-                grid-template-columns: 1fr 1fr 1fr;
-                align-items: center;
-                padding: 0 60px;
-                background: linear-gradient( 90deg, #086fbf, #078bd4 );
-                color: white;
-                box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+                grid-template-columns:
+                    1fr 1fr;
+
+                height: auto;
+
+                min-height: 85px;
+
+                padding:
+                    15px 25px;
             }
 
-
-            /* ================================= */
-            /* LOGO                              */
-            /* ================================= */
-
-            .logo {
-                display: flex;
-                align-items: center;
-                gap: 13px;
-            }
-
-            .logo-cruz {
-                width: 47px;
-                height: 47px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                border-radius: 10px;
-                background: white;
-                color: #087fc8;
-                font-size: 37px;
-                font-weight: bold;
-                line-height: 1;
-            }
-
-            .logo-texto {
-                font-size: 31px;
-                font-weight: 700;
-                letter-spacing: 0.3px;
-            }
-
-
-            /* ================================= */
-            /* TITULO CENTRAL                    */
-            /* ================================= */
 
             .titulo-superior {
-                text-align: center;
-                font-size: 25px;
-                font-weight: 600;
+                display: none;
             }
 
-
-            /* ================================= */
-            /* INFORMACION DEL USUARIO           */
-            /* ================================= */
-
-            .usuario-superior {
-                display: flex;
-                justify-content: flex-end;
-                align-items: center;
-                gap: 16px;
-            }
-
-            .usuario-datos {
-                text-align: right;
-            }
-
-            .usuario-nombre {
-                display: block;
-                font-size: 16px;
-                font-weight: 600;
-            }
-
-            .usuario-rol {
-                display: block;
-                margin-top: 2px;
-                font-size: 13px;
-                opacity: 0.85;
-            }
-
-            .usuario-circulo {
-                width: 48px;
-                height: 48px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-                background: rgba(255,255,255,0.22);
-                font-size: 20px;
-                font-weight: 600;
-            }
-
-
-            /* ================================= */
-            /* CONTENEDOR PRINCIPAL              */
-            /* ================================= */
-
-            .contenido {
-                max-width: 1240px;
-                margin: 0 auto;
-                padding: 55px 40px 70px;
-            }
-
-
-            /* ================================= */
-            /* CUADRICULA DE MODULOS             */
-            /* ================================= */
 
             .modulos {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 34px;
+                grid-template-columns:
+                    1fr;
             }
 
 
-            /* ================================= */
-            /* TARJETAS                          */
-            /* ================================= */
-
-            .modulo {
-                position: relative;
-                height: 300px;
-                overflow: hidden;
-                border-radius: 14px;
-                background: white;
-                box-shadow: 0 7px 20px rgba(28, 65, 95, 0.13);
-                transition: transform 0.22s ease, box-shadow 0.22s ease;
-                text-decoration: none;
-                color: inherit;
+            .contenido {
+                padding:
+                    35px 20px;
             }
 
 
-                /* Cuando tiene permiso,
-                       la tarjeta crece al pasar el mouse */
-
-                .modulo.habilitado:hover {
-                    transform: scale(1.035);
-                    box-shadow: 0 15px 32px rgba(15, 91, 150, 0.25);
-                    z-index: 5;
-                    cursor: pointer;
-                }
-
-
-            /* ================================= */
-            /* TITULO DE CADA MODULO             */
-            /* ================================= */
-
-            .modulo-titulo {
-                height: 68px;
-                display: flex;
-                align-items: center;
-                padding: 0 25px;
-                background: white;
-                color: #087bc2;
-                font-size: 21px;
-                font-weight: 700;
-                text-transform: uppercase;
-            }
-
-
-            /* ================================= */
-            /* IMAGEN GENERAL                    */
-            /* ================================= */
-
-            .modulo-imagen {
-                position: relative;
-                height: calc(100% - 68px);
-                background-size: cover;
-                background-position: center center;
-                background-repeat: no-repeat;
-            }
-
-
-            /* ================================= */
-            /* AJUSTE PARA LAS IMAGENES DE ABAJO */
-            /* ================================= */
-
-            .imagen-movimientos {
-                background-position: center 78%;
-            }
-
+            .modulo-imagen,
+            .imagen-movimientos,
             .imagen-controlados {
-                background-position: center 78%;
+                background-position:
+                    center top;
             }
-
-
-            /* ================================= */
-            /* TARJETA BLOQUEADA                 */
-            /* ================================= */
-
-            .modulo.bloqueado {
-                cursor: not-allowed;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.09);
-            }
-
-
-                /* Titulo gris cuando no tiene permiso */
-
-                .modulo.bloqueado
-                .modulo-titulo {
-                    background: #d7d9dc;
-                    color: #63717c;
-                }
-
-
-                /* Imagen en escala de grises */
-
-                .modulo.bloqueado
-                .modulo-imagen {
-                    filter: grayscale(100%);
-                }
-
-
-            /* Capa oscura encima de la imagen */
-
-            .modulo-bloqueo {
-                position: absolute;
-                inset: 0;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                background: rgba(80, 88, 95, 0.58);
-                color: white;
-                font-weight: 700;
-                z-index: 2;
-            }
-
-            .candado {
-                margin-bottom: 9px;
-                font-size: 38px;
-            }
-
-            .sin-permiso {
-                font-size: 19px;
-            }
-
-
-            /* ================================= */
-            /* RESPONSIVE                        */
-            /* ================================= */
-
-            @@media (max-width: 900px) {
-
-                .barra-superior {
-                    grid-template-columns: 1fr 1fr;
-                    height: auto;
-                    min-height: 85px;
-                    padding: 15px 25px;
-                }
-
-                .titulo-superior {
-                    display: none;
-                }
-
-                .modulos {
-                    grid-template-columns: 1fr;
-                }
-
-                .contenido {
-                    padding: 35px 20px;
-                }
-            }
+        }
 
     </style>
 
@@ -343,15 +590,23 @@
 
         <div class="logo">
 
-            <div class="logo-cruz">
-                +
+
+            <div class="logo-cruz-medica">
+
+                <span class="cruz"></span>
+
             </div>
+
 
             <div class="logo-texto">
-                SARMedix
+
+                SARMedix | SAR de Chiguay
+
             </div>
 
+
         </div>
+
 
 
         <!-- TITULO -->
@@ -363,12 +618,14 @@
         </div>
 
 
+
         <!-- USUARIO -->
 
         <div class="usuario-superior">
 
 
             <div class="usuario-datos">
+
 
                 <span class="usuario-nombre">
 
@@ -383,7 +640,9 @@
 
                 </span>
 
+
             </div>
+
 
 
             <div class="usuario-circulo">
@@ -391,6 +650,24 @@
                 @inicial
 
             </div>
+
+
+
+            <form asp-controller="Home"
+                  asp-action="CerrarSesion"
+                  method="post"
+                  class="form-cerrar-sesion">
+
+
+                <button type="submit"
+                        class="btn-cerrar-sesion">
+
+                    Cerrar sesión
+
+                </button>
+
+
+            </form>
 
 
         </div>
@@ -410,9 +687,11 @@
         <div class="modulos">
 
 
+
             <!-- ================================= -->
             <!-- USUARIOS Y PERMISOS               -->
             <!-- ================================= -->
+
             @if (permisoUsuarios)
             {
                 <a href="/Home/UsuariosPermisos"
@@ -431,6 +710,7 @@
                         background-image:
                         url('/images/modulos/usuarios-permisos.jpg');
                         ">
+
                     </div>
 
 
@@ -457,6 +737,7 @@
 
                         <div class="modulo-bloqueo">
 
+
                             <div class="candado">
 
                                 🔒
@@ -469,6 +750,7 @@
                                 Sin permiso
 
                             </div>
+
 
                         </div>
 
@@ -484,6 +766,7 @@
             <!-- ================================= -->
             <!-- PRODUCTOS                         -->
             <!-- ================================= -->
+
             @if (permisoProductos)
             {
                 <a href="/Home/Productos"
@@ -502,6 +785,7 @@
                         background-image:
                         url('/images/modulos/productos.jpg');
                         ">
+
                     </div>
 
 
@@ -528,6 +812,7 @@
 
                         <div class="modulo-bloqueo">
 
+
                             <div class="candado">
 
                                 🔒
@@ -540,6 +825,7 @@
                                 Sin permiso
 
                             </div>
+
 
                         </div>
 
@@ -555,6 +841,7 @@
             <!-- ================================= -->
             <!-- MOVIMIENTOS E HISTORIAL           -->
             <!-- ================================= -->
+
             @if (permisoMovimientos)
             {
                 <a href="/Home/MovimientoHistorial"
@@ -573,6 +860,7 @@
                         background-image:
                         url('/images/modulos/movimientos.jpg');
                         ">
+
                     </div>
 
 
@@ -599,6 +887,7 @@
 
                         <div class="modulo-bloqueo">
 
+
                             <div class="candado">
 
                                 🔒
@@ -611,6 +900,7 @@
                                 Sin permiso
 
                             </div>
+
 
                         </div>
 
@@ -626,10 +916,11 @@
             <!-- ================================= -->
             <!-- MEDICAMENTOS CONTROLADOS          -->
             <!-- ================================= -->
+
             @if (permisoControlados)
             {
                 <a href="/Home/MedicamentosControlados"
-                    class="modulo habilitado">
+                   class="modulo habilitado">
 
 
                     <div class="modulo-titulo">
@@ -644,6 +935,7 @@
                         background-image:
                         url('/images/modulos/controlados.jpg');
                         ">
+
                     </div>
 
 
@@ -670,6 +962,7 @@
 
                         <div class="modulo-bloqueo">
 
+
                             <div class="candado">
 
                                 🔒
@@ -682,6 +975,7 @@
                                 Sin permiso
 
                             </div>
+
 
                         </div>
 
@@ -697,6 +991,18 @@
 
 
     </main>
+
+
+
+    <!-- ================================= -->
+    <!-- FOOTER                            -->
+    <!-- ================================= -->
+
+    <footer class="footer">
+
+        SARMedix · Sistema de Gestión Farmacéutica · SAR de Chiguay
+
+    </footer>
 
 
 </body>

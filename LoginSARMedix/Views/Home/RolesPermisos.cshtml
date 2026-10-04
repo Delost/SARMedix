@@ -1,0 +1,1298 @@
+﻿@using LoginSARMedix.Models
+
+@{
+    Layout = null;
+
+    var roles =
+        ViewBag.Roles as List<Rol> ?? new List<Rol>();
+
+    var permisos =
+        ViewBag.Permisos as List<Permiso> ?? new List<Permiso>();
+
+    var permisosRol =
+        ViewBag.PermisosRol as List<int> ?? new List<int>();
+
+
+    int? idRol = null;
+
+    if (ViewBag.IdRol != null)
+    {
+        idRol = Convert.ToInt32(ViewBag.IdRol);
+    }
+
+
+    string nombreCompleto =
+        ViewBag.Nombre + " " + ViewBag.Apellido;
+
+
+    string inicial =
+        !string.IsNullOrEmpty(ViewBag.Nombre?.ToString())
+        ? ViewBag.Nombre.ToString().Substring(0, 1).ToUpper()
+        : "U";
+}
+
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>Roles y Permisos - SARMedix</title>
+
+
+    <style>
+
+            * {
+                box-sizing: border-box;
+            }
+
+
+            body {
+                margin: 0;
+                font-family: "Segoe UI", Arial, sans-serif;
+                color: #17324d;
+                background: linear-gradient( rgba(235, 247, 252, 0.82), rgba(235, 247, 252, 0.82) ), url('/images/fondo-clinico.png');
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+
+
+            /* ================================= */
+            /* BARRA SUPERIOR                    */
+            /* ================================= */
+
+            .barra-superior {
+                height: 82px;
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                align-items: center;
+                padding: 0 60px;
+                background: #0f5278;
+                color: white;
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            }
+
+
+
+            /* ================================= */
+            /* LOGO                              */
+            /* ================================= */
+
+            .logo {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+
+
+            .logo-cruz-medica {
+                width: 48px;
+                height: 48px;
+                background: white;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            }
+
+
+            .cruz {
+                position: relative;
+                width: 22px;
+                height: 22px;
+                display: block;
+            }
+
+
+                .cruz::before,
+                .cruz::after {
+                    content: "";
+                    position: absolute;
+                    background: #0b6fb8;
+                    border-radius: 3px;
+                }
+
+
+                .cruz::before {
+                    width: 8px;
+                    height: 22px;
+                    left: 7px;
+                    top: 0;
+                }
+
+
+                .cruz::after {
+                    width: 22px;
+                    height: 8px;
+                    left: 0;
+                    top: 7px;
+                }
+
+
+            .logo-texto {
+                font-size: 25px;
+                font-weight: 700;
+                color: white;
+                letter-spacing: 0.3px;
+                white-space: nowrap;
+            }
+
+
+
+            /* ================================= */
+            /* TITULO SUPERIOR                   */
+            /* ================================= */
+
+            .titulo-superior {
+                text-align: center;
+                font-size: 25px;
+                font-weight: 600;
+            }
+
+
+
+            /* ================================= */
+            /* USUARIO                           */
+            /* ================================= */
+
+            .usuario-superior {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                gap: 16px;
+            }
+
+
+            .usuario-datos {
+                text-align: right;
+            }
+
+
+            .usuario-nombre {
+                display: block;
+                font-size: 16px;
+                font-weight: 600;
+            }
+
+
+            .usuario-rol {
+                display: block;
+                margin-top: 2px;
+                font-size: 13px;
+                opacity: 0.85;
+            }
+
+
+            .usuario-circulo {
+                width: 48px;
+                height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.22);
+                font-size: 20px;
+                font-weight: 600;
+            }
+
+
+
+            /* ================================= */
+            /* CONTENIDO                         */
+            /* ================================= */
+
+            .contenedor {
+                width: 90%;
+                max-width: 900px;
+                margin: 45px auto;
+                flex: 1;
+            }
+
+
+            .titulo {
+                text-align: center;
+                color: #087bc2;
+                font-size: 32px;
+                margin-bottom: 8px;
+            }
+
+
+            .descripcion {
+                text-align: center;
+                color: #687b89;
+                margin-bottom: 25px;
+                font-size: 16px;
+            }
+
+
+
+            /* ================================= */
+            /* BOTONES SUPERIORES                */
+            /* ================================= */
+
+            .acciones-superiores {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+
+
+            .btn-crear-rol {
+                display: inline-block;
+                padding: 11px 20px;
+                background: #087bc2;
+                color: white;
+                border-radius: 7px;
+                text-decoration: none;
+                font-size: 15px;
+                font-weight: 600;
+                transition: background 0.2s ease, transform 0.2s ease;
+            }
+
+
+                .btn-crear-rol:hover {
+                    background: #06669f;
+                    color: white;
+                    transform: translateY(-2px);
+                }
+
+
+            .btn-inactivos {
+                display: inline-block;
+                padding: 11px 20px;
+                background: #687b89;
+                color: white;
+                border-radius: 7px;
+                text-decoration: none;
+                font-size: 15px;
+                font-weight: 600;
+                transition: background 0.2s ease, transform 0.2s ease;
+            }
+
+
+                .btn-inactivos:hover {
+                    background: #536570;
+                    color: white;
+                    transform: translateY(-2px);
+                }
+
+
+
+            /* ================================= */
+            /* MENSAJES                          */
+            /* ================================= */
+
+            .mensaje {
+                width: 100%;
+                margin-bottom: 22px;
+                padding: 14px 18px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                border-radius: 9px;
+                font-size: 15px;
+                font-weight: 600;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+                transition: opacity 0.4s ease, transform 0.4s ease;
+            }
+
+
+                .mensaje.exito {
+                    background: #e8f7ef;
+                    border: 1px solid #9fd8b7;
+                    color: #176b3a;
+                }
+
+
+                .mensaje.error {
+                    background: #fdecec;
+                    border: 1px solid #e5aaaa;
+                    color: #a12828;
+                }
+
+
+            .mensaje-icono {
+                width: 28px;
+                height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                background: currentColor;
+                color: white;
+                font-weight: bold;
+            }
+
+
+
+            /* ================================= */
+            /* TARJETA                           */
+            /* ================================= */
+
+            .tarjeta {
+                background: rgba(255, 255, 255, 0.96);
+                padding: 35px;
+                border-radius: 14px;
+                box-shadow: 0 7px 20px rgba(28, 65, 95, 0.15);
+            }
+
+
+
+            /* ================================= */
+            /* SELECCIONAR ROL                   */
+            /* ================================= */
+
+            .grupo {
+                margin-bottom: 25px;
+            }
+
+
+                .grupo label {
+                    display: block;
+                    margin-bottom: 8px;
+                    font-weight: 600;
+                    color: #17324d;
+                }
+
+
+                .grupo select {
+                    width: 100%;
+                    padding: 12px;
+                    border: 1px solid #b9cbd7;
+                    border-radius: 7px;
+                    font-size: 15px;
+                    background: white;
+                    color: #17324d;
+                    cursor: pointer;
+                }
+
+
+
+            /* ================================= */
+            /* ACCIONES DEL ROL                  */
+            /* ================================= */
+
+            .acciones-rol {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 25px;
+            }
+
+
+            .btn-editar {
+                display: inline-block;
+                padding: 10px 18px;
+                background: #087bc2;
+                color: white;
+                border: none;
+                border-radius: 7px;
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+
+                .btn-editar:hover {
+                    background: #06669f;
+                    color: white;
+                }
+
+
+            .btn-desactivar {
+                padding: 10px 18px;
+                background: #c94b4b;
+                color: white;
+                border: none;
+                border-radius: 7px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+
+                .btn-desactivar:hover {
+                    background: #a93636;
+                }
+
+
+
+            /* ================================= */
+            /* CONFIRMACION DESACTIVAR           */
+            /* ================================= */
+
+            .confirmacion {
+                display: none;
+                margin-bottom: 25px;
+                padding: 18px;
+                background: #fff4f4;
+                border: 1px solid #e7b5b5;
+                border-radius: 9px;
+            }
+
+
+            .confirmacion-texto {
+                margin-bottom: 15px;
+                color: #8d2c2c;
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+
+            .confirmacion-botones {
+                display: flex;
+                gap: 10px;
+            }
+
+
+            .btn-confirmar {
+                padding: 9px 16px;
+                background: #c94b4b;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+
+                .btn-confirmar:hover {
+                    background: #a93636;
+                }
+
+
+            .btn-cancelar {
+                padding: 9px 16px;
+                background: #687b89;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+
+                .btn-cancelar:hover {
+                    background: #536570;
+                }
+
+
+
+            /* ================================= */
+            /* PERMISOS                          */
+            /* ================================= */
+
+            .permisos {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+
+            .permiso {
+                padding: 16px;
+                border: 1px solid #dce6ec;
+                border-radius: 8px;
+                background: #f8fbfd;
+                transition: border 0.2s ease, box-shadow 0.2s ease;
+            }
+
+
+                .permiso:hover {
+                    border-color: #aacbdc;
+                    box-shadow: 0 3px 8px rgba(28, 65, 95, 0.08);
+                }
+
+
+            .permiso-superior {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+
+                .permiso-superior input[type="checkbox"] {
+                    width: 18px;
+                    height: 18px;
+                    cursor: pointer;
+                }
+
+
+            .permiso-nombre {
+                font-weight: 600;
+                color: #17324d;
+            }
+
+
+            .permiso-descripcion {
+                margin-top: 6px;
+                margin-left: 28px;
+                font-size: 13px;
+                color: #687b89;
+                line-height: 1.4;
+            }
+
+
+
+            /* ================================= */
+            /* GUARDAR PERMISOS                  */
+            /* ================================= */
+
+            .guardar-contenedor {
+                margin-top: 30px;
+                text-align: center;
+            }
+
+
+            .btn-guardar {
+                padding: 12px 24px;
+                background: #0b8f9c;
+                color: white;
+                border: none;
+                border-radius: 7px;
+                font-size: 15px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: background 0.2s ease, transform 0.2s ease;
+            }
+
+
+                .btn-guardar:hover {
+                    background: #087580;
+                    transform: translateY(-2px);
+                }
+
+
+
+            /* ================================= */
+            /* MENSAJE SELECCION                 */
+            /* ================================= */
+
+            .mensaje-seleccion {
+                padding: 25px;
+                text-align: center;
+                color: #687b89;
+                background: #f8fbfd;
+                border: 1px dashed #c5d5df;
+                border-radius: 8px;
+            }
+
+
+
+            /* ================================= */
+            /* VOLVER                            */
+            /* ================================= */
+
+            .volver {
+                margin-top: 30px;
+                text-align: center;
+            }
+
+
+            .btn-volver {
+                display: inline-block;
+                padding: 11px 20px;
+                background: #0b8f9c;
+                color: white;
+                text-decoration: none;
+                border-radius: 7px;
+                font-weight: 600;
+            }
+
+
+                .btn-volver:hover {
+                    background: #087580;
+                    color: white;
+                }
+
+
+
+            /* ================================= */
+            /* FOOTER                            */
+            /* ================================= */
+
+            .footer {
+                margin-top: auto;
+                padding: 18px;
+                background: rgba(255, 255, 255, 0.90);
+                text-align: center;
+                color: #668092;
+                font-size: 13px;
+            }
+
+
+
+            /* ================================= */
+            /* RESPONSIVE                        */
+            /* ================================= */
+
+            @@media (max-width: 900px) {
+
+                .barra-superior {
+                    grid-template-columns: 1fr 1fr;
+                    height: auto;
+                    min-height: 82px;
+                    padding: 15px 25px;
+                }
+
+
+                .titulo-superior {
+                    display: none;
+                }
+
+
+                .logo-texto {
+                    font-size: 20px;
+                }
+
+
+                .permisos {
+                    grid-template-columns: 1fr;
+                }
+
+
+                .contenedor {
+                    width: 94%;
+                    margin-top: 30px;
+                }
+            }
+
+
+            @@media (max-width: 600px) {
+
+                .barra-superior {
+                    padding: 12px 15px;
+                }
+
+
+                .logo-cruz-medica {
+                    width: 42px;
+                    height: 42px;
+                }
+
+
+                .logo-texto {
+                    font-size: 17px;
+                }
+
+
+                .usuario-nombre {
+                    font-size: 14px;
+                }
+
+
+                .usuario-rol {
+                    font-size: 11px;
+                }
+
+
+                .usuario-circulo {
+                    width: 42px;
+                    height: 42px;
+                }
+
+
+                .tarjeta {
+                    padding: 22px;
+                }
+
+
+                .acciones-superiores {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+
+
+                .btn-crear-rol,
+                .btn-inactivos {
+                    width: 100%;
+                    text-align: center;
+                }
+
+
+                .acciones-rol {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+
+
+                .btn-editar,
+                .btn-desactivar {
+                    width: 100%;
+                    text-align: center;
+                }
+
+
+                .confirmacion-botones {
+                    flex-direction: column;
+                }
+            }
+
+    </style>
+
+</head>
+
+
+
+<body>
+
+
+    <!-- ================================= -->
+    <!-- BARRA SUPERIOR                    -->
+    <!-- ================================= -->
+
+    <header class="barra-superior">
+
+
+        <div class="logo">
+
+
+            <div class="logo-cruz-medica">
+
+                <span class="cruz"></span>
+
+            </div>
+
+
+            <div class="logo-texto">
+
+                SARMedix | SAR de Chiguay
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="titulo-superior">
+
+            Roles y Permisos
+
+        </div>
+
+
+
+        <div class="usuario-superior">
+
+
+            <div class="usuario-datos">
+
+
+                <span class="usuario-nombre">
+
+                    @nombreCompleto
+
+                </span>
+
+
+                <span class="usuario-rol">
+
+                    @ViewBag.Rol
+
+                </span>
+
+
+            </div>
+
+
+            <div class="usuario-circulo">
+
+                @inicial
+
+            </div>
+
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- ================================= -->
+    <!-- CONTENIDO                         -->
+    <!-- ================================= -->
+
+    <main class="contenedor">
+
+
+        <h1 class="titulo">
+
+            Roles y Permisos
+
+        </h1>
+
+
+        <p class="descripcion">
+
+            Seleccione un rol para consultar y modificar sus permisos.
+
+        </p>
+
+
+
+        <!-- ================================= -->
+        <!-- ACCIONES SUPERIORES                -->
+        <!-- ================================= -->
+
+        <div class="acciones-superiores">
+
+
+            <a asp-controller="Home"
+               asp-action="RolesInactivos"
+               class="btn-inactivos">
+
+                Ver roles inactivos
+
+            </a>
+
+
+            <a asp-controller="Home"
+               asp-action="CrearRol"
+               class="btn-crear-rol">
+
+                + Crear nuevo rol
+
+            </a>
+
+
+        </div>
+
+
+
+        <!-- ================================= -->
+        <!-- MENSAJE                           -->
+        <!-- ================================= -->
+        @if (TempData["Mensaje"] != null)
+        {
+            string tipo =
+                TempData["TipoMensaje"]?.ToString() ?? "exito";
+
+
+            <div class="mensaje @tipo"
+                 id="mensaje">
+
+
+                @if (tipo == "exito")
+                {
+                    <span class="mensaje-icono">
+
+                        ✓
+
+                    </span>
+                }
+                else
+                {
+                    <span class="mensaje-icono">
+
+                        !
+
+                    </span>
+                }
+
+
+                <span>
+
+                    @TempData["Mensaje"]
+
+                </span>
+
+
+            </div>
+        }
+
+
+
+        <!-- ================================= -->
+        <!-- TARJETA                           -->
+        <!-- ================================= -->
+
+        <div class="tarjeta">
+
+
+
+            <!-- ================================= -->
+            <!-- SELECTOR DE ROL                   -->
+            <!-- ================================= -->
+
+            <form asp-controller="Home"
+                  asp-action="RolesPermisos"
+                  method="get">
+
+
+                <div class="grupo">
+
+
+                    <label>
+
+                        Seleccione un rol
+
+                    </label>
+
+
+                    <select name="idRol"
+                            onchange="this.form.submit()">
+
+
+                        <option value="">
+
+                            Seleccione
+
+                        </option>
+
+
+                        @foreach (var rol in roles)
+                        {
+
+                            if (idRol == rol.id_rol)
+                            {
+                                <option value="@rol.id_rol"
+                                        selected>
+
+                                    @rol.nombre
+
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@rol.id_rol">
+
+                                    @rol.nombre
+
+                                </option>
+                            }
+
+                        }
+
+
+                    </select>
+
+
+                </div>
+
+
+            </form>
+
+
+
+            @if (idRol.HasValue)
+            {
+
+                <!-- ================================= -->
+                <!-- ACCIONES DEL ROL                  -->
+                <!-- ================================= -->
+
+                <div class="acciones-rol">
+
+
+                    <a asp-controller="Home"
+                       asp-action="EditarRol"
+                       asp-route-idRol="@idRol"
+                       class="btn-editar">
+
+                        ✏ Editar rol
+
+                    </a>
+
+
+                    <button type="button"
+                            class="btn-desactivar"
+                            onclick="mostrarConfirmacion()">
+
+                        Desactivar rol
+
+                    </button>
+
+
+                </div>
+
+
+
+                <!-- ================================= -->
+                <!-- CONFIRMACION DESACTIVAR           -->
+                <!-- ================================= -->
+
+                <div class="confirmacion"
+                     id="confirmacionDesactivar">
+
+
+                    <div class="confirmacion-texto">
+
+                        ¿Está seguro de que desea desactivar este rol?
+
+                    </div>
+
+
+                    <div class="confirmacion-botones">
+
+
+                        <form asp-controller="Home"
+                              asp-action="DesactivarRol"
+                              method="post">
+
+
+                            <input type="hidden"
+                                   name="idRol"
+                                   value="@idRol" />
+
+
+                            <button type="submit"
+                                    class="btn-confirmar">
+
+                                Sí, desactivar
+
+                            </button>
+
+
+                        </form>
+
+
+                        <button type="button"
+                                class="btn-cancelar"
+                                onclick="ocultarConfirmacion()">
+
+                            Cancelar
+
+                        </button>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- ================================= -->
+                <!-- PERMISOS                          -->
+                <!-- ================================= -->
+
+                <form asp-controller="Home"
+                      asp-action="GuardarPermisos"
+                      method="post">
+
+
+                    <input type="hidden"
+                           name="idRol"
+                           value="@idRol" />
+
+
+
+                    <div class="permisos">
+
+
+                        @foreach (var permiso in permisos)
+                        {
+
+                            bool seleccionado =
+                                permisosRol.Contains(
+                                    permiso.id_permiso
+                                );
+
+
+                            <div class="permiso">
+
+
+                                <div class="permiso-superior">
+
+
+                                    @if (seleccionado)
+                                    {
+                                        <input type="checkbox"
+                                               name="permisosSeleccionados"
+                                               value="@permiso.id_permiso"
+                                               checked />
+                                    }
+                                    else
+                                    {
+                                        <input type="checkbox"
+                                               name="permisosSeleccionados"
+                                               value="@permiso.id_permiso" />
+                                    }
+
+
+                                    <span class="permiso-nombre">
+
+                                        @permiso.nombre
+
+                                    </span>
+
+
+                                </div>
+
+
+
+                                <div class="permiso-descripcion">
+
+                                    @permiso.descripcion
+
+                                </div>
+
+
+                            </div>
+
+                        }
+
+
+                    </div>
+
+
+
+                    <!-- ================================= -->
+                    <!-- GUARDAR PERMISOS                  -->
+                    <!-- ================================= -->
+
+                    <div class="guardar-contenedor">
+
+
+                        <button type="submit"
+                                class="btn-guardar">
+
+                            Guardar permisos
+
+                        </button>
+
+
+                    </div>
+
+
+                </form>
+
+            }
+            else
+            {
+
+                <div class="mensaje-seleccion">
+
+                    Seleccione un rol para visualizar sus permisos.
+
+                </div>
+
+            }
+
+
+        </div>
+
+
+
+        <!-- ================================= -->
+        <!-- VOLVER                            -->
+        <!-- ================================= -->
+
+        <div class="volver">
+
+
+            <a asp-controller="Home"
+               asp-action="UsuariosPermisos"
+               class="btn-volver">
+
+                ← Volver a Usuarios y Permisos
+
+            </a>
+
+
+        </div>
+
+
+    </main>
+
+
+
+    <!-- ================================= -->
+    <!-- FOOTER                            -->
+    <!-- ================================= -->
+
+    <footer class="footer">
+
+        SARMedix · Sistema de Gestión Farmacéutica · SAR de Chiguay
+
+    </footer>
+
+
+
+    <!-- ================================= -->
+    <!-- JAVASCRIPT                        -->
+    <!-- ================================= -->
+
+    <script>
+
+            function mostrarConfirmacion() {
+
+                let confirmacion =
+                    document.getElementById(
+                        "confirmacionDesactivar"
+                    );
+
+                if (confirmacion) {
+
+                    confirmacion.style.display =
+                        "block";
+                }
+            }
+
+
+            function ocultarConfirmacion() {
+
+                let confirmacion =
+                    document.getElementById(
+                        "confirmacionDesactivar"
+                    );
+
+                if (confirmacion) {
+
+                    confirmacion.style.display =
+                        "none";
+                }
+            }
+
+
+
+            setTimeout(function () {
+
+                let mensaje =
+                    document.getElementById(
+                        "mensaje"
+                    );
+
+                if (mensaje) {
+
+                    mensaje.style.opacity =
+                        "0";
+
+                    mensaje.style.transform =
+                        "translateY(-5px)";
+
+
+                    setTimeout(function () {
+
+                        mensaje.style.display =
+                            "none";
+
+                    }, 400);
+
+                }
+
+            }, 4000);
+
+    </script>
+
+
+</body>
+
+</html>

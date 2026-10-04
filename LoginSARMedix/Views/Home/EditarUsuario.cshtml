@@ -7,32 +7,50 @@
       method="post"
       class="formulario-principal">
 
-    <input asp-for="id_usuario" type="hidden" />
+    <input asp-for="id_usuario"
+           type="hidden" />
 
 
     <div>
-        <label>Nombre</label>
+
+        <label>
+            Nombre
+        </label>
+
         <input asp-for="nombre" />
+
     </div>
 
 
     <div>
-        <label>Apellido</label>
+
+        <label>
+            Apellido
+        </label>
+
         <input asp-for="apellido" />
+
     </div>
 
 
     <div>
-        <label>RUT</label>
+
+        <label>
+            RUT
+        </label>
 
         <input asp-for="rut"
                maxlength="10"
                oninput="formatearRut(this)" />
+
     </div>
 
 
     <div>
-        <label>Rol</label>
+
+        <label>
+            Rol
+        </label>
 
         <select asp-for="id_rol">
 
@@ -58,13 +76,20 @@
 
 
     <div>
-        <label>Nombre de usuario</label>
+
+        <label>
+            Nombre de usuario
+        </label>
+
         <input asp-for="nombre_usuario" />
+
     </div>
 
 
     <button type="submit">
+
         Actualizar usuario
+
     </button>
 
 
@@ -85,7 +110,9 @@
 @if (ViewBag.Mensaje != null)
 {
     <script>
+
         alert('@ViewBag.Mensaje');
+
     </script>
 }
 
@@ -98,7 +125,9 @@
             .replace(/[^0-9kK]/g, '')
             .toUpperCase();
 
+
         rut = rut.substring(0, 9);
+
 
         if (rut.length > 1) {
 
@@ -108,6 +137,7 @@
                 + rut.slice(-1);
 
         }
+
 
         input.value = rut;
     }
