@@ -1,66 +1,564 @@
 ﻿@model List<LoginSARMedix.Models.Lote>
 
-<h2>Listado de lotes</h2>
+@using Microsoft.AspNetCore.Http
+
+@{
+    string permisosTexto =
+        Context.Session.GetString("Permisos") ?? "";
+
+    var permisos =
+        permisosTexto
+            .Split(
+                '|',
+                StringSplitOptions.RemoveEmptyEntries
+            );
+
+    bool puedeRegistrar =
+        permisos.Any(
+            p => p.Equals(
+                "Registrar productos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
+}
+
 
 <div class="usuarios-card">
 
-    <table class="tabla-usuarios">
 
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Número de lote</th>
-                <th>Fecha de vencimiento</th>
-                <th>Cantidad actual</th>
-                <th>Ubicación</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
+    <!-- ========================================= -->
+    <!-- TITULO                                    -->
+    <!-- ========================================= -->
 
-        <tbody>
+    <div class="usuarios-titulo">
 
-            @foreach (var lote in Model)
-            {
-                <tr>
+        <h1>
+            Listado de lotes
+        </h1>
 
-                    <td>
-                        @lote.nombre_producto
-                    </td>
+        <p>
+            Administración de lotes de medicamentos e insumos
+        </p>
 
-                    <td>
-                        @lote.numero_lote
-                    </td>
+    </div>
 
-                    <td>
-                        @lote.fecha_vencimiento?.ToString("dd-MM-yyyy")
-                    </td>
 
-                    <td>
-                        @lote.cantidad_actual
-                    </td>
 
-                    <td>
-                        @lote.nombre_ubicacion
-                    </td>
+    <!-- ========================================= -->
+    <!-- MENSAJE                                   -->
+    <!-- ========================================= -->
 
-                    <td>
+    @if (TempData["Mensaje"] != null)
+    {
+        string tipoMensaje =
+            TempData["TipoMensaje"]?.ToString() ?? "";
 
-                        <a asp-controller="Home"
-                           asp-action="EditarLote"
-                           asp-route-idLote="@lote.id_lote"
-                           class="btn-editar">
+        <div id="mensajeListado"
+             class="mensaje @(tipoMensaje == "exito" ? "mensaje-exito" : "mensaje-error")">
 
-                            Editar
+            @TempData["Mensaje"]
 
-                        </a>
+        </div>
+    }
 
-                    </td>
 
-                </tr>
-            }
 
-        </tbody>
+    <!-- ========================================= -->
+    <!-- BOTON REGISTRAR LOTE                      -->
+    <!-- ========================================= -->
 
-    </table>
+    @if (puedeRegistrar)
+    {
+        <div class="acciones-superiores">
+
+            <a asp-controller="Home"
+               asp-action="CrearLote"
+               class="btn-nuevo-lote">
+
+                + Registrar lote
+
+            </a>
+
+        </div>
+    }
+
+
+
+    <!-- ========================================= -->
+    <!-- TABLA DE LOTES                            -->
+    <!-- ========================================= -->
+
+    @if (
+        Model != null &&
+        Model.Count > 0
+    )
+    {
+        <div class="tabla-contenedor">
+
+            <table class="tabla-usuarios">
+
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Producto
+                        </th>
+
+                        <th>
+                            Número de lote
+                        </th>
+
+                        <th>
+                            Fecha de vencimiento
+                        </th>
+
+                        <th>
+                            Cantidad actual
+                        </th>
+
+                        <th>
+                            Ubicación
+                        </th>
+
+
+                        @if (puedeRegistrar)
+                        {
+                            <th>
+                                Acciones
+                            </th>
+                        }
+
+                    </tr>
+
+                </thead>
+
+
+
+                <tbody>
+
+                    @foreach (var lote in Model)
+                    {
+                        <tr>
+
+                            <td>
+                                @lote.nombre_producto
+                            </td>
+
+
+                            <td>
+                                @lote.numero_lote
+                            </td>
+
+
+                            <td>
+
+                                @lote.fecha_vencimiento?.ToString(
+                                    "dd-MM-yyyy"
+                                )
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="cantidad-lote">
+
+                                    @lote.cantidad_actual
+
+                                </span>
+
+                            </td>
+
+
+                            <td>
+                                @lote.nombre_ubicacion
+                            </td>
+
+
+                            @if (puedeRegistrar)
+                            {
+                                <td>
+
+                                    <a asp-controller="Home"
+                                       asp-action="EditarLote"
+                                       asp-route-idLote="@lote.id_lote"
+                                       class="btn-editar">
+
+                                        Editar
+
+                                    </a>
+
+                                </td>
+                            }
+
+                        </tr>
+                    }
+
+                </tbody>
+
+
+            </table>
+
+        </div>
+    }
+    else
+    {
+        <div class="sin-registros">
+
+            No existen lotes registrados.
+
+        </div>
+    }
+
+
+
+    <!-- ========================================= -->
+    <!-- NAVEGACION                                -->
+    <!-- ========================================= -->
+
+    <div class="contenedor-navegacion">
+
+
+        <a asp-controller="Home"
+           asp-action="ListadoProductos2"
+           class="btn-listado-productos">
+
+            ← Ver listado de productos
+
+        </a>
+
+
+        <a asp-controller="Home"
+           asp-action="Productos"
+           class="btn-volver-productos">
+
+            ← Volver a Productos
+
+        </a>
+
+
+    </div>
+
 
 </div>
+
+
+
+<style>
+
+    /* ========================================= */
+    /* TARJETA                                   */
+    /* ========================================= */
+
+    .usuarios-card {
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+
+
+    /* ========================================= */
+    /* TABLA                                     */
+    /* ========================================= */
+
+    .tabla-contenedor {
+        width: 100%;
+        max-width: 100%;
+
+        overflow-x: auto;
+
+        box-sizing: border-box;
+    }
+
+
+    .tabla-usuarios {
+        width: 100%;
+
+        box-sizing: border-box;
+    }
+
+
+    .tabla-usuarios th,
+    .tabla-usuarios td {
+        vertical-align: middle;
+    }
+
+
+
+    /* ========================================= */
+    /* BOTON REGISTRAR                           */
+    /* ========================================= */
+
+    .acciones-superiores {
+        display: flex;
+
+        justify-content: flex-end;
+
+        margin-top: 20px;
+        margin-bottom: 22px;
+    }
+
+
+    .btn-nuevo-lote {
+        display: inline-block;
+
+        padding: 10px 18px;
+
+        background-color: #0d7898;
+
+        color: white;
+
+        border-radius: 6px;
+
+        text-decoration: none;
+
+        font-weight: 600;
+
+        transition:
+            background-color 0.2s ease;
+    }
+
+
+    .btn-nuevo-lote:hover {
+        background-color: #09637e;
+
+        color: white;
+    }
+
+
+
+    /* ========================================= */
+    /* CANTIDAD                                  */
+    /* ========================================= */
+
+    .cantidad-lote {
+        display: inline-block;
+
+        min-width: 45px;
+
+        padding: 5px 10px;
+
+        background-color: #e7f3f7;
+
+        color: #0d5b82;
+
+        border-radius: 14px;
+
+        text-align: center;
+
+        font-weight: 600;
+    }
+
+
+
+    /* ========================================= */
+    /* MENSAJES                                  */
+    /* ========================================= */
+
+    .mensaje {
+        width: 100%;
+
+        box-sizing: border-box;
+
+        margin-top: 20px;
+        margin-bottom: 20px;
+
+        padding: 12px 15px;
+
+        border-radius: 7px;
+
+        text-align: center;
+
+        font-weight: 600;
+
+        opacity: 1;
+
+        transition:
+            opacity 0.5s ease;
+    }
+
+
+    .mensaje-exito {
+        background-color: #d1e7dd;
+
+        color: #0f5132;
+
+        border:
+            1px solid #badbcc;
+    }
+
+
+    .mensaje-error {
+        background-color: #f8d7da;
+
+        color: #842029;
+
+        border:
+            1px solid #f5c2c7;
+    }
+
+
+
+    /* ========================================= */
+    /* SIN REGISTROS                             */
+    /* ========================================= */
+
+    .sin-registros {
+        padding: 25px;
+
+        margin-top: 20px;
+
+        background-color: #f5f8fa;
+
+        border:
+            1px solid #d8e2e8;
+
+        border-radius: 8px;
+
+        text-align: center;
+
+        color: #60798b;
+
+        font-size: 16px;
+    }
+
+
+
+    /* ========================================= */
+    /* NAVEGACION                                */
+    /* ========================================= */
+
+    .contenedor-navegacion {
+        display: flex;
+
+        justify-content: center;
+        align-items: center;
+
+        gap: 12px;
+
+        margin-top: 30px;
+        margin-bottom: 10px;
+
+        flex-wrap: wrap;
+    }
+
+
+    .btn-listado-productos {
+        display: inline-block;
+
+        padding: 12px 22px;
+
+        background-color: #59636b;
+
+        color: white;
+
+        border-radius: 7px;
+
+        text-decoration: none;
+
+        font-weight: 600;
+    }
+
+
+    .btn-listado-productos:hover {
+        background-color: #474f55;
+
+        color: white;
+    }
+
+
+    .btn-volver-productos {
+        display: inline-block;
+
+        padding: 12px 22px;
+
+        background-color: #1198a5;
+
+        color: white;
+
+        border-radius: 7px;
+
+        text-decoration: none;
+
+        font-weight: 600;
+    }
+
+
+    .btn-volver-productos:hover {
+        background-color: #0d8490;
+
+        color: white;
+    }
+
+
+
+    /* ========================================= */
+    /* CELULAR                                   */
+    /* ========================================= */
+
+    @@media (max-width: 700px) {
+
+        .acciones-superiores {
+            justify-content: center;
+        }
+
+
+        .contenedor-navegacion {
+            flex-direction: column;
+        }
+
+
+        .btn-listado-productos,
+        .btn-volver-productos {
+            width: 90%;
+
+            box-sizing: border-box;
+
+            text-align: center;
+        }
+
+    }
+
+</style>
+
+
+
+<script>
+
+    // =========================================
+    // OCULTAR MENSAJE DESPUES DE 3 SEGUNDOS
+    // =========================================
+
+    setTimeout(
+        function () {
+
+            const mensaje =
+                document.getElementById(
+                    "mensajeListado"
+                );
+
+
+            if (mensaje) {
+
+                mensaje.style.opacity =
+                    "0";
+
+
+                setTimeout(
+                    function () {
+
+                        mensaje.style.display =
+                            "none";
+
+                    },
+                    500
+                );
+            }
+
+        },
+        3000
+    );
+
+</script>

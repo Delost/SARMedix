@@ -1,5 +1,14 @@
 ﻿@model LoginSARMedix.Models.Usuario
 
+@{
+    string mensajeExito =
+        TempData["Mensaje"]?.ToString() ?? "";
+
+    string mensajeError =
+        ViewBag.Mensaje?.ToString() ?? "";
+}
+
+
 <h2>Inicio de sesión SARMedix</h2>
 
 
@@ -9,42 +18,94 @@
       class="formulario-principal">
 
 
+    <!-- ========================================= -->
+    <!-- MENSAJES                                  -->
+    <!-- ========================================= -->
+
     <div class="espacio-mensaje">
 
-        @if (TempData["Mensaje"] != null)
+        @if (!string.IsNullOrEmpty(mensajeExito))
         {
-            <div class="mensaje-exito"
-                 id="mensajeExito">
+            <div class="mensaje mensaje-exito"
+                 id="mensajeLogin">
 
-                @TempData["Mensaje"]
+                <span class="mensaje-icono">
+                    ✓
+                </span>
 
+                <span>
+                    @mensajeExito
+                </span>
+
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(mensajeError))
+        {
+            <div class="mensaje mensaje-error"
+                 id="mensajeLogin">
+
+                <span class="mensaje-icono">
+                    !
+                </span>
+
+                <span>
+                    @mensajeError
+                </span>
+
+            </div>
+        }
+        else
+        {
+            <div class="mensaje-vacio">
             </div>
         }
 
     </div>
 
 
+
+    <!-- ========================================= -->
+    <!-- NOMBRE DE USUARIO                         -->
+    <!-- ========================================= -->
+
     <div>
 
-        <label>Nombre de usuario</label>
+        <label>
+            Nombre de usuario
+        </label>
 
-        <input asp-for="nombre_usuario" />
+        <input asp-for="nombre_usuario"
+               autocomplete="username" />
 
     </div>
 
 
+
+    <!-- ========================================= -->
+    <!-- CONTRASEÑA                                -->
+    <!-- ========================================= -->
+
     <div>
 
-        <label>Contraseña</label>
+        <label>
+            Contraseña
+        </label>
 
         <input asp-for="contrasena"
-               type="password" />
+               type="password"
+               autocomplete="current-password" />
 
     </div>
+
 
 
     <br />
 
+
+
+    <!-- ========================================= -->
+    <!-- BOTON INICIAR SESION                      -->
+    <!-- ========================================= -->
 
     <button type="submit">
 
@@ -53,81 +114,177 @@
     </button>
 
 
-    <a asp-controller="Home"
-       asp-action="CrearUsuario">
-
-        Nuevo usuario
-
-    </a>
-
 </form>
 
-
-@if (ViewBag.Mensaje != null)
-{
-    <script>
-
-        alert('@ViewBag.Mensaje');
-
-    </script>
-}
 
 
 <style>
 
-    /*
-        Reserva siempre el espacio del mensaje.
-        Así la tarjeta no cambia de tamaño.
-    */
+    /* ========================================= */
+    /* ESPACIO PARA MENSAJES                     */
+    /* ========================================= */
 
     .espacio-mensaje {
-        min-height: 48px;
+        min-height: 55px;
+
         margin-bottom: 8px;
     }
 
 
-    .mensaje-exito {
+
+    /* ========================================= */
+    /* MENSAJE GENERAL                           */
+    /* ========================================= */
+
+    .mensaje {
         width: 100%;
-        padding: 12px 15px;
 
-        background-color: #d1e7dd;
-        color: #0f5132;
+        min-height: 48px;
 
-        border: 1px solid #badbcc;
-        border-radius: 7px;
+        padding: 11px 14px;
+
+        box-sizing: border-box;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 10px;
+
+        border-radius: 8px;
 
         text-align: center;
+
+        font-size: 14px;
+
         font-weight: 600;
 
         opacity: 1;
 
-        transition: opacity 0.5s ease;
+        transition:
+            opacity 0.5s ease;
+    }
+
+
+
+    /* ========================================= */
+    /* MENSAJE DE EXITO                          */
+    /* ========================================= */
+
+    .mensaje-exito {
+        background-color: #d1e7dd;
+
+        color: #0f5132;
+
+        border: 1px solid #badbcc;
+    }
+
+
+
+    /* ========================================= */
+    /* MENSAJE DE ERROR                          */
+    /* ========================================= */
+
+    .mensaje-error {
+        background-color: #f8d7da;
+
+        color: #842029;
+
+        border: 1px solid #f5c2c7;
+    }
+
+
+
+    /* ========================================= */
+    /* ICONO                                     */
+    /* ========================================= */
+
+    .mensaje-icono {
+        width: 24px;
+
+        height: 24px;
+
+        flex-shrink: 0;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 50%;
+
+        font-size: 15px;
+
+        font-weight: bold;
+    }
+
+
+    .mensaje-exito .mensaje-icono {
+        background-color: #198754;
+
+        color: white;
+    }
+
+
+    .mensaje-error .mensaje-icono {
+        background-color: #dc3545;
+
+        color: white;
+    }
+
+
+
+    /* ========================================= */
+    /* ESPACIO CUANDO NO HAY MENSAJE             */
+    /* ========================================= */
+
+    .mensaje-vacio {
+        width: 100%;
+
+        height: 48px;
     }
 
 </style>
 
 
+
 <script>
 
-    setTimeout(function () {
+    // =========================================
+    // OCULTAR MENSAJE DESPUES DE 3 SEGUNDOS
+    // =========================================
 
-        const mensaje =
-            document.getElementById(
-                "mensajeExito"
-            );
+    setTimeout(
+        function () {
 
-        if (mensaje) {
+            const mensaje =
+                document.getElementById(
+                    "mensajeLogin"
+                );
 
-            mensaje.style.opacity = "0";
 
-            setTimeout(function () {
+            if (mensaje) {
 
-                mensaje.style.visibility = "hidden";
+                mensaje.style.opacity =
+                    "0";
 
-            }, 500);
 
-        }
+                setTimeout(
+                    function () {
 
-    }, 3000);
+                        mensaje.style.visibility =
+                            "hidden";
+
+                    },
+                    500
+                );
+            }
+
+        },
+        3000
+    );
 
 </script>

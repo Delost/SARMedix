@@ -1,35 +1,102 @@
 ﻿@{
     Layout = null;
 
-    var permisos = ViewBag.Permisos as List<string> ?? new List<string>();
+    var permisos =
+        ViewBag.Permisos as List<string>
+        ?? new List<string>();
+
 
     bool permisoUsuarios =
-        permisos.Any(p => p.Equals("Crear usuario", StringComparison.OrdinalIgnoreCase)) ||
-        permisos.Any(p => p.Equals("Gestionar usuarios y permisos", StringComparison.OrdinalIgnoreCase));
+        permisos.Any(
+            p => p.Equals(
+                "Crear usuario",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        ||
+        permisos.Any(
+            p => p.Equals(
+                "Gestionar usuarios y permisos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
+
 
     bool permisoProductos =
-        permisos.Any(p => p.Equals("Consultar productos", StringComparison.OrdinalIgnoreCase)) ||
-        permisos.Any(p => p.Equals("Registrar productos", StringComparison.OrdinalIgnoreCase)) ||
-        permisos.Any(p => p.Equals("Gestionar productos", StringComparison.OrdinalIgnoreCase));
+        permisos.Any(
+            p => p.Equals(
+                "Consultar productos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        ||
+        permisos.Any(
+            p => p.Equals(
+                "Registrar productos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        ||
+        permisos.Any(
+            p => p.Equals(
+                "Gestionar productos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
+
 
     bool permisoMovimientos =
-        permisos.Any(p => p.Equals("Registrar movimientos", StringComparison.OrdinalIgnoreCase)) ||
-        permisos.Any(p => p.Equals("Consultar historial", StringComparison.OrdinalIgnoreCase)) ||
-        permisos.Any(p => p.Equals("Gestionar movimientos", StringComparison.OrdinalIgnoreCase));
+        permisos.Any(
+            p => p.Equals(
+                "Registrar movimientos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        ||
+        permisos.Any(
+            p => p.Equals(
+                "Consultar historial",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        ||
+        permisos.Any(
+            p => p.Equals(
+                "Gestionar movimientos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
+
 
     bool permisoControlados =
-        permisos.Any(p => p.Equals("Gestionar medicamentos controlados", StringComparison.OrdinalIgnoreCase));
+        permisos.Any(
+            p => p.Equals(
+                "Gestionar medicamentos controlados",
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
 
-    string nombreCompleto = ViewBag.Nombre + " " + ViewBag.Apellido;
 
-    string inicial = !string.IsNullOrEmpty(ViewBag.Nombre?.ToString())
-        ? ViewBag.Nombre.ToString().Substring(0, 1).ToUpper()
+    string nombreCompleto =
+        ViewBag.Nombre + " " + ViewBag.Apellido;
+
+
+    string inicial =
+        !string.IsNullOrEmpty(
+            ViewBag.Nombre?.ToString()
+        )
+        ? ViewBag.Nombre
+            .ToString()
+            .Substring(0, 1)
+            .ToUpper()
         : "U";
 }
+
 
 <!DOCTYPE html>
 
 <html lang="es">
+
 
 <head>
 
@@ -38,7 +105,10 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0" />
 
-    <title>SARMedix - Seleccione Módulo</title>
+    <title>
+        SARMedix - Seleccione Módulo
+    </title>
+
 
     <style>
 
@@ -56,7 +126,10 @@
 
             flex-direction: column;
 
-            font-family: "Segoe UI", Arial, sans-serif;
+            font-family:
+                "Segoe UI",
+                Arial,
+                sans-serif;
 
             background: #f1f5fb;
 
@@ -74,11 +147,13 @@
 
             display: grid;
 
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns:
+                1fr 1fr 1fr;
 
             align-items: center;
 
-            padding: 0 60px;
+            padding:
+                0 60px;
 
             background: #0f5278;
 
@@ -269,7 +344,8 @@
 
 
         .btn-cerrar-sesion {
-            padding: 9px 13px;
+            padding:
+                9px 13px;
 
             border:
                 1px solid
@@ -300,7 +376,95 @@
 
 
         /* ================================= */
-        /* CONTENEDOR PRINCIPAL              */
+        /* MENSAJE DE NAVEGACION             */
+        /* ================================= */
+
+        .contenedor-advertencia {
+            width: 100%;
+
+            display: flex;
+
+            justify-content: center;
+
+            position: relative;
+
+            z-index: 20;
+        }
+
+
+        .mensaje-advertencia {
+            width:
+                calc(100% - 80px);
+
+            max-width: 1160px;
+
+            margin-top: 18px;
+
+            padding:
+                13px 18px;
+
+            display: none;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 11px;
+
+            background: #fff3cd;
+
+            border:
+                1px solid #ffda6a;
+
+            border-radius: 9px;
+
+            color: #664d03;
+
+            font-size: 15px;
+
+            font-weight: 600;
+
+            text-align: center;
+
+            box-shadow:
+                0 4px 12px
+                rgba(120, 90, 0, 0.10);
+
+            opacity: 1;
+
+            transition:
+                opacity 0.5s ease;
+        }
+
+
+        .advertencia-icono {
+            width: 25px;
+
+            height: 25px;
+
+            flex-shrink: 0;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #ffc107;
+
+            color: #5c4500;
+
+            font-size: 16px;
+
+            font-weight: 800;
+        }
+
+
+
+        /* ================================= */
+        /* CONTENIDO                         */
         /* ================================= */
 
         .contenido {
@@ -308,7 +472,8 @@
 
             max-width: 1240px;
 
-            margin: 0 auto;
+            margin:
+                0 auto;
 
             padding:
                 55px 40px 70px;
@@ -319,7 +484,7 @@
 
 
         /* ================================= */
-        /* CUADRICULA DE MODULOS             */
+        /* MODULOS                           */
         /* ================================= */
 
         .modulos {
@@ -362,12 +527,6 @@
         }
 
 
-
-        /*
-            Cuando tiene permiso,
-            la tarjeta crece al pasar el mouse
-        */
-
         .modulo.habilitado:hover {
             transform:
                 scale(1.035);
@@ -382,11 +541,6 @@
         }
 
 
-
-        /* ================================= */
-        /* TITULO DE CADA MODULO             */
-        /* ================================= */
-
         .modulo-titulo {
             display: none;
         }
@@ -394,7 +548,7 @@
 
 
         /* ================================= */
-        /* IMAGEN GENERAL                    */
+        /* IMAGENES                          */
         /* ================================= */
 
         .modulo-imagen {
@@ -412,11 +566,6 @@
         }
 
 
-
-        /* ================================= */
-        /* AJUSTE PARA LAS IMAGENES DE ABAJO */
-        /* ================================= */
-
         .imagen-movimientos {
             background-position:
                 center 78%;
@@ -431,7 +580,7 @@
 
 
         /* ================================= */
-        /* TARJETA BLOQUEADA                 */
+        /* MODULO BLOQUEADO                  */
         /* ================================= */
 
         .modulo.bloqueado {
@@ -443,29 +592,12 @@
         }
 
 
-
-        /* Titulo gris cuando no tiene permiso */
-
-        .modulo.bloqueado
-        .modulo-titulo {
-            background: #d7d9dc;
-
-            color: #63717c;
-        }
-
-
-
-        /* Imagen en escala de grises */
-
         .modulo.bloqueado
         .modulo-imagen {
             filter:
                 grayscale(100%);
         }
 
-
-
-        /* Capa oscura encima de la imagen */
 
         .modulo-bloqueo {
             position: absolute;
@@ -500,6 +632,151 @@
 
         .sin-permiso {
             font-size: 19px;
+        }
+
+
+
+        /* ================================= */
+        /* MODAL CERRAR SESION               */
+        /* ================================= */
+
+        .modal-fondo-sesion {
+            display: none;
+
+            position: fixed;
+
+            top: 0;
+
+            left: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            background-color:
+                rgba(0, 0, 0, 0.45);
+
+            align-items: center;
+
+            justify-content: center;
+
+            z-index: 99999;
+        }
+
+
+        .modal-contenido-sesion {
+            width: 90%;
+
+            max-width: 430px;
+
+            padding: 30px;
+
+            background-color: white;
+
+            border-radius: 15px;
+
+            text-align: center;
+
+            box-shadow:
+                0 12px 35px
+                rgba(0, 0, 0, 0.25);
+        }
+
+
+        .modal-icono-sesion {
+            width: 55px;
+
+            height: 55px;
+
+            margin:
+                0 auto 15px auto;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background-color: #1198a5;
+
+            color: white;
+
+            border-radius: 50%;
+
+            font-size: 30px;
+
+            font-weight: bold;
+        }
+
+
+        .modal-titulo-sesion {
+            margin: 0;
+
+            color: #003b64;
+
+            font-size: 25px;
+
+            font-weight: 700;
+        }
+
+
+        .modal-texto-sesion {
+            margin-top: 15px;
+
+            margin-bottom: 25px;
+
+            color: #444;
+
+            font-size: 17px;
+        }
+
+
+        .modal-botones-sesion {
+            display: flex;
+
+            justify-content: center;
+
+            gap: 10px;
+        }
+
+
+        .modal-botones-sesion button {
+            min-width: 100px;
+
+            padding:
+                10px 18px;
+
+            border: none;
+
+            border-radius: 7px;
+
+            color: white;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+
+        .btn-sesion-si {
+            background-color: #198754;
+        }
+
+
+        .btn-sesion-si:hover {
+            background-color: #157347;
+        }
+
+
+        .btn-sesion-no {
+            background-color: #c82333;
+        }
+
+
+        .btn-sesion-no:hover {
+            background-color: #a91d2a;
         }
 
 
@@ -569,11 +846,19 @@
                 background-position:
                     center top;
             }
+
+
+            .mensaje-advertencia {
+                width:
+                    calc(100% - 40px);
+            }
+
         }
 
     </style>
 
 </head>
+
 
 
 <body>
@@ -653,14 +938,18 @@
 
 
 
+            <!-- FORMULARIO CERRAR SESION -->
+
             <form asp-controller="Home"
                   asp-action="CerrarSesion"
                   method="post"
+                  id="formCerrarSesion"
                   class="form-cerrar-sesion">
 
 
-                <button type="submit"
-                        class="btn-cerrar-sesion">
+                <button type="button"
+                        class="btn-cerrar-sesion"
+                        onclick="abrirConfirmacionCerrarSesion()">
 
                     Cerrar sesión
 
@@ -674,6 +963,38 @@
 
 
     </header>
+
+
+
+    <!-- ================================= -->
+    <!-- MENSAJE AL INTENTAR VOLVER        -->
+    <!-- ================================= -->
+
+    <div class="contenedor-advertencia">
+
+
+        <div id="mensajeNavegacion"
+             class="mensaje-advertencia">
+
+
+            <span class="advertencia-icono">
+
+                !
+
+            </span>
+
+
+            <span>
+
+                Debe cerrar sesión para volver a la pantalla de inicio de sesión.
+
+            </span>
+
+
+        </div>
+
+
+    </div>
 
 
 
@@ -707,9 +1028,9 @@
 
                     <div class="modulo-imagen"
                          style="
-                        background-image:
-                        url('/images/modulos/usuarios-permisos.jpg');
-                        ">
+                            background-image:
+                            url('/images/modulos/usuarios-permisos.jpg');
+                         ">
 
                     </div>
 
@@ -730,9 +1051,9 @@
 
                     <div class="modulo-imagen"
                          style="
-                        background-image:
-                        url('/images/modulos/usuarios-permisos.jpg');
-                        ">
+                            background-image:
+                            url('/images/modulos/usuarios-permisos.jpg');
+                         ">
 
 
                         <div class="modulo-bloqueo">
@@ -782,9 +1103,9 @@
 
                     <div class="modulo-imagen"
                          style="
-                        background-image:
-                        url('/images/modulos/productos.jpg');
-                        ">
+                            background-image:
+                            url('/images/modulos/productos.jpg');
+                         ">
 
                     </div>
 
@@ -805,9 +1126,9 @@
 
                     <div class="modulo-imagen"
                          style="
-                        background-image:
-                        url('/images/modulos/productos.jpg');
-                        ">
+                            background-image:
+                            url('/images/modulos/productos.jpg');
+                         ">
 
 
                         <div class="modulo-bloqueo">
@@ -857,9 +1178,9 @@
 
                     <div class="modulo-imagen imagen-movimientos"
                          style="
-                        background-image:
-                        url('/images/modulos/movimientos.jpg');
-                        ">
+                            background-image:
+                            url('/images/modulos/movimientos.jpg');
+                         ">
 
                     </div>
 
@@ -880,9 +1201,9 @@
 
                     <div class="modulo-imagen imagen-movimientos"
                          style="
-                        background-image:
-                        url('/images/modulos/movimientos.jpg');
-                        ">
+                            background-image:
+                            url('/images/modulos/movimientos.jpg');
+                         ">
 
 
                         <div class="modulo-bloqueo">
@@ -932,9 +1253,9 @@
 
                     <div class="modulo-imagen imagen-controlados"
                          style="
-                        background-image:
-                        url('/images/modulos/controlados.jpg');
-                        ">
+                            background-image:
+                            url('/images/modulos/controlados.jpg');
+                         ">
 
                     </div>
 
@@ -955,9 +1276,9 @@
 
                     <div class="modulo-imagen imagen-controlados"
                          style="
-                        background-image:
-                        url('/images/modulos/controlados.jpg');
-                        ">
+                            background-image:
+                            url('/images/modulos/controlados.jpg');
+                         ">
 
 
                         <div class="modulo-bloqueo">
@@ -995,6 +1316,69 @@
 
 
     <!-- ================================= -->
+    <!-- CONFIRMACION CERRAR SESION        -->
+    <!-- ================================= -->
+
+    <div id="modalCerrarSesion"
+         class="modal-fondo-sesion">
+
+
+        <div class="modal-contenido-sesion">
+
+
+            <div class="modal-icono-sesion">
+
+                ?
+
+            </div>
+
+
+            <div class="modal-titulo-sesion">
+
+                Confirmar acción
+
+            </div>
+
+
+            <div class="modal-texto-sesion">
+
+                ¿Quieres cerrar sesión?
+
+            </div>
+
+
+            <div class="modal-botones-sesion">
+
+
+                <button type="button"
+                        class="btn-sesion-si"
+                        onclick="confirmarCerrarSesion()">
+
+                    Sí
+
+                </button>
+
+
+                <button type="button"
+                        class="btn-sesion-no"
+                        onclick="cerrarConfirmacionCerrarSesion()">
+
+                    No
+
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- ================================= -->
     <!-- FOOTER                            -->
     <!-- ================================= -->
 
@@ -1005,6 +1389,182 @@
     </footer>
 
 
+
+    <script>
+
+        let temporizadorAdvertencia;
+
+
+
+        // =========================================
+        // ABRIR CONFIRMACION DE CIERRE
+        // =========================================
+
+        function abrirConfirmacionCerrarSesion() {
+
+            const modal =
+                document.getElementById(
+                    "modalCerrarSesion"
+                );
+
+
+            if (modal) {
+
+                modal.style.display =
+                    "flex";
+
+            }
+
+        }
+
+
+
+        // =========================================
+        // NO - CONTINUAR EN EL SISTEMA
+        // =========================================
+
+        function cerrarConfirmacionCerrarSesion() {
+
+            const modal =
+                document.getElementById(
+                    "modalCerrarSesion"
+                );
+
+
+            if (modal) {
+
+                modal.style.display =
+                    "none";
+
+            }
+
+        }
+
+
+
+        // =========================================
+        // SI - CERRAR SESION
+        // =========================================
+
+        function confirmarCerrarSesion() {
+
+            const formulario =
+                document.getElementById(
+                    "formCerrarSesion"
+                );
+
+
+            if (formulario) {
+
+                formulario.submit();
+
+            }
+
+        }
+
+
+
+        // =========================================
+        // MOSTRAR MENSAJE AMARILLO
+        // =========================================
+
+        function mostrarAdvertenciaNavegacion() {
+
+            const mensaje =
+                document.getElementById(
+                    "mensajeNavegacion"
+                );
+
+
+            mensaje.style.display =
+                "flex";
+
+
+            mensaje.style.opacity =
+                "1";
+
+
+            clearTimeout(
+                temporizadorAdvertencia
+            );
+
+
+            temporizadorAdvertencia =
+                setTimeout(
+                    function () {
+
+                        mensaje.style.opacity =
+                            "0";
+
+
+                        setTimeout(
+                            function () {
+
+                                mensaje.style.display =
+                                    "none";
+
+                            },
+                            500
+                        );
+
+                    },
+                    4000
+                );
+
+        }
+
+
+
+        // =========================================
+        // IMPEDIR VOLVER AL LOGIN
+        // =========================================
+
+        history.pushState(
+            null,
+            "",
+            window.location.href
+        );
+
+
+        window.addEventListener(
+            "popstate",
+            function () {
+
+                history.pushState(
+                    null,
+                    "",
+                    window.location.href
+                );
+
+
+                mostrarAdvertenciaNavegacion();
+
+            }
+        );
+
+
+
+        // =========================================
+        // CONTROL DE CACHE DEL NAVEGADOR
+        // =========================================
+
+        window.addEventListener(
+            "pageshow",
+            function (evento) {
+
+                if (evento.persisted) {
+
+                    window.location.reload();
+
+                }
+
+            }
+        );
+
+    </script>
+
+
 </body>
+
 
 </html>

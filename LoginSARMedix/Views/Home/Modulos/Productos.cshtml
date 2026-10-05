@@ -1,13 +1,1287 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using Microsoft.AspNetCore.Http
+
+@{
+    Layout = null;
+
+    string nombre =
+        Context.Session.GetString("Nombre") ?? "";
+
+    string apellido =
+        Context.Session.GetString("Apellido") ?? "";
+
+    string rol =
+        Context.Session.GetString("Rol") ?? "";
+
+    string permisosTexto =
+        Context.Session.GetString("Permisos") ?? "";
+
+    string nombreCompleto =
+        (nombre + " " + apellido).Trim();
+
+    string inicial =
+        !string.IsNullOrEmpty(nombre)
+            ? nombre.Substring(0, 1).ToUpper()
+            : "U";
+
+
+    var permisos =
+        permisosTexto
+            .Split(
+                '|',
+                StringSplitOptions.RemoveEmptyEntries
+            );
+
+
+    bool permisoRegistrar =
+        permisos.Any(
+            p => p.Equals(
+                "Registrar productos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
+
+
+    bool permisoConsultar =
+        permisos.Any(
+            p => p.Equals(
+                "Consultar productos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
+}
+
+
+<!DOCTYPE html>
+
+<html lang="es">
+
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+
+    <title>
+        SARMedix - Productos
+    </title>
+
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html,
+        body {
+            margin: 0;
+
+            min-height: 100%;
+
+            font-family:
+                "Segoe UI",
+                Arial,
+                Helvetica,
+                sans-serif;
+        }
+
+
+        body {
+            min-height: 100vh;
+
+            display: flex;
+
+            flex-direction: column;
+
+            background-color: #eef4fb;
+
+            color: #17324d;
+        }
+
+
+
+        /* ========================================= */
+        /* BARRA SUPERIOR                            */
+        /* ========================================= */
+
+        .barra-superior {
+            min-height: 82px;
+
+            width: 100%;
+
+            padding: 12px 50px;
+
+            display: grid;
+
+            grid-template-columns:
+                1fr
+                auto
+                1fr;
+
+            align-items: center;
+
+            gap: 25px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #073b64,
+                    #0d5b82
+                );
+
+            color: white;
+
+            box-shadow:
+                0 3px 15px
+                rgba(0, 0, 0, 0.16);
+        }
+
+
+
+        /* ========================================= */
+        /* LOGO                                      */
+        /* ========================================= */
+
+        .logo {
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+        }
+
+
+        .logo-cruz-medica {
+            position: relative;
+
+            width: 43px;
+
+            height: 43px;
+
+            flex-shrink: 0;
+
+            border-radius: 10px;
+
+            background-color: white;
+
+            box-shadow:
+                0 5px 12px
+                rgba(0, 0, 0, 0.14);
+        }
+
+
+        .logo-cruz-medica::before {
+            content: "";
+
+            position: absolute;
+
+            width: 23px;
+
+            height: 8px;
+
+            left: 10px;
+
+            top: 17px;
+
+            border-radius: 2px;
+
+            background-color: #0d7898;
+        }
+
+
+        .logo-cruz-medica::after {
+            content: "";
+
+            position: absolute;
+
+            width: 8px;
+
+            height: 23px;
+
+            left: 17px;
+
+            top: 10px;
+
+            border-radius: 2px;
+
+            background-color: #0d7898;
+        }
+
+
+        .logo-texto {
+            color: white;
+
+            font-size: 24px;
+
+            font-weight: 700;
+
+            white-space: nowrap;
+        }
+
+
+
+        /* ========================================= */
+        /* TITULO SUPERIOR                           */
+        /* ========================================= */
+
+        .titulo-superior {
+            text-align: center;
+
+            font-size: 21px;
+
+            font-weight: 600;
+
+            color: white;
+
+            white-space: nowrap;
+        }
+
+
+
+        /* ========================================= */
+        /* USUARIO                                   */
+        /* ========================================= */
+
+        .usuario-superior {
+            display: flex;
+
+            justify-content: flex-end;
+
+            align-items: center;
+
+            gap: 11px;
+
+            min-width: 0;
+        }
+
+
+        .usuario-datos {
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: flex-end;
+
+            line-height: 1.2;
+        }
+
+
+        .usuario-nombre {
+            color: white;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            white-space: nowrap;
+        }
+
+
+        .usuario-rol {
+            margin-top: 3px;
+
+            color: #d8ebf5;
+
+            font-size: 12px;
+
+            white-space: nowrap;
+        }
+
+
+        .usuario-circulo {
+            width: 42px;
+
+            height: 42px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-shrink: 0;
+
+            border-radius: 50%;
+
+            background-color:
+                rgba(255, 255, 255, 0.18);
+
+            color: white;
+
+            font-size: 18px;
+
+            font-weight: 700;
+        }
+
+
+
+        /* ========================================= */
+        /* CERRAR SESION                             */
+        /* ========================================= */
+
+        .form-cerrar-sesion {
+            margin: 0;
+
+            padding: 0;
+        }
+
+
+        .btn-cerrar-sesion {
+            width: auto;
+
+            padding: 9px 14px;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.70);
+
+            border-radius: 7px;
+
+            background-color:
+                rgba(255, 255, 255, 0.10);
+
+            color: white;
+
+            font-family: inherit;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition:
+                background-color 0.2s ease,
+                border-color 0.2s ease;
+        }
+
+
+        .btn-cerrar-sesion:hover {
+            background-color:
+                rgba(255, 255, 255, 0.23);
+
+            border-color: white;
+        }
+
+
+
+        /* ========================================= */
+        /* CONTENIDO                                 */
+        /* ========================================= */
+
+        .submenu-contenedor {
+            width: 100%;
+
+            flex: 1;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            padding:
+                48px 25px
+                45px 25px;
+        }
+
+
+        .submenu-titulo {
+            color: #07527c;
+
+            font-size: 29px;
+
+            font-weight: 700;
+
+            text-align: center;
+        }
+
+
+        .submenu-descripcion {
+            margin:
+                10px 0
+                38px 0;
+
+            color: #60798b;
+
+            font-size: 15px;
+
+            text-align: center;
+        }
+
+
+
+        /* ========================================= */
+        /* TARJETAS                                  */
+        /* ========================================= */
+
+        .submenu-grid {
+            width: 100%;
+
+            max-width: 950px;
+
+            display: flex;
+
+            justify-content: center;
+
+            gap: 25px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .submenu-card {
+            width: 300px;
+
+            min-height: 216px;
+
+            padding:
+                34px 28px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background-color: white;
+
+            border-radius: 14px;
+
+            box-shadow:
+                0 8px 22px
+                rgba(16, 65, 95, 0.11);
+
+            text-decoration: none;
+
+            color: inherit;
+
+            text-align: center;
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+
+        .submenu-card:hover {
+            transform:
+                translateY(-4px);
+
+            box-shadow:
+                0 13px 30px
+                rgba(16, 65, 95, 0.17);
+
+            color: inherit;
+        }
+
+
+        .submenu-icono {
+            width: 64px;
+
+            height: 64px;
+
+            margin-bottom: 20px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background-color: #e8f5fa;
+
+            font-size: 30px;
+        }
+
+
+        .submenu-card-titulo {
+            margin-bottom: 9px;
+
+            color: #07527c;
+
+            font-size: 18px;
+
+            font-weight: 700;
+        }
+
+
+        .submenu-card p {
+            margin: 0;
+
+            color: #60798b;
+
+            font-size: 14px;
+
+            line-height: 1.5;
+        }
+
+
+
+        /* ========================================= */
+        /* VOLVER                                    */
+        /* ========================================= */
+
+        .volver-contenedor {
+            margin-top: 38px;
+
+            text-align: center;
+        }
+
+
+        .btn-volver-submenu {
+            display: inline-block;
+
+            padding:
+                11px 22px;
+
+            border-radius: 7px;
+
+            background-color: #1198a5;
+
+            color: white;
+
+            text-decoration: none;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            transition:
+                background-color 0.2s ease;
+        }
+
+
+        .btn-volver-submenu:hover {
+            background-color: #0d8490;
+
+            color: white;
+        }
+
+
+
+        /* ========================================= */
+        /* CONFIRMACION CERRAR SESION                */
+        /* ========================================= */
+
+        .modal-fondo-sesion {
+            display: none;
+
+            position: fixed;
+
+            top: 0;
+
+            left: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background-color:
+                rgba(0, 0, 0, 0.45);
+
+            z-index: 99999;
+        }
+
+
+        .modal-contenido-sesion {
+            width: 90%;
+
+            max-width: 430px;
+
+            padding: 30px;
+
+            background-color: white;
+
+            border-radius: 15px;
+
+            text-align: center;
+
+            box-shadow:
+                0 12px 35px
+                rgba(0, 0, 0, 0.25);
+        }
+
+
+        .modal-icono-sesion {
+            width: 55px;
+
+            height: 55px;
+
+            margin:
+                0 auto 15px auto;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background-color: #1198a5;
+
+            color: white;
+
+            font-size: 30px;
+
+            font-weight: bold;
+        }
+
+
+        .modal-titulo-sesion {
+            margin: 0;
+
+            color: #003b64;
+
+            font-size: 25px;
+
+            font-weight: 700;
+        }
+
+
+        .modal-texto-sesion {
+            margin-top: 15px;
+
+            margin-bottom: 25px;
+
+            color: #444;
+
+            font-size: 17px;
+        }
+
+
+        .modal-botones-sesion {
+            display: flex;
+
+            justify-content: center;
+
+            gap: 10px;
+        }
+
+
+        .modal-botones-sesion button {
+            min-width: 100px;
+
+            padding:
+                10px 18px;
+
+            border: none;
+
+            border-radius: 7px;
+
+            color: white;
+
+            font-family: inherit;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+
+        .btn-sesion-si {
+            background-color: #198754;
+        }
+
+
+        .btn-sesion-si:hover {
+            background-color: #157347;
+        }
+
+
+        .btn-sesion-no {
+            background-color: #c82333;
+        }
+
+
+        .btn-sesion-no:hover {
+            background-color: #a91d2a;
+        }
+
+
+
+        /* ========================================= */
+        /* FOOTER                                    */
+        /* ========================================= */
+
+        .footer {
+            width: 100%;
+
+            min-height: 62px;
+
+            margin-top: auto;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background-color:
+                rgba(255, 255, 255, 0.96);
+
+            color: #60798b;
+
+            font-size: 14px;
+
+            text-align: center;
+        }
+
+
+
+        /* ========================================= */
+        /* RESPONSIVE                                */
+        /* ========================================= */
+
+        @@media (max-width: 1000px) {
+
+            .barra-superior {
+                padding:
+                    12px 25px;
+            }
+
+
+            .usuario-datos {
+                display: none;
+            }
+
+        }
+
+
+
+        @@media (max-width: 750px) {
+
+            .barra-superior {
+                display: flex;
+
+                justify-content: space-between;
+
+                padding:
+                    12px 18px;
+            }
+
+
+            .titulo-superior {
+                display: none;
+            }
+
+
+            .logo-texto {
+                font-size: 19px;
+            }
+
+
+            .usuario-circulo {
+                display: none;
+            }
+
+
+            .btn-cerrar-sesion {
+                padding:
+                    8px 10px;
+
+                font-size: 12px;
+            }
+
+
+            .submenu-card {
+                width: 100%;
+
+                max-width: 440px;
+            }
+
+        }
+
+
+
+        @@media (max-width: 500px) {
+
+            .logo-cruz-medica {
+                width: 36px;
+
+                height: 36px;
+            }
+
+
+            .logo-cruz-medica::before {
+                width: 20px;
+
+                height: 6px;
+
+                left: 8px;
+
+                top: 15px;
+            }
+
+
+            .logo-cruz-medica::after {
+                width: 6px;
+
+                height: 20px;
+
+                left: 15px;
+
+                top: 8px;
+            }
+
+
+            .logo-texto {
+                font-size: 16px;
+            }
+
+
+            .submenu-contenedor {
+                padding:
+                    35px 18px;
+            }
+
+
+            .submenu-titulo {
+                font-size: 25px;
+            }
+
+
+            .modal-botones-sesion {
+                flex-direction: column;
+            }
+
+
+            .modal-botones-sesion button {
+                width: 100%;
+            }
+
+        }
+
+    </style>
+
+
 </head>
+
+
+
 <body>
 
-    <p>Productos</p>
+
+    <!-- ========================================= -->
+    <!-- BARRA SUPERIOR                            -->
+    <!-- ========================================= -->
+
+    <header class="barra-superior">
+
+
+        <div class="logo">
+
+
+            <div class="logo-cruz-medica">
+            </div>
+
+
+            <div class="logo-texto">
+
+                SARMedix | SAR de Chiguay
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="titulo-superior">
+
+            Seleccione Submódulo
+
+        </div>
+
+
+
+        <div class="usuario-superior">
+
+
+            <div class="usuario-datos">
+
+
+                <span class="usuario-nombre">
+
+                    @nombreCompleto
+
+                </span>
+
+
+                <span class="usuario-rol">
+
+                    @rol
+
+                </span>
+
+
+            </div>
+
+
+
+            <div class="usuario-circulo">
+
+                @inicial
+
+            </div>
+
+
+
+            <!-- ================================= -->
+            <!-- CERRAR SESION                     -->
+            <!-- ================================= -->
+
+            <form asp-controller="Home"
+                  asp-action="CerrarSesion"
+                  method="post"
+                  id="formCerrarSesion"
+                  class="form-cerrar-sesion">
+
+
+                <button type="button"
+                        class="btn-cerrar-sesion"
+                        onclick="abrirConfirmacionCerrarSesion()">
+
+                    Cerrar sesión
+
+                </button>
+
+
+            </form>
+
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- ========================================= -->
+    <!-- CONTENIDO                                 -->
+    <!-- ========================================= -->
+
+    <main class="submenu-contenedor">
+
+
+        <div class="submenu-titulo">
+
+            Productos
+
+        </div>
+
+
+        <p class="submenu-descripcion">
+
+            Seleccione una opción para gestionar los productos e inventario.
+
+        </p>
+
+
+
+        <div class="submenu-grid">
+
+
+            <!-- ================================= -->
+            <!-- REGISTRAR PRODUCTO                -->
+            <!-- ================================= -->
+
+            @if (permisoRegistrar)
+            {
+                <a asp-controller="Home"
+                   asp-action="CrearProducto"
+                   class="submenu-card">
+
+
+                    <div class="submenu-icono">
+
+                        ➕
+
+                    </div>
+
+
+                    <div class="submenu-card-titulo">
+
+                        Registrar Producto
+
+                    </div>
+
+
+                    <p>
+
+                        Registrar un nuevo medicamento o insumo en SARMedix.
+
+                    </p>
+
+
+                </a>
+            }
+
+
+
+            <!-- ================================= -->
+            <!-- LISTADO DE PRODUCTOS              -->
+            <!-- ================================= -->
+
+            @if (permisoConsultar)
+            {
+                <a asp-controller="Home"
+                   asp-action="ListadoProductos2"
+                   class="submenu-card">
+
+
+                    <div class="submenu-icono">
+
+                        📦
+
+                    </div>
+
+
+                    <div class="submenu-card-titulo">
+
+                        Listado de Productos
+
+                    </div>
+
+
+                    <p>
+
+                        Consultar y editar los medicamentos e insumos registrados.
+
+                    </p>
+
+
+                </a>
+            }
+
+
+
+            <!-- ================================= -->
+            <!-- LOTES                             -->
+            <!-- ================================= -->
+
+            @if (permisoConsultar)
+            {
+                <a asp-controller="Home"
+                   asp-action="Lotes"
+                   class="submenu-card">
+
+
+                    <div class="submenu-icono">
+
+                        📁
+
+                    </div>
+
+
+                    <div class="submenu-card-titulo">
+
+                        Gestión de Lotes
+
+                    </div>
+
+
+                    <p>
+
+                        Consultar y administrar los lotes asociados a los productos.
+
+                    </p>
+
+
+                </a>
+            }
+
+
+        </div>
+
+
+
+        <!-- ===================================== -->
+        <!-- VOLVER                                -->
+        <!-- ===================================== -->
+
+        <div class="volver-contenedor">
+
+
+            <a asp-controller="Home"
+               asp-action="Modulos"
+               class="btn-volver-submenu">
+
+                ← Volver a módulos
+
+            </a>
+
+
+        </div>
+
+
+    </main>
+
+
+
+    <!-- ========================================= -->
+    <!-- CONFIRMACION CERRAR SESION                -->
+    <!-- ========================================= -->
+
+    <div id="modalCerrarSesion"
+         class="modal-fondo-sesion">
+
+
+        <div class="modal-contenido-sesion">
+
+
+            <div class="modal-icono-sesion">
+
+                ?
+
+            </div>
+
+
+            <div class="modal-titulo-sesion">
+
+                Confirmar acción
+
+            </div>
+
+
+            <div class="modal-texto-sesion">
+
+                ¿Quieres cerrar sesión?
+
+            </div>
+
+
+            <div class="modal-botones-sesion">
+
+
+                <button type="button"
+                        class="btn-sesion-si"
+                        onclick="confirmarCerrarSesion()">
+
+                    Sí
+
+                </button>
+
+
+                <button type="button"
+                        class="btn-sesion-no"
+                        onclick="cerrarConfirmacionCerrarSesion()">
+
+                    No
+
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- ========================================= -->
+    <!-- FOOTER                                    -->
+    <!-- ========================================= -->
+
+    <footer class="footer">
+
+        SARMedix · Sistema de Gestión Farmacéutica · SAR de Chiguay
+
+    </footer>
+
+
+
+    <script>
+
+        // =========================================
+        // ABRIR CONFIRMACION DE CIERRE
+        // =========================================
+
+        function abrirConfirmacionCerrarSesion() {
+
+            const modal =
+                document.getElementById(
+                    "modalCerrarSesion"
+                );
+
+
+            if (modal) {
+
+                modal.style.display =
+                    "flex";
+
+            }
+
+        }
+
+
+
+        // =========================================
+        // NO - CONTINUAR EN EL SISTEMA
+        // =========================================
+
+        function cerrarConfirmacionCerrarSesion() {
+
+            const modal =
+                document.getElementById(
+                    "modalCerrarSesion"
+                );
+
+
+            if (modal) {
+
+                modal.style.display =
+                    "none";
+
+            }
+
+        }
+
+
+
+        // =========================================
+        // SI - CERRAR SESION
+        // =========================================
+
+        function confirmarCerrarSesion() {
+
+            const formulario =
+                document.getElementById(
+                    "formCerrarSesion"
+                );
+
+
+            if (formulario) {
+
+                formulario.submit();
+
+            }
+
+        }
+
+    </script>
+
 
 </body>
+
+
 </html>
