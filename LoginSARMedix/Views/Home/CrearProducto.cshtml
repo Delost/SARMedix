@@ -1,158 +1,1084 @@
 ﻿@model LoginSARMedix.Models.Producto
 
+@{
+    string mensaje = ViewBag.Mensaje as string ?? "";
+
+    bool mensajeExito =
+        mensaje.Equals(
+            "Producto registrado correctamente",
+            StringComparison.OrdinalIgnoreCase
+        );
+}
+
+
 <h2>Registrar producto</h2>
+
 
 <form asp-controller="Home"
       asp-action="NuevoProducto"
       method="post"
-      class="formulario-principal">
+      class="formulario-principal"
+      id="formCrearProducto"
+      onsubmit="return validarYConfirmar()"
+      novalidate>
+
+
+    <!-- ========================================= -->
+    <!-- MENSAJE                                   -->
+    <!-- ========================================= -->
+
+    <div class="espacio-mensaje">
+
+        @if (!string.IsNullOrEmpty(mensaje))
+        {
+            if (mensajeExito)
+            {
+                <div class="mensaje mensaje-exito"
+                     id="mensajeFormulario">
+
+                    @mensaje
+
+                </div>
+            }
+            else
+            {
+                <div class="mensaje mensaje-error"
+                     id="mensajeFormulario">
+
+                    @mensaje
+
+                </div>
+            }
+        }
+        else
+        {
+            <div class="mensaje mensaje-error mensaje-oculto"
+                 id="mensajeFormulario">
+            </div>
+        }
+
+    </div>
+
+
+
+    <!-- ========================================= -->
+    <!-- TIPO DE PRODUCTO                          -->
+    <!-- ========================================= -->
 
     <div>
+
         <label>Tipo de producto</label>
 
         <select asp-for="tipo"
                 id="tipoProducto"
                 onchange="cambiarTipo()">
 
-            <option value="">Seleccione</option>
-            <option value="Medicamento">Medicamento</option>
-            <option value="Insumo">Insumo</option>
+            <option value="">
+                Seleccione
+            </option>
+
+            <option value="Medicamento">
+                Medicamento
+            </option>
+
+            <option value="Insumo">
+                Insumo
+            </option>
 
         </select>
+
     </div>
 
 
+
+    <!-- ========================================= -->
+    <!-- CODIGO INTERNO                            -->
+    <!-- ========================================= -->
+
     <div>
+
         <label>Código interno</label>
 
-        <input asp-for="codigo_interno" />
+        <input asp-for="codigo_interno"
+               id="codigoInterno" />
+
     </div>
 
 
+
+    <!-- ========================================= -->
+    <!-- NOMBRE                                    -->
+    <!-- ========================================= -->
+
     <div>
+
         <label>Nombre</label>
 
-        <input asp-for="nombre" />
+        <input asp-for="nombre"
+               id="nombreProducto" />
+
     </div>
 
 
+
+    <!-- ========================================= -->
+    <!-- STOCK MINIMO                              -->
+    <!-- ========================================= -->
+
     <div>
+
         <label>Stock mínimo</label>
 
         <input asp-for="stock_minimo"
+               id="stockMinimo"
                type="number"
                min="0" />
+
     </div>
 
 
-    <!-- MEDICAMENTO -->
+
+    <!-- ========================================= -->
+    <!-- CAMPOS MEDICAMENTO                        -->
+    <!-- ========================================= -->
 
     <div id="camposMedicamento"
          style="display:none;">
 
+
         <div>
+
             <label>Principio activo</label>
 
-            <input asp-for="principio_activo" />
+            <input asp-for="principio_activo"
+                   id="principioActivo" />
+
         </div>
 
 
         <div>
+
             <label>Concentración</label>
 
-            <input asp-for="concentracion" />
+            <input asp-for="concentracion"
+                   id="concentracion" />
+
         </div>
 
 
         <div>
+
             <label>¿Requiere control?</label>
 
-            <select asp-for="requiere_control">
+            <select asp-for="requiere_control"
+                    id="requiereControl">
 
-                <option value="false">No</option>
-                <option value="true">Sí</option>
+                <option value="false">
+                    No
+                </option>
+
+                <option value="true">
+                    Sí
+                </option>
 
             </select>
+
         </div>
+
 
     </div>
 
 
-    <!-- INSUMO -->
+
+    <!-- ========================================= -->
+    <!-- CAMPOS INSUMO                             -->
+    <!-- ========================================= -->
 
     <div id="camposInsumo"
          style="display:none;">
 
+
         <div>
+
             <label>Material</label>
 
-            <input asp-for="material" />
+            <input asp-for="material"
+                   id="material" />
+
         </div>
 
 
         <div>
+
             <label>¿Es estéril?</label>
 
-            <select asp-for="es_esteril">
+            <select asp-for="es_esteril"
+                    id="esEsteril">
 
-                <option value="false">No</option>
-                <option value="true">Sí</option>
+                <option value="false">
+                    No
+                </option>
+
+                <option value="true">
+                    Sí
+                </option>
 
             </select>
+
         </div>
+
 
     </div>
 
 
+
+    <br />
+
+
+    <!-- ========================================= -->
+    <!-- BOTON REGISTRAR                           -->
+    <!-- ========================================= -->
+
     <button type="submit">
+
         Registrar producto
+
     </button>
+
 
 </form>
 
 
-@if (ViewBag.Mensaje != null)
-{
-    <script>
-        alert('@ViewBag.Mensaje');
-    </script>
-}
+
+<!-- ========================================= -->
+<!-- VOLVER                                    -->
+<!-- ========================================= -->
+
+<div class="contenedor-volver">
+
+    <a asp-controller="Home"
+       asp-action="Productos"
+       class="btn-volver-productos">
+
+        ← Volver a Productos
+
+    </a>
+
+</div>
+
+
+
+<!-- ========================================= -->
+<!-- VENTANA DE CONFIRMACION                   -->
+<!-- ========================================= -->
+
+<div id="modalConfirmacion"
+     class="modal-fondo">
+
+    <div class="modal-contenido">
+
+
+        <div class="modal-icono">
+
+            ?
+
+        </div>
+
+
+        <h2>
+
+            Confirmar acción
+
+        </h2>
+
+
+        <p>
+
+            ¿Quieres registrar este producto?
+
+        </p>
+
+
+        <div class="modal-botones">
+
+
+            <button type="button"
+                    class="btn-modal-si"
+                    onclick="registrarProducto()">
+
+                Sí
+
+            </button>
+
+
+            <button type="button"
+                    class="btn-modal-no"
+                    onclick="cerrarConfirmacion()">
+
+                No
+
+            </button>
+
+
+            <button type="button"
+                    class="btn-modal-cancelar"
+                    onclick="cancelarRegistro()">
+
+                Cancelar
+
+            </button>
+
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<style>
+
+    /* ========================================= */
+    /* MENSAJES                                  */
+    /* ========================================= */
+
+    .espacio-mensaje {
+        min-height: 48px;
+
+        margin-bottom: 8px;
+    }
+
+
+    .mensaje {
+        width: 100%;
+
+        padding: 12px 15px;
+
+        border-radius: 7px;
+
+        text-align: center;
+
+        font-weight: 600;
+
+        opacity: 1;
+
+        transition:
+            opacity 0.5s ease;
+    }
+
+
+    .mensaje-exito {
+        background-color: #d1e7dd;
+
+        color: #0f5132;
+
+        border:
+            1px solid #badbcc;
+    }
+
+
+    .mensaje-error {
+        background-color: #f8d7da;
+
+        color: #842029;
+
+        border:
+            1px solid #f5c2c7;
+    }
+
+
+    .mensaje-oculto {
+        visibility: hidden;
+    }
+
+
+
+    /* ========================================= */
+    /* BOTON VOLVER                              */
+    /* ========================================= */
+
+    .contenedor-volver {
+        display: flex;
+
+        justify-content: center;
+
+        margin-top: 30px;
+
+        margin-bottom: 30px;
+    }
+
+
+    .btn-volver-productos {
+        display: inline-block;
+
+        padding: 12px 22px;
+
+        background-color: #1198a5;
+
+        color: white;
+
+        border-radius: 7px;
+
+        text-decoration: none;
+
+        font-weight: 600;
+
+        transition:
+            background-color 0.2s ease;
+    }
+
+
+    .btn-volver-productos:hover {
+        background-color: #0d8490;
+
+        color: white;
+    }
+
+
+
+    /* ========================================= */
+    /* VENTANA DE CONFIRMACION                   */
+    /* ========================================= */
+
+    .modal-fondo {
+        display: none;
+
+        position: fixed;
+
+        top: 0;
+
+        left: 0;
+
+        width: 100%;
+
+        height: 100%;
+
+        background-color:
+            rgba(0, 0, 0, 0.45);
+
+        align-items: center;
+
+        justify-content: center;
+
+        z-index: 9999;
+    }
+
+
+    .modal-contenido {
+        width: 90%;
+
+        max-width: 430px;
+
+        background-color: white;
+
+        border-radius: 15px;
+
+        padding: 30px;
+
+        text-align: center;
+
+        box-shadow:
+            0 12px 35px
+            rgba(0, 0, 0, 0.25);
+    }
+
+
+    .modal-icono {
+        width: 55px;
+
+        height: 55px;
+
+        margin:
+            0 auto 15px auto;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        background-color: #1198a5;
+
+        color: white;
+
+        border-radius: 50%;
+
+        font-size: 30px;
+
+        font-weight: bold;
+    }
+
+
+    .modal-contenido h2 {
+        margin-top: 0;
+
+        color: #003b64;
+    }
+
+
+    .modal-contenido p {
+        margin-top: 15px;
+
+        margin-bottom: 25px;
+
+        font-size: 17px;
+
+        color: #444;
+    }
+
+
+    .modal-botones {
+        display: flex;
+
+        justify-content: center;
+
+        gap: 10px;
+
+        flex-wrap: wrap;
+    }
+
+
+    .modal-botones button {
+        min-width: 90px;
+
+        padding: 10px 18px;
+
+        border: none;
+
+        border-radius: 7px;
+
+        color: white;
+
+        font-weight: 600;
+
+        cursor: pointer;
+    }
+
+
+    .btn-modal-si {
+        background-color: #198754;
+    }
+
+
+    .btn-modal-si:hover {
+        background-color: #157347;
+    }
+
+
+    .btn-modal-no {
+        background-color: #c82333;
+    }
+
+
+    .btn-modal-no:hover {
+        background-color: #a91d2a;
+    }
+
+
+    .btn-modal-cancelar {
+        background-color: #59636b;
+    }
+
+
+    .btn-modal-cancelar:hover {
+        background-color: #474f55;
+    }
+
+</style>
+
 
 
 <script>
 
+    let productoConfirmado = false;
+
+
+
+    // =========================================
+    // MOSTRAR CAMPOS SEGUN TIPO
+    // =========================================
+
     function cambiarTipo() {
 
-        let tipo =
-            document.getElementById("tipoProducto").value;
+        const tipo =
+            document.getElementById(
+                "tipoProducto"
+            ).value;
 
-        let medicamento =
-            document.getElementById("camposMedicamento");
 
-        let insumo =
-            document.getElementById("camposInsumo");
+        const medicamento =
+            document.getElementById(
+                "camposMedicamento"
+            );
+
+
+        const insumo =
+            document.getElementById(
+                "camposInsumo"
+            );
 
 
         if (tipo === "Medicamento") {
 
-            medicamento.style.display = "block";
+            medicamento.style.display =
+                "block";
 
-            insumo.style.display = "none";
+            insumo.style.display =
+                "none";
         }
 
         else if (tipo === "Insumo") {
 
-            medicamento.style.display = "none";
+            medicamento.style.display =
+                "none";
 
-            insumo.style.display = "block";
+            insumo.style.display =
+                "block";
         }
 
         else {
 
-            medicamento.style.display = "none";
+            medicamento.style.display =
+                "none";
 
-            insumo.style.display = "none";
+            insumo.style.display =
+                "none";
         }
     }
+
+
+
+    // =========================================
+    // MOSTRAR ERROR
+    // =========================================
+
+    function mostrarError(
+        texto,
+        campo
+    ) {
+
+        const mensaje =
+            document.getElementById(
+                "mensajeFormulario"
+            );
+
+
+        mensaje.innerText =
+            texto;
+
+
+        mensaje.className =
+            "mensaje mensaje-error";
+
+
+        mensaje.style.visibility =
+            "visible";
+
+
+        mensaje.style.opacity =
+            "1";
+
+
+        campo.focus();
+    }
+
+
+
+    // =========================================
+    // VALIDAR Y MOSTRAR CONFIRMACION
+    // =========================================
+
+    function validarYConfirmar() {
+
+        if (productoConfirmado) {
+
+            return true;
+        }
+
+
+        const tipo =
+            document.getElementById(
+                "tipoProducto"
+            );
+
+
+        const codigo =
+            document.getElementById(
+                "codigoInterno"
+            );
+
+
+        const nombre =
+            document.getElementById(
+                "nombreProducto"
+            );
+
+
+        const stock =
+            document.getElementById(
+                "stockMinimo"
+            );
+
+
+        const principioActivo =
+            document.getElementById(
+                "principioActivo"
+            );
+
+
+        const concentracion =
+            document.getElementById(
+                "concentracion"
+            );
+
+
+        const material =
+            document.getElementById(
+                "material"
+            );
+
+
+
+        if (tipo.value === "") {
+
+            mostrarError(
+                "Debe seleccionar el tipo de producto.",
+                tipo
+            );
+
+            return false;
+        }
+
+
+
+        if (codigo.value.trim() === "") {
+
+            mostrarError(
+                "Debe ingresar el código interno.",
+                codigo
+            );
+
+            return false;
+        }
+
+
+
+        if (nombre.value.trim() === "") {
+
+            mostrarError(
+                "Debe ingresar el nombre del producto.",
+                nombre
+            );
+
+            return false;
+        }
+
+
+
+        if (
+            stock.value.trim() === "" ||
+            Number(stock.value) < 0
+        ) {
+
+            mostrarError(
+                "Debe ingresar un stock mínimo válido.",
+                stock
+            );
+
+            return false;
+        }
+
+
+
+        // =====================================
+        // VALIDACIONES MEDICAMENTO
+        // =====================================
+
+        if (
+            tipo.value === "Medicamento"
+        ) {
+
+            if (
+                principioActivo.value.trim()
+                === ""
+            ) {
+
+                mostrarError(
+                    "Debe ingresar el principio activo.",
+                    principioActivo
+                );
+
+                return false;
+            }
+
+
+            if (
+                concentracion.value.trim()
+                === ""
+            ) {
+
+                mostrarError(
+                    "Debe ingresar la concentración.",
+                    concentracion
+                );
+
+                return false;
+            }
+        }
+
+
+
+        // =====================================
+        // VALIDACIONES INSUMO
+        // =====================================
+
+        if (
+            tipo.value === "Insumo"
+        ) {
+
+            if (
+                material.value.trim()
+                === ""
+            ) {
+
+                mostrarError(
+                    "Debe ingresar el material.",
+                    material
+                );
+
+                return false;
+            }
+        }
+
+
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display =
+            "flex";
+
+
+        return false;
+    }
+
+
+
+    // =========================================
+    // BOTON SI
+    // =========================================
+
+    function registrarProducto() {
+
+        productoConfirmado =
+            true;
+
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display =
+            "none";
+
+
+        document.getElementById(
+            "formCrearProducto"
+        ).requestSubmit();
+    }
+
+
+
+    // =========================================
+    // BOTON NO
+    // =========================================
+
+    function cerrarConfirmacion() {
+
+        productoConfirmado =
+            false;
+
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display =
+            "none";
+    }
+
+
+
+    // =========================================
+    // BOTON CANCELAR
+    // =========================================
+
+    function cancelarRegistro() {
+
+        productoConfirmado =
+            false;
+
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display =
+            "none";
+
+
+        document.getElementById(
+            "tipoProducto"
+        ).value =
+            "";
+
+
+        document.getElementById(
+            "codigoInterno"
+        ).value =
+            "";
+
+
+        document.getElementById(
+            "nombreProducto"
+        ).value =
+            "";
+
+
+        document.getElementById(
+            "stockMinimo"
+        ).value =
+            "0";
+
+
+        document.getElementById(
+            "principioActivo"
+        ).value =
+            "";
+
+
+        document.getElementById(
+            "concentracion"
+        ).value =
+            "";
+
+
+        document.getElementById(
+            "requiereControl"
+        ).value =
+            "false";
+
+
+        document.getElementById(
+            "material"
+        ).value =
+            "";
+
+
+        document.getElementById(
+            "esEsteril"
+        ).value =
+            "false";
+
+
+        document.getElementById(
+            "camposMedicamento"
+        ).style.display =
+            "none";
+
+
+        document.getElementById(
+            "camposInsumo"
+        ).style.display =
+            "none";
+
+
+        const mensaje =
+            document.getElementById(
+                "mensajeFormulario"
+            );
+
+
+        mensaje.innerText =
+            "";
+
+
+        mensaje.className =
+            "mensaje mensaje-error mensaje-oculto";
+
+
+        mensaje.style.visibility =
+            "hidden";
+
+
+        mensaje.style.opacity =
+            "1";
+
+
+        document.getElementById(
+            "tipoProducto"
+        ).focus();
+    }
+
+
+
+    // =========================================
+    // MOSTRAR CAMPOS AL RECARGAR
+    // =========================================
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            cambiarTipo();
+
+        }
+    );
+
+
+
+    // =========================================
+    // OCULTAR MENSAJE DESPUES DE 3 SEGUNDOS
+    // =========================================
+
+    setTimeout(
+        function () {
+
+            const mensaje =
+                document.getElementById(
+                    "mensajeFormulario"
+                );
+
+
+            if (
+                mensaje &&
+                (
+                    mensaje.classList.contains(
+                        "mensaje-exito"
+                    )
+                    ||
+                    mensaje.classList.contains(
+                        "mensaje-error"
+                    )
+                )
+                &&
+                !mensaje.classList.contains(
+                    "mensaje-oculto"
+                )
+            ) {
+
+                mensaje.style.opacity =
+                    "0";
+
+
+                setTimeout(
+                    function () {
+
+                        mensaje.style.visibility =
+                            "hidden";
+
+                    },
+                    500
+                );
+            }
+
+        },
+        3000
+    );
 
 </script>

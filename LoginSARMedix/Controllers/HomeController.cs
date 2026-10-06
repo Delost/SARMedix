@@ -5,6 +5,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LoginSARMedix.Controllers
 {
+    [ResponseCache(
+        Duration = 0,
+        Location = ResponseCacheLocation.None,
+        NoStore = true
+    )]
     public class HomeController : Controller
     {
         private readonly EmailService _emailService;
@@ -38,6 +43,22 @@ namespace LoginSARMedix.Controllers
         [HttpGet]
         public IActionResult Index()
         {
+            string? nombre =
+                HttpContext.Session.GetString(
+                    "Nombre"
+                );
+
+
+            // Si ya existe una sesion iniciada,
+            // no permitir volver al login
+            if (!string.IsNullOrEmpty(nombre))
+            {
+                return RedirectToAction(
+                    "Modulos"
+                );
+            }
+
+
             return View();
         }
         //==================================================
@@ -86,6 +107,7 @@ namespace LoginSARMedix.Controllers
             );
         }
 
+
         [HttpPost]
         public async Task<IActionResult> InicioSesion(
             Usuario reg)
@@ -129,14 +151,19 @@ namespace LoginSARMedix.Controllers
                 );
 
 
-                return RedirectToAction("Modulos");
+                return RedirectToAction(
+                    "Modulos"
+                );
             }
             else
             {
                 ViewBag.Mensaje =
                     "Usuario o contraseña incorrectos";
 
-                return View("Index");
+
+                return View(
+                    "Index"
+                );
             }
         }
 
@@ -359,13 +386,18 @@ namespace LoginSARMedix.Controllers
         {
             HttpContext.Session.Clear();
 
+
             TempData["Mensaje"] =
                 "Sesión cerrada correctamente";
+
 
             TempData["TipoMensaje"] =
                 "exito";
 
-            return RedirectToAction("Index");
+
+            return RedirectToAction(
+                "Index"
+            );
         }
 
 
@@ -385,11 +417,14 @@ namespace LoginSARMedix.Controllers
 
             if (nombre == null)
             {
-                return RedirectToAction("Index");
+                return RedirectToAction(
+                    "Index"
+                );
             }
 
 
-            ViewBag.Nombre = nombre;
+            ViewBag.Nombre =
+                nombre;
 
 
             ViewBag.Apellido =
@@ -419,7 +454,9 @@ namespace LoginSARMedix.Controllers
                     .ToList();
 
 
-            return View("Bienvenida");
+            return View(
+                "Bienvenida"
+            );
         }
 
 
@@ -439,16 +476,21 @@ namespace LoginSARMedix.Controllers
 
             if (nombre == null)
             {
-                return RedirectToAction("Index");
+                return RedirectToAction(
+                    "Index"
+                );
             }
 
 
-            ViewBag.Nombre = nombre;
+            ViewBag.Nombre =
+                nombre;
+
 
             ViewBag.Apellido =
                 HttpContext.Session.GetString(
                     "Apellido"
                 );
+
 
             ViewBag.Rol =
                 HttpContext.Session.GetString(
@@ -481,10 +523,12 @@ namespace LoginSARMedix.Controllers
                     "Nombre"
                 );
 
+
             ViewBag.Apellido =
                 HttpContext.Session.GetString(
                     "Apellido"
                 );
+
 
             ViewBag.Rol =
                 HttpContext.Session.GetString(
@@ -500,7 +544,7 @@ namespace LoginSARMedix.Controllers
 
 
         //==================================================
-        // PRODUCTOS
+        // MODULO PRODUCTOS
         //==================================================
 
         [HttpGet]
@@ -610,6 +654,7 @@ namespace LoginSARMedix.Controllers
                 TempData["Mensaje"] =
                     "Usuario creado correctamente";
 
+
                 TempData["TipoMensaje"] =
                     "exito";
 
@@ -652,7 +697,9 @@ namespace LoginSARMedix.Controllers
                     .ListadoUsuarios();
 
 
-            return View(listado);
+            return View(
+                listado
+            );
         }
 
 
@@ -684,6 +731,7 @@ namespace LoginSARMedix.Controllers
                 TempData["Mensaje"] =
                     "Usuario desactivado correctamente";
 
+
                 TempData["TipoMensaje"] =
                     "exito";
             }
@@ -691,6 +739,7 @@ namespace LoginSARMedix.Controllers
             {
                 TempData["Mensaje"] =
                     "No se pudo desactivar el usuario";
+
 
                 TempData["TipoMensaje"] =
                     "error";
@@ -734,7 +783,9 @@ namespace LoginSARMedix.Controllers
             }
 
 
-            return View(usuario);
+            return View(
+                usuario
+            );
         }
 
 
@@ -802,7 +853,9 @@ namespace LoginSARMedix.Controllers
                     .ListadoEliminarUsuarios();
 
 
-            return View(listado);
+            return View(
+                listado
+            );
         }
 
 
@@ -834,6 +887,7 @@ namespace LoginSARMedix.Controllers
                 TempData["Mensaje"] =
                     "Usuario reactivado correctamente";
 
+
                 TempData["TipoMensaje"] =
                     "exito";
             }
@@ -841,6 +895,7 @@ namespace LoginSARMedix.Controllers
             {
                 TempData["Mensaje"] =
                     "No se pudo reactivar el usuario";
+
 
                 TempData["TipoMensaje"] =
                     "error";
@@ -902,10 +957,12 @@ namespace LoginSARMedix.Controllers
                     "Nombre"
                 );
 
+
             ViewBag.Apellido =
                 HttpContext.Session.GetString(
                     "Apellido"
                 );
+
 
             ViewBag.Rol =
                 HttpContext.Session.GetString(
@@ -937,10 +994,20 @@ namespace LoginSARMedix.Controllers
             }
 
 
-            ViewBag.Roles = roles;
-            ViewBag.Permisos = permisos;
-            ViewBag.PermisosRol = permisosRol;
-            ViewBag.IdRol = idRol;
+            ViewBag.Roles =
+                roles;
+
+
+            ViewBag.Permisos =
+                permisos;
+
+
+            ViewBag.PermisosRol =
+                permisosRol;
+
+
+            ViewBag.IdRol =
+                idRol;
 
 
             return View();
@@ -981,6 +1048,7 @@ namespace LoginSARMedix.Controllers
                 TempData["Mensaje"] =
                     "Permisos actualizados correctamente";
 
+
                 TempData["TipoMensaje"] =
                     "exito";
             }
@@ -988,6 +1056,7 @@ namespace LoginSARMedix.Controllers
             {
                 TempData["Mensaje"] =
                     "No se pudieron actualizar los permisos";
+
 
                 TempData["TipoMensaje"] =
                     "error";
@@ -1024,10 +1093,12 @@ namespace LoginSARMedix.Controllers
                     "Nombre"
                 );
 
+
             ViewBag.Apellido =
                 HttpContext.Session.GetString(
                     "Apellido"
                 );
+
 
             ViewBag.Rol =
                 HttpContext.Session.GetString(
@@ -1067,6 +1138,7 @@ namespace LoginSARMedix.Controllers
                 TempData["Mensaje"] =
                     "Rol creado correctamente";
 
+
                 TempData["TipoMensaje"] =
                     "exito";
 
@@ -1082,15 +1154,18 @@ namespace LoginSARMedix.Controllers
                         "Nombre"
                     );
 
+
                 ViewBag.Apellido =
                     HttpContext.Session.GetString(
                         "Apellido"
                     );
 
+
                 ViewBag.Rol =
                     HttpContext.Session.GetString(
                         "Rol"
                     );
+
 
                 ViewBag.Mensaje =
                     "No se pudo crear el rol. El nombre ya existe.";
@@ -1132,6 +1207,7 @@ namespace LoginSARMedix.Controllers
                 TempData["Mensaje"] =
                     "No se encontró el rol seleccionado";
 
+
                 TempData["TipoMensaje"] =
                     "error";
 
@@ -1147,10 +1223,12 @@ namespace LoginSARMedix.Controllers
                     "Nombre"
                 );
 
+
             ViewBag.Apellido =
                 HttpContext.Session.GetString(
                     "Apellido"
                 );
+
 
             ViewBag.Rol =
                 HttpContext.Session.GetString(
@@ -1158,7 +1236,9 @@ namespace LoginSARMedix.Controllers
                 );
 
 
-            return View(rol);
+            return View(
+                rol
+            );
         }
 
 
@@ -1190,6 +1270,7 @@ namespace LoginSARMedix.Controllers
                 TempData["Mensaje"] =
                     "Rol actualizado correctamente";
 
+
                 TempData["TipoMensaje"] =
                     "exito";
 
@@ -1209,15 +1290,18 @@ namespace LoginSARMedix.Controllers
                         "Nombre"
                     );
 
+
                 ViewBag.Apellido =
                     HttpContext.Session.GetString(
                         "Apellido"
                     );
 
+
                 ViewBag.Rol =
                     HttpContext.Session.GetString(
                         "Rol"
                     );
+
 
                 ViewBag.Mensaje =
                     "No se pudo actualizar el rol. El nombre ya existe.";
@@ -1259,6 +1343,7 @@ namespace LoginSARMedix.Controllers
                 TempData["Mensaje"] =
                     "Rol desactivado correctamente";
 
+
                 TempData["TipoMensaje"] =
                     "exito";
             }
@@ -1266,6 +1351,7 @@ namespace LoginSARMedix.Controllers
             {
                 TempData["Mensaje"] =
                     "No se pudo desactivar el rol";
+
 
                 TempData["TipoMensaje"] =
                     "error";
@@ -1298,10 +1384,12 @@ namespace LoginSARMedix.Controllers
                     "Nombre"
                 );
 
+
             ViewBag.Apellido =
                 HttpContext.Session.GetString(
                     "Apellido"
                 );
+
 
             ViewBag.Rol =
                 HttpContext.Session.GetString(
@@ -1314,7 +1402,9 @@ namespace LoginSARMedix.Controllers
                     .ListadoRolesInactivos();
 
 
-            return View(listado);
+            return View(
+                listado
+            );
         }
 
 
@@ -1346,6 +1436,7 @@ namespace LoginSARMedix.Controllers
                 TempData["Mensaje"] =
                     "Rol reactivado correctamente";
 
+
                 TempData["TipoMensaje"] =
                     "exito";
             }
@@ -1353,6 +1444,7 @@ namespace LoginSARMedix.Controllers
             {
                 TempData["Mensaje"] =
                     "No se pudo reactivar el rol";
+
 
                 TempData["TipoMensaje"] =
                     "error";
@@ -1408,7 +1500,9 @@ namespace LoginSARMedix.Controllers
                 string permiso
                 in permisosRequeridos)
             {
-                if (TienePermiso(permiso))
+                if (TienePermiso(
+                        permiso
+                    ))
                 {
                     return true;
                 }
@@ -1447,43 +1541,67 @@ namespace LoginSARMedix.Controllers
 
 
 
+        //==================================================
+        // PRODUCTOS
+        //==================================================
 
 
+        //==================================================
+        // CREAR PRODUCTO
+        //==================================================
 
-
-        //PRODUCTOS
-
-
-
-
-
-
-        //CREAR PRODUCTO VISTA
         [HttpGet]
         public IActionResult CrearProducto()
         {
+            if (!TienePermiso(
+                    "Registrar productos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
             return View();
         }
 
 
-        //CREAR PRODUCTO POST
+
+        //==================================================
+        // NUEVO PRODUCTO
+        //==================================================
+
         [HttpPost]
-        public async Task<IActionResult> NuevoProducto(Producto reg)
+        public async Task<IActionResult> NuevoProducto(
+            Producto reg)
         {
+            if (!TienePermiso(
+                    "Registrar productos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
             var resultado =
-                await _productoRepository.CrearProducto(reg);
+                await _productoRepository
+                    .CrearProducto(
+                        reg
+                    );
+
 
             if (resultado)
             {
                 ViewBag.Mensaje =
                     "Producto registrado correctamente";
 
-                return View("CrearProducto");
+
+                return View(
+                    "CrearProducto"
+                );
             }
             else
             {
                 ViewBag.Mensaje =
                     "No se pudo registrar el producto";
+
 
                 return View(
                     "CrearProducto",
@@ -1494,14 +1612,24 @@ namespace LoginSARMedix.Controllers
 
 
 
+        //==================================================
+        // LISTADO DE PRODUCTOS
+        //==================================================
 
-
-        //LISTADO DE PRODUCTOS
         [HttpGet]
         public async Task<IActionResult> ListadoProductos2()
         {
+            if (!TienePermiso(
+                    "Consultar productos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
             var listado =
-                await _productoRepository.ListadoProductos();
+                await _productoRepository
+                    .ListadoProductos();
+
 
             return View(
                 "Productos",
@@ -1510,16 +1638,28 @@ namespace LoginSARMedix.Controllers
         }
 
 
-        //EDITAR PRODUCTO VISTA
+
+        //==================================================
+        // EDITAR PRODUCTO
+        //==================================================
+
         [HttpGet]
         public async Task<IActionResult> EditarProducto(
             int idProducto)
         {
+            if (!TienePermiso(
+                    "Registrar productos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
             var producto =
                 await _productoRepository
                     .ObtenerProductoPorId(
                         idProducto
                     );
+
 
             if (producto == null)
             {
@@ -1528,23 +1668,46 @@ namespace LoginSARMedix.Controllers
                 );
             }
 
-            return View(producto);
+
+            return View(
+                producto
+            );
         }
 
 
-        //ACTUALIZAR PRODUCTO POST
+
+        //==================================================
+        // ACTUALIZAR PRODUCTO
+        //==================================================
+
         [HttpPost]
         public async Task<IActionResult> ActualizarProducto(
             Producto reg)
         {
+            if (!TienePermiso(
+                    "Registrar productos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
             var resultado =
                 await _productoRepository
                     .ActualizarProducto(
                         reg
                     );
 
+
             if (resultado)
             {
+                TempData["Mensaje"] =
+                    "Producto actualizado correctamente";
+
+
+                TempData["TipoMensaje"] =
+                    "exito";
+
+
                 return RedirectToAction(
                     "ListadoProductos2"
                 );
@@ -1553,6 +1716,7 @@ namespace LoginSARMedix.Controllers
             {
                 ViewBag.Mensaje =
                     "No se pudo actualizar el producto";
+
 
                 return View(
                     "EditarProducto",
@@ -1563,67 +1727,97 @@ namespace LoginSARMedix.Controllers
 
 
 
+        //==================================================
+        // LOTES
+        //==================================================
 
 
+        //==================================================
+        // CREAR LOTE
+        //==================================================
 
-        //LOTES
-
-
-        //CREAR LOTE VISTA
         [HttpGet]
         public async Task<IActionResult> CrearLote()
         {
+            if (!TienePermiso(
+                    "Registrar productos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
             ViewBag.Productos =
                 await _loteRepository
                     .ListadoProductos();
 
+
             ViewBag.Ubicaciones =
                 await _loteRepository
                     .ListadoUbicaciones();
+
 
             return View();
         }
 
 
 
-        //CREAR LOTE POST
+        //==================================================
+        // NUEVO LOTE
+        //==================================================
+
         [HttpPost]
         public async Task<IActionResult> NuevoLote(
             Lote reg)
         {
+            if (!TienePermiso(
+                    "Registrar productos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
             var resultado =
                 await _loteRepository
                     .CrearLote(
                         reg
                     );
 
+
             if (resultado)
             {
                 ViewBag.Mensaje =
                     "Lote registrado correctamente";
 
+
                 ViewBag.Productos =
                     await _loteRepository
                         .ListadoProductos();
+
 
                 ViewBag.Ubicaciones =
                     await _loteRepository
                         .ListadoUbicaciones();
 
-                return View("CrearLote");
+
+                return View(
+                    "CrearLote"
+                );
             }
             else
             {
                 ViewBag.Mensaje =
                     "No se pudo registrar el lote";
 
+
                 ViewBag.Productos =
                     await _loteRepository
                         .ListadoProductos();
 
+
                 ViewBag.Ubicaciones =
                     await _loteRepository
                         .ListadoUbicaciones();
+
 
                 return View(
                     "CrearLote",
@@ -1633,30 +1827,54 @@ namespace LoginSARMedix.Controllers
         }
 
 
-        //LISTADO DE LOTES
+
+        //==================================================
+        // LISTADO DE LOTES
+        //==================================================
+
         [HttpGet]
         public async Task<IActionResult> Lotes()
         {
+            if (!TienePermiso(
+                    "Consultar productos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
             var listado =
                 await _loteRepository
                     .ListadoLotes();
 
-            return View(listado);
+
+            return View(
+                listado
+            );
         }
 
 
 
+        //==================================================
+        // EDITAR LOTE
+        //==================================================
 
-        //EDITAR LOTE VISTA
         [HttpGet]
         public async Task<IActionResult> EditarLote(
             int idLote)
         {
+            if (!TienePermiso(
+                    "Registrar productos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
             var lote =
                 await _loteRepository
                     .ObtenerLotePorId(
                         idLote
                     );
+
 
             if (lote == null)
             {
@@ -1665,32 +1883,56 @@ namespace LoginSARMedix.Controllers
                 );
             }
 
+
             ViewBag.Productos =
                 await _loteRepository
                     .ListadoProductos();
+
 
             ViewBag.Ubicaciones =
                 await _loteRepository
                     .ListadoUbicaciones();
 
-            return View(lote);
+
+            return View(
+                lote
+            );
         }
 
 
 
-        //ACTUALIZAR LOTE POST
+        //==================================================
+        // ACTUALIZAR LOTE
+        //==================================================
+
         [HttpPost]
         public async Task<IActionResult> ActualizarLote(
             Lote reg)
         {
+            if (!TienePermiso(
+                    "Registrar productos"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
             var resultado =
                 await _loteRepository
                     .ActualizarLote(
                         reg
                     );
 
+
             if (resultado)
             {
+                TempData["Mensaje"] =
+                    "Lote actualizado correctamente";
+
+
+                TempData["TipoMensaje"] =
+                    "exito";
+
+
                 return RedirectToAction(
                     "Lotes"
                 );
@@ -1700,13 +1942,16 @@ namespace LoginSARMedix.Controllers
                 ViewBag.Mensaje =
                     "No se pudo actualizar el lote";
 
+
                 ViewBag.Productos =
                     await _loteRepository
                         .ListadoProductos();
 
+
                 ViewBag.Ubicaciones =
                     await _loteRepository
                         .ListadoUbicaciones();
+
 
                 return View(
                     "EditarLote",

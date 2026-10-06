@@ -1,49 +1,927 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using Microsoft.AspNetCore.Http
+
+@{
+    string nombre =
+        Context.Session.GetString("Nombre") ?? "";
+
+    string apellido =
+        Context.Session.GetString("Apellido") ?? "";
+
+    string rol =
+        Context.Session.GetString("Rol") ?? "";
+
+    string nombreCompleto =
+        (nombre + " " + apellido).Trim();
+
+    string inicial =
+        !string.IsNullOrEmpty(nombre)
+            ? nombre.Substring(0, 1).ToUpper()
+            : "U";
+
+    bool sesionIniciada =
+        !string.IsNullOrEmpty(nombre);
+}
+
+
+<!DOCTYPE html>
+
+<html lang="es">
+
+
 <head>
+
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - LoginSARMedix</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/LoginSARMedix.styles.css" asp-append-version="true" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+
+    <title>
+        @ViewData["Title"] - SARMedix
+    </title>
+
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
+
+    <link rel="stylesheet"
+          href="~/LoginSARMedix.styles.css"
+          asp-append-version="true" />
+
+
+
+    <style>
+
+        /* ========================================= */
+        /* BARRA SUPERIOR                            */
+        /* ========================================= */
+
+        .barra-layout {
+            min-height: 82px;
+
+            width: 100%;
+
+            padding: 12px 55px;
+
+            box-sizing: border-box;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 25px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #073b64,
+                    #0d5b82
+                );
+
+            box-shadow:
+                0 3px 15px
+                rgba(0, 0, 0, 0.16);
+
+            color: white;
+        }
+
+
+
+        /* ========================================= */
+        /* LOGO                                      */
+        /* ========================================= */
+
+        .logo-layout {
+            display: flex;
+
+            align-items: center;
+
+            gap: 13px;
+
+            text-decoration: none;
+
+            color: white;
+
+            flex-shrink: 0;
+        }
+
+
+        .logo-layout:hover {
+            color: white;
+        }
+
+
+        .logo-cruz-layout {
+            position: relative;
+
+            width: 42px;
+
+            height: 42px;
+
+            flex-shrink: 0;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0d7898,
+                    #12a594
+                );
+
+            box-shadow:
+                0 5px 12px
+                rgba(0, 0, 0, 0.18);
+        }
+
+
+        .logo-cruz-layout::before {
+            content: "";
+
+            position: absolute;
+
+            width: 22px;
+
+            height: 7px;
+
+            top: 17px;
+
+            left: 10px;
+
+            border-radius: 2px;
+
+            background-color: white;
+        }
+
+
+        .logo-cruz-layout::after {
+            content: "";
+
+            position: absolute;
+
+            width: 7px;
+
+            height: 22px;
+
+            top: 10px;
+
+            left: 17px;
+
+            border-radius: 2px;
+
+            background-color: white;
+        }
+
+
+        .logo-texto-layout {
+            font-size: 25px;
+
+            font-weight: 700;
+
+            letter-spacing: 0.2px;
+
+            white-space: nowrap;
+        }
+
+
+
+        /* ========================================= */
+        /* USUARIO                                   */
+        /* ========================================= */
+
+        .usuario-layout {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: flex-end;
+
+            gap: 12px;
+
+            min-width: 0;
+        }
+
+
+        .usuario-datos-layout {
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: flex-end;
+
+            line-height: 1.2;
+        }
+
+
+        .usuario-nombre-layout {
+            max-width: 190px;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+
+            white-space: nowrap;
+
+            color: white;
+
+            font-size: 15px;
+
+            font-weight: 600;
+        }
+
+
+        .usuario-rol-layout {
+            margin-top: 4px;
+
+            color: #cfe7f3;
+
+            font-size: 13px;
+
+            font-weight: 400;
+        }
+
+
+        .usuario-circulo-layout {
+            width: 42px;
+
+            height: 42px;
+
+            flex-shrink: 0;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border:
+                2px solid
+                rgba(255, 255, 255, 0.72);
+
+            border-radius: 50%;
+
+            background-color:
+                rgba(255, 255, 255, 0.14);
+
+            color: white;
+
+            font-size: 18px;
+
+            font-weight: 700;
+        }
+
+
+
+        /* ========================================= */
+        /* CERRAR SESION                             */
+        /* ========================================= */
+
+        .form-cerrar-layout {
+            margin: 0;
+        }
+
+
+        .btn-cerrar-layout {
+            width: auto !important;
+
+            height: auto !important;
+
+            margin: 0 !important;
+
+            padding: 9px 16px !important;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.70) !important;
+
+            border-radius: 7px !important;
+
+            background-color:
+                rgba(255, 255, 255, 0.10) !important;
+
+            color: white !important;
+
+            font-size: 14px !important;
+
+            font-weight: 600 !important;
+
+            cursor: pointer;
+
+            transition:
+                background-color 0.2s ease,
+                border-color 0.2s ease;
+        }
+
+
+        .btn-cerrar-layout:hover {
+            background-color:
+                rgba(255, 255, 255, 0.22) !important;
+
+            border-color:
+                white !important;
+        }
+
+
+
+        /* ========================================= */
+        /* CONTENIDO                                 */
+        /* ========================================= */
+
+        .contenedor-layout {
+            width: 100%;
+
+            max-width: 100%;
+
+            padding-left: 0;
+
+            padding-right: 0;
+        }
+
+
+
+        /* ========================================= */
+        /* FOOTER                                    */
+        /* ========================================= */
+
+        .footer-layout {
+            position: relative;
+
+            width: 100%;
+
+            height: 62px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background-color:
+                rgba(255, 255, 255, 0.96);
+
+            color: #60798b;
+
+            font-size: 14px;
+
+            text-align: center;
+        }
+
+
+
+        /* ========================================= */
+        /* MODAL CERRAR SESION                       */
+        /* ========================================= */
+
+        .modal-fondo-sesion {
+            display: none;
+
+            position: fixed;
+
+            top: 0;
+
+            left: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            background-color:
+                rgba(0, 0, 0, 0.45);
+
+            align-items: center;
+
+            justify-content: center;
+
+            z-index: 99999;
+        }
+
+
+        .modal-contenido-sesion {
+            width: 90%;
+
+            max-width: 430px;
+
+            padding: 30px;
+
+            background-color: white;
+
+            border-radius: 15px;
+
+            text-align: center;
+
+            box-shadow:
+                0 12px 35px
+                rgba(0, 0, 0, 0.25);
+        }
+
+
+        .modal-icono-sesion {
+            width: 55px;
+
+            height: 55px;
+
+            margin:
+                0 auto 15px auto;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background-color: #1198a5;
+
+            color: white;
+
+            border-radius: 50%;
+
+            font-size: 30px;
+
+            font-weight: bold;
+        }
+
+
+        .modal-contenido-sesion h2 {
+            width: auto !important;
+
+            max-width: none !important;
+
+            margin: 0 !important;
+
+            padding: 0 !important;
+
+            background: none !important;
+
+            border-radius: 0 !important;
+
+            box-shadow: none !important;
+
+            color: #003b64 !important;
+
+            font-size: 25px !important;
+        }
+
+
+        .modal-contenido-sesion h2::before,
+        .modal-contenido-sesion h2::after {
+            display: none !important;
+        }
+
+
+        .modal-contenido-sesion p {
+            margin-top: 15px;
+
+            margin-bottom: 25px;
+
+            color: #444;
+
+            font-size: 17px;
+        }
+
+
+        .modal-botones-sesion {
+            display: flex;
+
+            justify-content: center;
+
+            gap: 10px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .modal-botones-sesion button {
+            min-width: 100px;
+
+            width: auto !important;
+
+            height: auto !important;
+
+            margin: 0 !important;
+
+            padding: 10px 18px !important;
+
+            border: none !important;
+
+            border-radius: 7px !important;
+
+            color: white !important;
+
+            font-size: 14px !important;
+
+            font-weight: 600 !important;
+
+            cursor: pointer;
+        }
+
+
+        .btn-sesion-si {
+            background-color: #198754 !important;
+        }
+
+
+        .btn-sesion-si:hover {
+            background-color: #157347 !important;
+        }
+
+
+        .btn-sesion-no {
+            background-color: #c82333 !important;
+        }
+
+
+        .btn-sesion-no:hover {
+            background-color: #a91d2a !important;
+        }
+
+
+
+        /* ========================================= */
+        /* TABLET / CELULAR                          */
+        /* ========================================= */
+
+        @@media (max-width: 850px) {
+
+            .barra-layout {
+                padding:
+                    12px 22px;
+            }
+
+
+            .logo-texto-layout {
+                font-size: 20px;
+            }
+
+
+            .usuario-datos-layout {
+                display: none;
+            }
+
+        }
+
+
+
+        @@media (max-width: 620px) {
+
+            .barra-layout {
+                min-height: 70px;
+
+                padding:
+                    10px 14px;
+
+                gap: 10px;
+            }
+
+
+            .logo-cruz-layout {
+                width: 36px;
+
+                height: 36px;
+            }
+
+
+            .logo-cruz-layout::before {
+                width: 20px;
+
+                height: 6px;
+
+                top: 15px;
+
+                left: 8px;
+            }
+
+
+            .logo-cruz-layout::after {
+                width: 6px;
+
+                height: 20px;
+
+                top: 8px;
+
+                left: 15px;
+            }
+
+
+            .logo-texto-layout {
+                font-size: 17px;
+            }
+
+
+            .usuario-circulo-layout {
+                display: none;
+            }
+
+
+            .btn-cerrar-layout {
+                padding:
+                    8px 11px !important;
+
+                font-size:
+                    12px !important;
+            }
+
+        }
+
+    </style>
+
+
 </head>
+
+
+
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">LoginSARMedix</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
+
+
+    <!-- ========================================= -->
+    <!-- BARRA SUPERIOR                            -->
+    <!-- ========================================= -->
+
+    <header class="barra-layout">
+
+
+        <a asp-controller="Home"
+           asp-action="Modulos"
+           class="logo-layout">
+
+
+            <div class="logo-cruz-layout">
             </div>
-        </nav>
+
+
+            <div class="logo-texto-layout">
+
+                SARMedix | SAR de Chiguay
+
+            </div>
+
+
+        </a>
+
+
+
+        @if (sesionIniciada)
+        {
+            <div class="usuario-layout">
+
+
+                <div class="usuario-datos-layout">
+
+
+                    <span class="usuario-nombre-layout">
+
+                        @nombreCompleto
+
+                    </span>
+
+
+                    <span class="usuario-rol-layout">
+
+                        @rol
+
+                    </span>
+
+
+                </div>
+
+
+
+                <div class="usuario-circulo-layout">
+
+                    @inicial
+
+                </div>
+
+
+
+                <form asp-controller="Home"
+                      asp-action="CerrarSesion"
+                      method="post"
+                      id="formCerrarSesion"
+                      class="form-cerrar-layout">
+
+
+                    <button type="button"
+                            class="btn-cerrar-layout"
+                            onclick="abrirConfirmacionCerrarSesion()">
+
+                        Cerrar sesión
+
+                    </button>
+
+
+                </form>
+
+
+            </div>
+        }
+
+
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+
+
+
+    <!-- ========================================= -->
+    <!-- CONTENIDO                                 -->
+    <!-- ========================================= -->
+
+    <div class="container contenedor-layout">
+
+
+        <main role="main"
+              class="pb-3">
+
             @RenderBody()
+
         </main>
+
+
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - LoginSARMedix - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
+
+
+    <!-- ========================================= -->
+    <!-- FOOTER                                    -->
+    <!-- ========================================= -->
+
+    <footer class="footer-layout">
+
+        SARMedix · Sistema de Gestión Farmacéutica · SAR de Chiguay
+
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+
+
+
+    <!-- ========================================= -->
+    <!-- CONFIRMACION CERRAR SESION                -->
+    <!-- ========================================= -->
+
+    @if (sesionIniciada)
+    {
+        <div id="modalCerrarSesion"
+             class="modal-fondo-sesion">
+
+
+            <div class="modal-contenido-sesion">
+
+
+                <div class="modal-icono-sesion">
+
+                    ?
+
+                </div>
+
+
+                <h2>
+
+                    Confirmar acción
+
+                </h2>
+
+
+                <p>
+
+                    ¿Quieres cerrar sesión?
+
+                </p>
+
+
+                <div class="modal-botones-sesion">
+
+
+                    <button type="button"
+                            class="btn-sesion-si"
+                            onclick="confirmarCerrarSesion()">
+
+                        Sí
+
+                    </button>
+
+
+                    <button type="button"
+                            class="btn-sesion-no"
+                            onclick="cerrarConfirmacionCerrarSesion()">
+
+                        No
+
+                    </button>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+    }
+
+
+
+    <!-- ========================================= -->
+    <!-- SCRIPTS                                   -->
+    <!-- ========================================= -->
+
+    <script src="~/lib/jquery/dist/jquery.min.js">
+    </script>
+
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+
+    <script src="~/js/site.js"
+            asp-append-version="true">
+    </script>
+
+
+
+    <script>
+
+        // =========================================
+        // ABRIR CONFIRMACION
+        // =========================================
+
+        function abrirConfirmacionCerrarSesion() {
+
+            const modal =
+                document.getElementById(
+                    "modalCerrarSesion"
+                );
+
+
+            if (modal) {
+
+                modal.style.display =
+                    "flex";
+
+            }
+
+        }
+
+
+
+        // =========================================
+        // NO
+        // =========================================
+
+        function cerrarConfirmacionCerrarSesion() {
+
+            const modal =
+                document.getElementById(
+                    "modalCerrarSesion"
+                );
+
+
+            if (modal) {
+
+                modal.style.display =
+                    "none";
+
+            }
+
+        }
+
+
+
+        // =========================================
+        // SI - CERRAR SESION
+        // =========================================
+
+        function confirmarCerrarSesion() {
+
+            const formulario =
+                document.getElementById(
+                    "formCerrarSesion"
+                );
+
+
+            if (formulario) {
+
+                formulario.submit();
+
+            }
+
+        }
+
+    </script>
+
+
+
+    @await RenderSectionAsync(
+        "Scripts",
+        required: false
+    )
+
+
 </body>
+
+
 </html>

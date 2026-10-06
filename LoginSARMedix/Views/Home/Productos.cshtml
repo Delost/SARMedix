@@ -1,153 +1,662 @@
 ﻿@model List<LoginSARMedix.Models.Producto>
 
-<h2>Productos</h2>
+@using Microsoft.AspNetCore.Http
+
+@{
+    string permisosTexto =
+        Context.Session.GetString("Permisos") ?? "";
+
+    var permisos =
+        permisosTexto
+            .Split(
+                '|',
+                StringSplitOptions.RemoveEmptyEntries
+            );
+
+    bool puedeRegistrar =
+        permisos.Any(
+            p => p.Equals(
+                "Registrar productos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
+}
+
 
 <div class="usuarios-card">
 
-    <h3>Medicamentos</h3>
 
-    <table class="tabla-usuarios">
+    <!-- ========================================= -->
+    <!-- TITULO                                    -->
+    <!-- ========================================= -->
 
-        <thead>
-            <tr>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Stock mínimo</th>
-                <th>Principio activo</th>
-                <th>Concentración</th>
-                <th>Controlado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
+    <div class="usuarios-titulo">
 
-        <tbody>
+        <h1>Listado de productos</h1>
 
-            @foreach (var producto in Model.Where(x => x.tipo == "Medicamento"))
-            {
-                <tr>
+        <p>
+            Administración de medicamentos e insumos
+        </p>
 
-                    <td>
-                        @producto.codigo_interno
-                    </td>
+    </div>
 
-                    <td>
-                        @producto.nombre
-                    </td>
 
-                    <td>
-                        @producto.stock_minimo
-                    </td>
 
-                    <td>
-                        @producto.principio_activo
-                    </td>
+    <!-- ========================================= -->
+    <!-- MENSAJE                                   -->
+    <!-- ========================================= -->
 
-                    <td>
-                        @producto.concentracion
-                    </td>
+    @if (TempData["Mensaje"] != null)
+    {
+        string tipoMensaje =
+            TempData["TipoMensaje"]?.ToString() ?? "";
 
-                    <td>
-                        @if (producto.requiere_control)
+        <div id="mensajeListado"
+             class="mensaje @(tipoMensaje == "exito" ? "mensaje-exito" : "mensaje-error")">
+
+            @TempData["Mensaje"]
+
+        </div>
+    }
+
+
+
+    <!-- ========================================= -->
+    <!-- BOTON REGISTRAR                           -->
+    <!-- ========================================= -->
+
+    @if (puedeRegistrar)
+    {
+        <div class="acciones-superiores">
+
+            <a asp-controller="Home"
+               asp-action="CrearProducto"
+               class="btn-nuevo-producto">
+
+                + Registrar producto
+
+            </a>
+
+        </div>
+    }
+
+
+
+    <!-- ========================================= -->
+    <!-- MEDICAMENTOS                              -->
+    <!-- ========================================= -->
+
+    <div class="seccion-productos">
+
+        <h3>
+            Medicamentos
+        </h3>
+
+
+        @if (
+            Model != null &&
+            Model.Any(
+                x => x.tipo == "Medicamento"
+            )
+        )
+        {
+            <div class="tabla-contenedor">
+
+                <table class="tabla-usuarios">
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Código
+                            </th>
+
+                            <th>
+                                Nombre
+                            </th>
+
+                            <th>
+                                Stock mínimo
+                            </th>
+
+                            <th>
+                                Principio activo
+                            </th>
+
+                            <th>
+                                Concentración
+                            </th>
+
+                            <th>
+                                Controlado
+                            </th>
+
+                            @if (puedeRegistrar)
+                            {
+                                <th>
+                                    Acciones
+                                </th>
+                            }
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        @foreach (
+                            var producto
+                            in Model.Where(
+                                x => x.tipo == "Medicamento"
+                            )
+                        )
                         {
-                            <span>Sí</span>
+                            <tr>
+
+                                <td>
+                                    @producto.codigo_interno
+                                </td>
+
+                                <td>
+                                    @producto.nombre
+                                </td>
+
+                                <td>
+                                    @producto.stock_minimo
+                                </td>
+
+                                <td>
+                                    @producto.principio_activo
+                                </td>
+
+                                <td>
+                                    @producto.concentracion
+                                </td>
+
+                                <td>
+
+                                    @if (producto.requiere_control)
+                                    {
+                                        <span class="estado-controlado">
+
+                                            Sí
+
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="estado-normal">
+
+                                            No
+
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                @if (puedeRegistrar)
+                                {
+                                    <td>
+
+                                        <a asp-controller="Home"
+                                           asp-action="EditarProducto"
+                                           asp-route-idProducto="@producto.id_producto"
+                                           class="btn-editar">
+
+                                            Editar
+
+                                        </a>
+
+                                    </td>
+                                }
+
+                            </tr>
                         }
-                        else
+
+                    </tbody>
+
+
+                </table>
+
+            </div>
+        }
+        else
+        {
+            <div class="sin-registros">
+
+                No existen medicamentos registrados.
+
+            </div>
+        }
+
+    </div>
+
+
+
+    <!-- ========================================= -->
+    <!-- INSUMOS                                   -->
+    <!-- ========================================= -->
+
+    <div class="seccion-productos">
+
+        <h3>
+            Insumos
+        </h3>
+
+
+        @if (
+            Model != null &&
+            Model.Any(
+                x => x.tipo == "Insumo"
+            )
+        )
+        {
+            <div class="tabla-contenedor">
+
+                <table class="tabla-usuarios">
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Código
+                            </th>
+
+                            <th>
+                                Nombre
+                            </th>
+
+                            <th>
+                                Stock mínimo
+                            </th>
+
+                            <th>
+                                Material
+                            </th>
+
+                            <th>
+                                Estéril
+                            </th>
+
+                            @if (puedeRegistrar)
+                            {
+                                <th>
+                                    Acciones
+                                </th>
+                            }
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        @foreach (
+                            var producto
+                            in Model.Where(
+                                x => x.tipo == "Insumo"
+                            )
+                        )
                         {
-                            <span>No</span>
+                            <tr>
+
+                                <td>
+                                    @producto.codigo_interno
+                                </td>
+
+                                <td>
+                                    @producto.nombre
+                                </td>
+
+                                <td>
+                                    @producto.stock_minimo
+                                </td>
+
+                                <td>
+                                    @producto.material
+                                </td>
+
+                                <td>
+
+                                    @if (producto.es_esteril)
+                                    {
+                                        <span class="estado-normal">
+
+                                            Sí
+
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="estado-no">
+
+                                            No
+
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                @if (puedeRegistrar)
+                                {
+                                    <td>
+
+                                        <a asp-controller="Home"
+                                           asp-action="EditarProducto"
+                                           asp-route-idProducto="@producto.id_producto"
+                                           class="btn-editar">
+
+                                            Editar
+
+                                        </a>
+
+                                    </td>
+                                }
+
+                            </tr>
                         }
-                    </td>
 
-                    <td>
-
-                        <a asp-controller="Home"
-                           asp-action="EditarProducto"
-                           asp-route-idProducto="@producto.id_producto"
-                           class="btn-editar">
-
-                            Editar
-
-                        </a>
-
-                    </td>
-
-                </tr>
-            }
-
-        </tbody>
-
-    </table>
+                    </tbody>
 
 
-    <br />
-    <br />
+                </table>
+
+            </div>
+        }
+        else
+        {
+            <div class="sin-registros">
+
+                No existen insumos registrados.
+
+            </div>
+        }
+
+    </div>
 
 
-    <h3>Insumos</h3>
 
-    <table class="tabla-usuarios">
+    <!-- ========================================= -->
+    <!-- VOLVER                                    -->
+    <!-- ========================================= -->
 
-        <thead>
-            <tr>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Stock mínimo</th>
-                <th>Material</th>
-                <th>Estéril</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
+    <div class="usuarios-volver">
 
-        <tbody>
+        <a asp-controller="Home"
+           asp-action="Productos"
+           class="btn-volver">
 
-            @foreach (var producto in Model.Where(x => x.tipo == "Insumo"))
-            {
-                <tr>
+            ← Volver a Productos
 
-                    <td>
-                        @producto.codigo_interno
-                    </td>
+        </a>
 
-                    <td>
-                        @producto.nombre
-                    </td>
+    </div>
 
-                    <td>
-                        @producto.stock_minimo
-                    </td>
-
-                    <td>
-                        @producto.material
-                    </td>
-
-                    <td>
-                        @if (producto.es_esteril)
-                        {
-                            <span>Sí</span>
-                        }
-                        else
-                        {
-                            <span>No</span>
-                        }
-                    </td>
-
-                    <td>
-
-                        <a asp-controller="Home"
-                           asp-action="EditarProducto"
-                           asp-route-idProducto="@producto.id_producto"
-                           class="btn-editar">
-
-                            Editar
-
-                        </a>
-
-                    </td>
-
-                </tr>
-            }
-
-        </tbody>
-
-    </table>
 
 </div>
+
+
+
+<style>
+
+    /* ========================================= */
+    /* SECCIONES                                 */
+    /* ========================================= */
+
+    .seccion-productos {
+        margin-top: 30px;
+    }
+
+
+    .seccion-productos h3 {
+        margin-bottom: 15px;
+
+        color: #093b62;
+
+        font-size: 22px;
+
+        font-weight: 700;
+    }
+
+
+
+    /* ========================================= */
+    /* ACCIONES SUPERIORES                       */
+    /* ========================================= */
+
+    .acciones-superiores {
+        display: flex;
+
+        justify-content: flex-end;
+
+        margin-top: 20px;
+
+        margin-bottom: 20px;
+    }
+
+
+    .btn-nuevo-producto {
+        display: inline-block;
+
+        padding: 10px 18px;
+
+        background: #0d7898;
+
+        color: white;
+
+        border-radius: 6px;
+
+        text-decoration: none;
+
+        font-weight: 600;
+
+        transition:
+            background-color 0.2s ease;
+    }
+
+
+    .btn-nuevo-producto:hover {
+        background: #09637e;
+
+        color: white;
+    }
+
+
+
+    /* ========================================= */
+    /* MENSAJE                                   */
+    /* ========================================= */
+
+    .mensaje {
+        width: 100%;
+
+        box-sizing: border-box;
+
+        margin-top: 20px;
+
+        margin-bottom: 20px;
+
+        padding: 12px 15px;
+
+        border-radius: 7px;
+
+        text-align: center;
+
+        font-weight: 600;
+
+        opacity: 1;
+
+        transition:
+            opacity 0.5s ease;
+    }
+
+
+    .mensaje-exito {
+        background-color: #d1e7dd;
+
+        color: #0f5132;
+
+        border:
+            1px solid #badbcc;
+    }
+
+
+    .mensaje-error {
+        background-color: #f8d7da;
+
+        color: #842029;
+
+        border:
+            1px solid #f5c2c7;
+    }
+
+
+
+    /* ========================================= */
+    /* ESTADOS                                   */
+    /* ========================================= */
+
+    .estado-controlado {
+        display: inline-block;
+
+        min-width: 45px;
+
+        padding: 5px 9px;
+
+        border-radius: 14px;
+
+        background-color: #fff3cd;
+
+        color: #664d03;
+
+        font-weight: 600;
+
+        text-align: center;
+    }
+
+
+    .estado-normal {
+        display: inline-block;
+
+        min-width: 45px;
+
+        padding: 5px 9px;
+
+        border-radius: 14px;
+
+        background-color: #d1e7dd;
+
+        color: #0f5132;
+
+        font-weight: 600;
+
+        text-align: center;
+    }
+
+
+    .estado-no {
+        display: inline-block;
+
+        min-width: 45px;
+
+        padding: 5px 9px;
+
+        border-radius: 14px;
+
+        background-color: #e2e3e5;
+
+        color: #41464b;
+
+        font-weight: 600;
+
+        text-align: center;
+    }
+
+
+
+    /* ========================================= */
+    /* SIN REGISTROS                             */
+    /* ========================================= */
+
+    .sin-registros {
+        padding: 20px;
+
+        background-color: #f5f8fa;
+
+        border: 1px solid #d8e2e8;
+
+        border-radius: 8px;
+
+        text-align: center;
+
+        color: #60798b;
+    }
+
+
+
+    /* ========================================= */
+    /* CELULAR                                   */
+    /* ========================================= */
+
+    @@media (max-width: 700px) {
+
+        .acciones-superiores {
+            justify-content: center;
+        }
+
+
+        .seccion-productos {
+            overflow-x: auto;
+        }
+
+    }
+
+</style>
+
+
+
+<script>
+
+    // =========================================
+    // OCULTAR MENSAJE DESPUES DE 3 SEGUNDOS
+    // =========================================
+
+    setTimeout(
+        function () {
+
+            const mensaje =
+                document.getElementById(
+                    "mensajeListado"
+                );
+
+
+            if (mensaje) {
+
+                mensaje.style.opacity =
+                    "0";
+
+
+                setTimeout(
+                    function () {
+
+                        mensaje.style.display =
+                            "none";
+
+                    },
+                    500
+                );
+            }
+
+        },
+        3000
+    );
+
+</script>
