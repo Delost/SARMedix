@@ -38,6 +38,7 @@ namespace LoginSARMedix.Repository
                 @"SELECT u.id_usuario,
                          u.nombre,
                          u.apellido,
+                         u.email,
                          u.rut,
                          u.id_rol,
                          u.nombre_usuario,
@@ -94,6 +95,13 @@ namespace LoginSARMedix.Repository
                             lector.GetString(
                                 "apellido"
                             ),
+
+                        email =
+                            lector.IsDBNull(
+                                lector.GetOrdinal("email")
+                            )
+                            ? null
+                            : lector.GetString("email"),
 
                         rut =
                             lector.GetString(
@@ -206,14 +214,17 @@ namespace LoginSARMedix.Repository
 
 
 
-            //COMPROBAR SI YA EXISTE
-            //EL RUT O NOMBRE DE USUARIO
+            //==================================================
+            // COMPROBAR SI YA EXISTE
+            // RUT, USUARIO O EMAIL
+            //==================================================
 
             string consultaExiste =
                 @"SELECT COUNT(*)
                   FROM usuario
                   WHERE rut = @rut
-                  OR nombre_usuario = @nombreUsuario";
+                  OR nombre_usuario = @nombreUsuario
+                  OR email = @email";
 
 
             using MySqlCommand comandoExiste =
@@ -235,6 +246,12 @@ namespace LoginSARMedix.Repository
             );
 
 
+            comandoExiste.Parameters.AddWithValue(
+                "@email",
+                reg.email
+            );
+
+
             int cantidad =
                 Convert.ToInt32(
                     await comandoExiste
@@ -249,13 +266,16 @@ namespace LoginSARMedix.Repository
 
 
 
-            //INSERTAR NUEVO USUARIO
+            //==================================================
+            // INSERTAR NUEVO USUARIO
+            //==================================================
 
             string consulta =
                 @"INSERT INTO usuario
                   (
                       nombre,
                       apellido,
+                      email,
                       rut,
                       id_rol,
                       nombre_usuario,
@@ -266,6 +286,7 @@ namespace LoginSARMedix.Repository
                   (
                       @nombre,
                       @apellido,
+                      @email,
                       @rut,
                       @idRol,
                       @nombreUsuario,
@@ -290,6 +311,12 @@ namespace LoginSARMedix.Repository
             comando.Parameters.AddWithValue(
                 "@apellido",
                 reg.apellido
+            );
+
+
+            comando.Parameters.AddWithValue(
+                "@email",
+                reg.email
             );
 
 
@@ -348,6 +375,7 @@ namespace LoginSARMedix.Repository
                 @"SELECT u.id_usuario,
                          u.nombre,
                          u.apellido,
+                         u.email,
                          u.rut,
                          u.id_rol,
                          u.nombre_usuario,
@@ -388,6 +416,13 @@ namespace LoginSARMedix.Repository
                             lector.GetString(
                                 "apellido"
                             ),
+
+                        email =
+                            lector.IsDBNull(
+                                lector.GetOrdinal("email")
+                            )
+                            ? null
+                            : lector.GetString("email"),
 
                         rut =
                             lector.GetString(
@@ -486,6 +521,7 @@ namespace LoginSARMedix.Repository
                 @"SELECT id_usuario,
                          nombre,
                          apellido,
+                         email,
                          rut,
                          id_rol,
                          nombre_usuario,
@@ -530,6 +566,13 @@ namespace LoginSARMedix.Repository
                             lector.GetString(
                                 "apellido"
                             ),
+
+                        email =
+                            lector.IsDBNull(
+                                lector.GetOrdinal("email")
+                            )
+                            ? null
+                            : lector.GetString("email"),
 
                         rut =
                             lector.GetString(
@@ -577,6 +620,7 @@ namespace LoginSARMedix.Repository
                 @"UPDATE usuario
                   SET nombre = @nombre,
                       apellido = @apellido,
+                      email = @email,
                       rut = @rut,
                       id_rol = @idRol,
                       nombre_usuario = @nombreUsuario
@@ -599,6 +643,12 @@ namespace LoginSARMedix.Repository
             comando.Parameters.AddWithValue(
                 "@apellido",
                 reg.apellido
+            );
+
+
+            comando.Parameters.AddWithValue(
+                "@email",
+                reg.email
             );
 
 
@@ -657,6 +707,7 @@ namespace LoginSARMedix.Repository
                 @"SELECT u.id_usuario,
                          u.nombre,
                          u.apellido,
+                         u.email,
                          u.rut,
                          u.id_rol,
                          u.nombre_usuario,
@@ -698,6 +749,13 @@ namespace LoginSARMedix.Repository
                             lector.GetString(
                                 "apellido"
                             ),
+
+                        email =
+                            lector.IsDBNull(
+                                lector.GetOrdinal("email")
+                            )
+                            ? null
+                            : lector.GetString("email"),
 
                         rut =
                             lector.GetString(
@@ -815,5 +873,298 @@ namespace LoginSARMedix.Repository
 
             return resultado > 0;
         }
+
+
+
+        //==================================================
+        // BUSCAR USUARIO POR CORREO
+        //==================================================
+
+        public async Task<Usuario?> BuscarPorCorreo(
+            string correo)
+        {
+            Usuario? usuario = null;
+
+
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"SELECT id_usuario,
+                         nombre,
+                         apellido,
+                         email
+                  FROM usuario
+                  WHERE email = @correo
+                  AND activo = 1
+                  LIMIT 1";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            comando.Parameters.AddWithValue(
+                "@correo",
+                correo
+            );
+
+
+            using MySqlDataReader lector =
+                await comando.ExecuteReaderAsync();
+
+
+            if (await lector.ReadAsync())
+            {
+                usuario =
+                    new Usuario()
+                    {
+                        id_usuario =
+                            lector.GetInt32(
+                                "id_usuario"
+                            ),
+
+                        nombre =
+                            lector.GetString(
+                                "nombre"
+                            ),
+
+                        apellido =
+                            lector.GetString(
+                                "apellido"
+                            ),
+
+                        email =
+                            lector.IsDBNull(
+                                lector.GetOrdinal("email")
+                            )
+                            ? null
+                            : lector.GetString("email")
+                    };
+            }
+
+
+            return usuario;
+        }
+
+        //==================================================
+        // CREAR CODIGO DE RECUPERACION
+        //==================================================
+
+        public async Task<bool> CrearCodigoRecuperacion(
+            int idUsuario,
+            string codigo,
+            DateTime fechaExpiracion)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"INSERT INTO recuperacion_contrasena
+          (
+              id_usuario,
+              codigo,
+              fecha_expiracion,
+              utilizado
+          )
+          VALUES
+          (
+              @idUsuario,
+              @codigo,
+              @fechaExpiracion,
+              0
+          )";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            comando.Parameters.AddWithValue(
+                "@idUsuario",
+                idUsuario
+            );
+
+
+            comando.Parameters.AddWithValue(
+                "@codigo",
+                codigo
+            );
+
+
+            comando.Parameters.AddWithValue(
+                "@fechaExpiracion",
+                fechaExpiracion
+            );
+
+
+            int resultado =
+                await comando.ExecuteNonQueryAsync();
+
+
+            return resultado > 0;
+        }
+        //==================================================
+        // VALIDAR CODIGO DE RECUPERACION
+        //==================================================
+
+        public async Task<int?> ValidarCodigoRecuperacion(
+            string codigo)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"SELECT id_usuario
+          FROM recuperacion_contrasena
+          WHERE codigo = @codigo
+          AND utilizado = 0
+          AND fecha_expiracion >= NOW()
+          ORDER BY id_recuperacion DESC
+          LIMIT 1";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            comando.Parameters.AddWithValue(
+                "@codigo",
+                codigo
+            );
+
+
+            object? resultado =
+                await comando.ExecuteScalarAsync();
+
+
+            if (resultado == null)
+            {
+                return null;
+            }
+
+
+            return Convert.ToInt32(
+                resultado
+            );
+        }
+
+        //==================================================
+        // CAMBIAR CONTRASEÑA
+        //==================================================
+
+        public async Task<bool> CambiarContrasena(
+            int idUsuario,
+            string nuevaContrasena)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"UPDATE usuario
+          SET contrasena = @contrasena
+          WHERE id_usuario = @idUsuario";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            comando.Parameters.AddWithValue(
+                "@contrasena",
+                nuevaContrasena
+            );
+
+
+            comando.Parameters.AddWithValue(
+                "@idUsuario",
+                idUsuario
+            );
+
+
+            int resultado =
+                await comando.ExecuteNonQueryAsync();
+
+
+            return resultado > 0;
+        }
+
+        //==================================================
+        // MARCAR CODIGO COMO UTILIZADO
+        //==================================================
+
+        public async Task<bool> MarcarCodigoComoUtilizado(
+            int idUsuario,
+            string codigo)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"UPDATE recuperacion_contrasena
+          SET utilizado = 1
+          WHERE id_usuario = @idUsuario
+          AND codigo = @codigo
+          AND utilizado = 0";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            comando.Parameters.AddWithValue(
+                "@idUsuario",
+                idUsuario
+            );
+
+
+            comando.Parameters.AddWithValue(
+                "@codigo",
+                codigo
+            );
+
+
+            int resultado =
+                await comando.ExecuteNonQueryAsync();
+
+
+            return resultado > 0;
+        }
+
     }
 }

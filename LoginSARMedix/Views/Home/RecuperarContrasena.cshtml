@@ -1,0 +1,31 @@
+﻿@{
+    ViewData["Title"] = "Recuperar contraseña";
+}
+
+<h2>Recuperar contraseña</h2>
+
+<p>Ingresa tu correo electrónico para recuperar tu contraseña.</p>
+
+@if (ViewBag.Mensaje != null)
+{
+    <p>@ViewBag.Mensaje</p>
+}
+<form asp-controller="Home"
+      asp-action="RecuperarContrasena"
+      method="post">
+
+    <label>Correo electrónico</label>
+
+    <input type="email"
+           name="correo"
+           required />
+
+    <button type="submit">
+        Enviar código
+    </button>
+</form>
+
+<a asp-controller="Home"
+   asp-action="Index">
+    Volver al inicio de sesión
+</a>

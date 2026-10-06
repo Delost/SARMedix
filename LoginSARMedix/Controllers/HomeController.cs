@@ -1,11 +1,14 @@
 using LoginSARMedix.Models;
 using LoginSARMedix.Repository;
+using LoginSARMedix.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LoginSARMedix.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly EmailService _emailService;
+
         private readonly UsuarioRepository _usuarioRepository;
         private readonly ProductoRepository _productoRepository;
         private readonly LoteRepository _loteRepository;
@@ -13,15 +16,17 @@ namespace LoginSARMedix.Controllers
 
 
         public HomeController(
-            UsuarioRepository usuarioRepository,
-            ProductoRepository productoRepository,
-            LoteRepository loteRepository,
-            PermisoRepository permisoRepository)
+    UsuarioRepository usuarioRepository,
+    ProductoRepository productoRepository,
+    LoteRepository loteRepository,
+    PermisoRepository permisoRepository,
+    EmailService emailService)
         {
             _usuarioRepository = usuarioRepository;
             _productoRepository = productoRepository;
             _loteRepository = loteRepository;
             _permisoRepository = permisoRepository;
+            _emailService = emailService;
         }
 
 
@@ -35,7 +40,51 @@ namespace LoginSARMedix.Controllers
         {
             return View();
         }
+        //==================================================
+        // VERIFICAR CODIGO
+        //==================================================
 
+        [HttpGet]
+        public IActionResult VerificarCodigo()
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> VerificarCodigo(
+    string codigo)
+        {
+            int? idUsuario =
+                await _usuarioRepository
+                    .ValidarCodigoRecuperacion(
+                        codigo
+                    );
+
+
+            if (idUsuario == null)
+            {
+                ViewBag.Mensaje =
+                    "El código es incorrecto o ha vencido.";
+
+                return View();
+            }
+
+
+            HttpContext.Session.SetInt32(
+                "IdUsuarioRecuperacion",
+                idUsuario.Value
+            );
+
+
+            HttpContext.Session.SetString(
+                "CodigoRecuperacion",
+                codigo
+            );
+
+
+            return RedirectToAction(
+                "NuevaContrasena"
+            );
+        }
 
         [HttpPost]
         public async Task<IActionResult> InicioSesion(
@@ -91,6 +140,214 @@ namespace LoginSARMedix.Controllers
             }
         }
 
+        //==================================================
+        // RECUPERAR CONTRASEÑA
+        //==================================================
+
+        [HttpGet]
+        public IActionResult RecuperarContrasena()
+        {
+            return View();
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> RecuperarContrasena(
+    string correo)
+        {
+            var usuario =
+                await _usuarioRepository
+                    .BuscarPorCorreo(
+                        correo
+                    );
+
+
+            if (usuario != null)
+            {
+                Random random =
+                    new Random();
+
+
+                string codigo =
+                    random.Next(
+                        100000,
+                        999999
+                    ).ToString();
+
+
+                DateTime fechaExpiracion =
+                    DateTime.Now.AddMinutes(10);
+
+
+                var guardado =
+                    await _usuarioRepository
+                        .CrearCodigoRecuperacion(
+                            usuario.id_usuario,
+                            codigo,
+                            fechaExpiracion
+                        );
+
+
+                if (guardado)
+                {
+                    bool correoEnviado =
+                        await _emailService
+                            .EnviarCodigoRecuperacion(
+                                usuario.email!,
+                                usuario.nombre ?? "Usuario",
+                                codigo
+                            );
+
+
+                    if (correoEnviado)
+                    {
+                        return RedirectToAction(
+                            "VerificarCodigo"
+                        );
+                    }
+                    else
+                    {
+                        ViewBag.Mensaje =
+                            "El código fue generado, pero no se pudo enviar el correo.";
+                    }
+                }
+                else
+                {
+                    ViewBag.Mensaje =
+                        "No se pudo generar el código.";
+                }
+            }
+            else
+            {
+                ViewBag.Mensaje =
+                    "Correo no registrado.";
+            }
+
+
+            return View();
+        }
+        //==================================================
+        // NUEVA CONTRASEÑA
+        //==================================================
+
+        [HttpGet]
+        public IActionResult NuevaContrasena()
+        {
+            int? idUsuario =
+                HttpContext.Session.GetInt32(
+                    "IdUsuarioRecuperacion"
+                );
+
+
+            if (idUsuario == null)
+            {
+                return RedirectToAction(
+                    "Index"
+                );
+            }
+
+
+            return View();
+        }
+
+        //==================================================
+        // CAMBIAR CONTRASEÑA
+        //==================================================
+
+        [HttpPost]
+        public async Task<IActionResult> CambiarContrasena(
+            string nuevaContrasena,
+            string confirmarContrasena)
+        {
+            int? idUsuario =
+                HttpContext.Session.GetInt32(
+                    "IdUsuarioRecuperacion"
+                );
+
+
+            string? codigo =
+                HttpContext.Session.GetString(
+                    "CodigoRecuperacion"
+                );
+
+
+            if (idUsuario == null ||
+                string.IsNullOrEmpty(codigo))
+            {
+                return RedirectToAction(
+                    "Index"
+                );
+            }
+
+
+            if (string.IsNullOrWhiteSpace(
+                nuevaContrasena))
+            {
+                ViewBag.Mensaje =
+                    "Debe ingresar una nueva contraseña.";
+
+                return View(
+                    "NuevaContrasena"
+                );
+            }
+
+
+            if (nuevaContrasena !=
+                confirmarContrasena)
+            {
+                ViewBag.Mensaje =
+                    "Las contraseñas no coinciden.";
+
+                return View(
+                    "NuevaContrasena"
+                );
+            }
+
+
+            bool actualizado =
+                await _usuarioRepository
+                    .CambiarContrasena(
+                        idUsuario.Value,
+                        nuevaContrasena
+                    );
+
+
+            if (!actualizado)
+            {
+                ViewBag.Mensaje =
+                    "No se pudo actualizar la contraseña.";
+
+                return View(
+                    "NuevaContrasena"
+                );
+            }
+
+
+            await _usuarioRepository
+                .MarcarCodigoComoUtilizado(
+                    idUsuario.Value,
+                    codigo
+                );
+
+
+            HttpContext.Session.Remove(
+                "IdUsuarioRecuperacion"
+            );
+
+
+            HttpContext.Session.Remove(
+                "CodigoRecuperacion"
+            );
+
+
+            TempData["Mensaje"] =
+                "Contraseña actualizada correctamente.";
+
+
+            return RedirectToAction(
+                "Index"
+            );
+        }
 
 
         //==================================================

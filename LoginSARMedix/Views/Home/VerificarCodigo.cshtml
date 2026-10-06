@@ -1,0 +1,46 @@
+﻿@{
+    ViewData["Title"] = "Verificar código";
+}
+
+<h2>Verificar código</h2>
+
+<p>
+    Ingresa el código de 6 dígitos
+    enviado a tu correo electrónico.
+</p>
+
+
+@if (ViewBag.Mensaje != null)
+{
+    <p>
+        @ViewBag.Mensaje
+    </p>
+}
+
+
+<form asp-controller="Home"
+      asp-action="VerificarCodigo"
+      method="post">
+
+    <label>
+        Código de recuperación
+    </label>
+
+    <input type="text"
+           name="codigo"
+           maxlength="6"
+           required />
+
+    <button type="submit">
+        Verificar código
+    </button>
+
+</form>
+
+
+<a asp-controller="Home"
+   asp-action="Index">
+
+    Volver al inicio de sesión
+
+</a>
