@@ -1,0 +1,259 @@
+﻿@{
+    ViewData["Title"] = "Nueva contraseña";
+}
+
+<div class="contenedor-recuperacion">
+
+    <div class="tarjeta-recuperacion">
+
+        <h2>
+            Nueva contraseña
+        </h2>
+
+        <p class="subtitulo">
+            Ingresa y confirma tu nueva contraseña.
+        </p>
+
+
+        @if (ViewBag.Mensaje != null)
+        {
+            <div class="mensaje-error">
+                @ViewBag.Mensaje
+            </div>
+        }
+
+
+        <form asp-controller="Home"
+              asp-action="CambiarContrasena"
+              method="post"
+              class="formulario-recuperacion">
+
+            <div class="grupo-campo">
+
+                <label>
+                    Nueva contraseña
+                </label>
+
+                <input type="password"
+                       name="nuevaContrasena"
+                       id="nuevaContrasena"
+                       placeholder="Ingresa tu nueva contraseña"
+                       required />
+
+            </div>
+
+
+            <div class="grupo-campo">
+
+                <label>
+                    Confirmar contraseña
+                </label>
+
+                <input type="password"
+                       name="confirmarContrasena"
+                       id="confirmarContrasena"
+                       placeholder="Repite tu nueva contraseña"
+                       required />
+
+            </div>
+
+
+            <button type="submit">
+                Cambiar contraseña
+            </button>
+
+        </form>
+
+
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="volver-login">
+
+            ← Volver al inicio de sesión
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<style>
+
+    .contenedor-recuperacion {
+        min-height: 75vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 30px 20px;
+    }
+
+
+    .tarjeta-recuperacion {
+        width: 100%;
+        max-width: 480px;
+
+        background-color: rgba(255, 255, 255, 0.96);
+
+        border-radius: 18px;
+
+        padding: 35px;
+
+        box-shadow:
+            0 12px 35px
+            rgba(0, 59, 100, 0.18);
+
+        text-align: center;
+    }
+
+
+    .tarjeta-recuperacion h2 {
+        margin: 0;
+
+        color: #003b64;
+
+        font-size: 30px;
+        font-weight: 700;
+    }
+
+
+    .subtitulo {
+        margin-top: 10px;
+        margin-bottom: 28px;
+
+        color: #60758a;
+
+        font-size: 16px;
+    }
+
+
+    .grupo-campo {
+        width: 100%;
+
+        margin-bottom: 20px;
+
+        text-align: left;
+    }
+
+
+    .grupo-campo label {
+        display: block;
+
+        margin-bottom: 8px;
+
+        color: #003b64;
+
+        font-weight: 600;
+    }
+
+
+    .grupo-campo input {
+        width: 100%;
+        height: 54px;
+
+        padding: 0 16px;
+
+        border:
+            1px solid #b8cfe0;
+
+        border-radius: 10px;
+
+        background-color: #ffffff;
+
+        font-size: 16px;
+
+        box-sizing: border-box;
+
+        outline: none;
+
+        transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+
+    .grupo-campo input:focus {
+        border-color: #1198a5;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(17, 152, 165, 0.15);
+    }
+
+
+    .formulario-recuperacion button {
+        width: 100%;
+
+        min-height: 50px;
+
+        margin-top: 5px;
+
+        border: none;
+
+        border-radius: 9px;
+
+        background-color: #1198a5;
+
+        color: white;
+
+        font-size: 16px;
+        font-weight: 600;
+
+        cursor: pointer;
+
+        transition:
+            background-color 0.2s ease,
+            transform 0.1s ease;
+    }
+
+
+    .formulario-recuperacion button:hover {
+        background-color: #0d8490;
+    }
+
+
+    .formulario-recuperacion button:active {
+        transform: scale(0.99);
+    }
+
+
+    .mensaje-error {
+        width: 100%;
+
+        margin-bottom: 20px;
+
+        padding: 12px 15px;
+
+        border:
+            1px solid #f5c2c7;
+
+        border-radius: 8px;
+
+        background-color: #f8d7da;
+
+        color: #842029;
+
+        box-sizing: border-box;
+
+        font-weight: 600;
+    }
+
+
+    .volver-login {
+        display: inline-block;
+
+        margin-top: 24px;
+
+        color: #0d8490;
+
+        text-decoration: none;
+
+        font-weight: 600;
+    }
+
+
+    .volver-login:hover {
+        text-decoration: underline;
+    }
+
+</style>

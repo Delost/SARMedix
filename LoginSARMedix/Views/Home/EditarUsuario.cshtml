@@ -11,29 +11,44 @@
            type="hidden" />
 
 
-    <div>
+    <div class="grupo-campo">
 
         <label>
             Nombre
         </label>
 
-        <input asp-for="nombre" />
+        <input asp-for="nombre"
+               autocomplete="off" />
 
     </div>
 
 
-    <div>
+    <div class="grupo-campo">
 
         <label>
             Apellido
         </label>
 
-        <input asp-for="apellido" />
+        <input asp-for="apellido"
+               autocomplete="off" />
 
     </div>
 
 
-    <div>
+    <div class="grupo-campo">
+
+        <label>
+            Correo electrónico
+        </label>
+
+        <input asp-for="email"
+               type="email"
+               autocomplete="off" />
+
+    </div>
+
+
+    <div class="grupo-campo">
 
         <label>
             RUT
@@ -41,12 +56,13 @@
 
         <input asp-for="rut"
                maxlength="10"
+               autocomplete="off"
                oninput="formatearRut(this)" />
 
     </div>
 
 
-    <div>
+    <div class="grupo-campo">
 
         <label>
             Rol
@@ -75,13 +91,14 @@
     </div>
 
 
-    <div>
+    <div class="grupo-campo">
 
         <label>
             Nombre de usuario
         </label>
 
-        <input asp-for="nombre_usuario" />
+        <input asp-for="nombre_usuario"
+               autocomplete="off" />
 
     </div>
 
@@ -93,16 +110,17 @@
     </button>
 
 
-    <br />
-    <br />
+    <div class="contenedor-volver">
 
+        <a asp-controller="Home"
+           asp-action="Usuarios"
+           class="btn-volver">
 
-    <a asp-controller="Home"
-       asp-action="Usuarios">
+            ← Volver al listado
 
-        Volver al listado
+        </a>
 
-    </a>
+    </div>
 
 </form>
 
@@ -115,6 +133,166 @@
 
     </script>
 }
+
+
+<style>
+
+    .grupo-campo {
+        width: 100%;
+        margin-bottom: 18px;
+    }
+
+
+    .grupo-campo label {
+        display: block;
+        width: 100%;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+
+    /* =========================================
+       TODOS LOS INPUT VISIBLES
+    ========================================= */
+
+    .formulario-principal input:not([type="hidden"]) {
+        display: block !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+
+        height: 54px !important;
+
+        padding: 0 16px !important;
+
+        margin: 0 !important;
+
+        border: 1px solid #b8cfe0 !important;
+        border-radius: 10px !important;
+
+        background-color: #ffffff !important;
+
+        font-size: 16px !important;
+        font-family: inherit !important;
+
+        box-sizing: border-box !important;
+
+        outline: none !important;
+
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+
+    /* =========================================
+       SELECT DEL ROL
+    ========================================= */
+
+    .formulario-principal select {
+        display: block !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+
+        height: 54px !important;
+
+        padding: 0 16px !important;
+
+        margin: 0 !important;
+
+        border: 1px solid #b8cfe0 !important;
+        border-radius: 10px !important;
+
+        background-color: #ffffff !important;
+
+        font-size: 16px !important;
+        font-family: inherit !important;
+
+        box-sizing: border-box !important;
+
+        outline: none !important;
+    }
+
+
+    /* =========================================
+       FOCUS
+    ========================================= */
+
+    .formulario-principal input:not([type="hidden"]):focus,
+    .formulario-principal select:focus {
+        border-color: #1198a5 !important;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(17, 152, 165, 0.15) !important;
+    }
+
+
+    /* =========================================
+       BOTÓN ACTUALIZAR
+    ========================================= */
+
+    .formulario-principal button[type="submit"] {
+        width: 100%;
+
+        min-height: 48px;
+
+        border: none;
+
+        border-radius: 8px;
+
+        background-color: #1198a5;
+
+        color: white;
+
+        font-size: 16px;
+        font-weight: 600;
+
+        cursor: pointer;
+    }
+
+
+    .formulario-principal button[type="submit"]:hover {
+        background-color: #0d8490;
+    }
+
+
+    /* =========================================
+       BOTÓN VOLVER
+    ========================================= */
+
+    .contenedor-volver {
+        display: flex;
+        justify-content: center;
+
+        margin-top: 25px;
+        margin-bottom: 20px;
+    }
+
+
+    .btn-volver {
+        display: inline-block;
+
+        padding: 12px 22px;
+
+        background-color: #1198a5;
+
+        color: white;
+
+        border-radius: 7px;
+
+        text-decoration: none;
+
+        font-weight: 600;
+    }
+
+
+    .btn-volver:hover {
+        background-color: #0d8490;
+        color: white;
+    }
+
+</style>
 
 
 <script>

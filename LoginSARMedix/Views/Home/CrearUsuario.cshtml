@@ -32,39 +32,54 @@
     </div>
 
 
-    <div>
+    <div class="grupo-campo">
 
         <label>Nombre</label>
 
         <input asp-for="nombre"
-               id="nombre" />
+               id="nombre"
+               autocomplete="off" />
 
     </div>
 
 
-    <div>
+    <div class="grupo-campo">
 
         <label>Apellido</label>
 
         <input asp-for="apellido"
-               id="apellido" />
+               id="apellido"
+               autocomplete="off" />
 
     </div>
 
 
-    <div>
+    <div class="grupo-campo">
+
+        <label>Correo electrónico</label>
+
+        <input asp-for="email"
+               id="email"
+               type="email"
+               autocomplete="off" />
+
+    </div>
+
+
+    <div class="grupo-campo">
 
         <label>RUT</label>
 
         <input asp-for="rut"
                id="rut"
                maxlength="10"
+               autocomplete="off"
                oninput="formatearRut(this)" />
 
     </div>
 
 
-    <div>
+    <div class="grupo-campo">
 
         <label>Rol</label>
 
@@ -96,23 +111,25 @@
     </div>
 
 
-    <div>
+    <div class="grupo-campo">
 
         <label>Nombre de usuario</label>
 
         <input asp-for="nombre_usuario"
-               id="nombre_usuario" />
+               id="nombre_usuario"
+               autocomplete="off" />
 
     </div>
 
 
-    <div>
+    <div class="grupo-campo">
 
         <label>Contraseña</label>
 
         <input asp-for="contrasena"
                id="contrasena"
-               type="password" />
+               type="password"
+               autocomplete="new-password" />
 
     </div>
 
@@ -121,9 +138,7 @@
 
 
     <button type="submit">
-
         Crear usuario
-
     </button>
 
 </form>
@@ -145,15 +160,15 @@
 @if (ViewBag.Mensaje != null)
 {
     <script>
-
         alert('@ViewBag.Mensaje');
-
     </script>
 }
 
 
 
-<!-- VENTANA DE CONFIRMACIÓN -->
+<!-- =========================================
+     VENTANA DE CONFIRMACIÓN
+========================================= -->
 
 <div id="modalConfirmacion"
      class="modal-fondo">
@@ -164,16 +179,13 @@
             ?
         </div>
 
-
         <h2>
             Confirmar acción
         </h2>
 
-
         <p>
             ¿Quieres crear este usuario?
         </p>
-
 
         <div class="modal-botones">
 
@@ -227,6 +239,7 @@
         font-weight: 600;
         opacity: 1;
         transition: opacity 0.5s ease;
+        box-sizing: border-box;
     }
 
 
@@ -249,6 +262,67 @@
     }
 
 
+    /* =========================================
+       CAMPOS DEL FORMULARIO
+    ========================================= */
+
+    .grupo-campo {
+        width: 100%;
+        margin-bottom: 18px;
+    }
+
+
+    .grupo-campo label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+
+    .formulario-principal input,
+    .formulario-principal select {
+        width: 100%;
+        height: 54px;
+        padding: 0 16px;
+
+        border: 1px solid #b8cfe0;
+        border-radius: 10px;
+
+        font-size: 16px;
+
+        background-color: white;
+
+        box-sizing: border-box;
+
+        outline: none;
+    }
+
+
+    .formulario-principal input:focus,
+    .formulario-principal select:focus {
+        border-color: #1198a5;
+        box-shadow: 0 0 0 3px rgba(17, 152, 165, 0.15);
+    }
+
+
+    .formulario-principal button[type="submit"] {
+        width: 100%;
+        min-height: 48px;
+        border: none;
+        border-radius: 8px;
+        background-color: #1198a5;
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+
+    .formulario-principal button[type="submit"]:hover {
+        background-color: #0d8490;
+    }
+
+
     .contenedor-volver {
         display: flex;
         justify-content: center;
@@ -268,27 +342,31 @@
     }
 
 
-        .btn-volver-usuarios:hover {
-            background-color: #0d8490;
-            color: white;
-        }
-
+    .btn-volver-usuarios:hover {
+        background-color: #0d8490;
+        color: white;
+    }
 
 
     /* =========================================
-           VENTANA DE CONFIRMACIÓN
-           ========================================= */
+       VENTANA DE CONFIRMACIÓN
+    ========================================= */
 
     .modal-fondo {
         display: none;
         position: fixed;
+
         top: 0;
         left: 0;
+
         width: 100%;
         height: 100%;
+
         background-color: rgba(0, 0, 0, 0.45);
+
         align-items: center;
         justify-content: center;
+
         z-index: 9999;
     }
 
@@ -296,25 +374,42 @@
     .modal-contenido {
         width: 90%;
         max-width: 430px;
+
         background-color: white;
+
         border-radius: 15px;
+
         padding: 30px;
+
         text-align: center;
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+
+        box-shadow:
+            0 12px 35px
+            rgba(0, 0, 0, 0.25);
     }
 
 
     .modal-icono {
         width: 55px;
         height: 55px;
-        margin: 0 auto 15px auto;
+
+        margin:
+            0 auto
+            15px auto;
+
         display: flex;
+
         align-items: center;
         justify-content: center;
+
         background-color: #1198a5;
+
         color: white;
+
         border-radius: 50%;
+
         font-size: 30px;
+
         font-weight: bold;
     }
 
@@ -328,28 +423,40 @@
     .modal-contenido p {
         margin-top: 15px;
         margin-bottom: 25px;
+
         font-size: 17px;
+
         color: #444;
     }
 
 
     .modal-botones {
         display: flex;
+
         justify-content: center;
+
         gap: 10px;
+
         flex-wrap: wrap;
     }
 
 
-        .modal-botones button {
-            min-width: 90px;
-            padding: 10px 18px;
-            border: none;
-            border-radius: 7px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-        }
+    .modal-botones button {
+        min-width: 90px;
+
+        padding:
+            10px 18px;
+
+        border: none;
+
+        border-radius: 7px;
+
+        color: white;
+
+        font-weight: 600;
+
+        cursor: pointer;
+    }
 
 
     .btn-modal-si {
@@ -357,9 +464,9 @@
     }
 
 
-        .btn-modal-si:hover {
-            background-color: #157347;
-        }
+    .btn-modal-si:hover {
+        background-color: #157347;
+    }
 
 
     .btn-modal-no {
@@ -367,9 +474,9 @@
     }
 
 
-        .btn-modal-no:hover {
-            background-color: #a91d2a;
-        }
+    .btn-modal-no:hover {
+        background-color: #a91d2a;
+    }
 
 
     .btn-modal-cancelar {
@@ -377,9 +484,9 @@
     }
 
 
-        .btn-modal-cancelar:hover {
-            background-color: #474f55;
-        }
+    .btn-modal-cancelar:hover {
+        background-color: #474f55;
+    }
 
 </style>
 
@@ -462,6 +569,12 @@
             );
 
 
+        const email =
+            document.getElementById(
+                "email"
+            );
+
+
         const rut =
             document.getElementById(
                 "rut"
@@ -504,6 +617,31 @@
             mostrarError(
                 "Debe ingresar el apellido.",
                 apellido
+            );
+
+            return false;
+        }
+
+
+
+        if (email.value.trim() === "") {
+
+            mostrarError(
+                "Debe ingresar el correo electrónico.",
+                email
+            );
+
+            return false;
+        }
+
+
+
+        if (!email.value.includes("@@") ||
+            !email.value.includes(".")) {
+
+            mostrarError(
+                "Debe ingresar un correo electrónico válido.",
+                email
             );
 
             return false;
@@ -586,13 +724,6 @@
 
 
 
-    /*
-        BOTÓN NO
-
-        Cierra la confirmación,
-        pero conserva todos los datos.
-    */
-
     function cerrarConfirmacion() {
 
         usuarioConfirmado = false;
@@ -604,13 +735,6 @@
     }
 
 
-
-    /*
-        BOTÓN CANCELAR
-
-        Cierra la confirmación
-        y limpia todos los campos.
-    */
 
     function cancelarCreacion() {
 
@@ -629,6 +753,11 @@
 
         document.getElementById(
             "apellido"
+        ).value = "";
+
+
+        document.getElementById(
+            "email"
         ).value = "";
 
 
@@ -660,11 +789,14 @@
 
         mensaje.innerText = "";
 
+
         mensaje.className =
             "mensaje mensaje-error mensaje-oculto";
 
+
         mensaje.style.visibility =
             "hidden";
+
 
         mensaje.style.opacity =
             "1";

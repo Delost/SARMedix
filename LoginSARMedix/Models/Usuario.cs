@@ -21,5 +21,7 @@
         public string? rol { get; set; }
 
         public List<string> permisos { get; set; } = new List<string>();
+
+        public string? email { get; set; }
     }
 }
