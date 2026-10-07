@@ -4,6 +4,7 @@
     ViewData["Title"] = "Listado de Usuarios";
     ViewData["TituloBarra"] = "Listado de Usuarios";
 }
+
 <div class="usuarios-card">
 
     <div class="usuarios-titulo">
@@ -321,9 +322,7 @@
     }
 
 
-    /* =========================================
-       VENTANA DE CONFIRMACIÓN
-       ========================================= */
+    /* VENTANA DE CONFIRMACIÓN */
 
     .modal-fondo {
         display: none;
@@ -460,6 +459,8 @@
     let accionPendiente = null;
 
 
+    // CONFIRMAR EDICION
+
     function confirmarEditar(enlace) {
 
         accionPendiente = {
@@ -484,6 +485,8 @@
 
 
 
+    // CONFIRMAR DESACTIVAR
+
     function confirmarDesactivar(formulario) {
 
         accionPendiente = {
@@ -507,6 +510,8 @@
     }
 
 
+
+    // REALIZAR ACCION
 
     function realizarAccion() {
 
@@ -534,6 +539,8 @@
     }
 
 
+
+    // CERRAR CONFIRMACION
 
     function cerrarConfirmacion() {
 

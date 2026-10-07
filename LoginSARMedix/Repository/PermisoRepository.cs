@@ -16,9 +16,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // LISTAR ROLES ACTIVOS
-        //==================================================
 
         public async Task<List<Rol>> ListadoRoles()
         {
@@ -83,9 +81,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // LISTAR TODOS LOS PERMISOS
-        //==================================================
 
         public async Task<List<Permiso>> ListadoPermisos()
         {
@@ -147,9 +143,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // OBTENER PERMISOS DE UN ROL
-        //==================================================
 
         public async Task<List<int>> PermisosPorRol(
             int idRol)
@@ -203,9 +197,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // ACTUALIZAR PERMISOS DE UN ROL
-        //==================================================
 
         public async Task<bool> ActualizarPermisosRol(
             int idRol,
@@ -302,9 +294,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // CREAR NUEVO ROL
-        //==================================================
 
         public async Task<bool> CrearRol(Rol reg)
         {
@@ -316,7 +306,7 @@ namespace LoginSARMedix.Repository
 
 
 
-            //VERIFICAR SI EL ROL YA EXISTE
+            // VERIFICAR SI EL ROL YA EXISTE
 
             string consultaExiste =
                 @"SELECT COUNT(*)
@@ -351,7 +341,7 @@ namespace LoginSARMedix.Repository
 
 
 
-            //INSERTAR NUEVO ROL
+            // INSERTAR NUEVO ROL
 
             string consultaInsertar =
                 @"INSERT INTO rol
@@ -389,9 +379,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // OBTENER ROL POR ID
-        //==================================================
 
         public async Task<Rol?> ObtenerRolPorId(
             int idRol)
@@ -457,9 +445,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // ACTUALIZAR ROL
-        //==================================================
 
         public async Task<bool> ActualizarRol(
             Rol reg)
@@ -472,7 +458,7 @@ namespace LoginSARMedix.Repository
 
 
 
-            //VERIFICAR SI OTRO ROL TIENE EL MISMO NOMBRE
+            // VERIFICAR SI OTRO ROL TIENE EL MISMO NOMBRE
 
             string consultaExiste =
                 @"SELECT COUNT(*)
@@ -514,7 +500,7 @@ namespace LoginSARMedix.Repository
 
 
 
-            //ACTUALIZAR NOMBRE Y DESCRIPCION
+            // ACTUALIZAR NOMBRE Y DESCRIPCION
 
             string consultaActualizar =
                 @"UPDATE rol
@@ -558,9 +544,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // DESACTIVAR ROL
-        //==================================================
 
         public async Task<bool> DesactivarRol(
             int idRol)
@@ -600,9 +584,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // LISTAR ROLES INACTIVOS
-        //==================================================
 
         public async Task<List<Rol>>
             ListadoRolesInactivos()
@@ -668,9 +650,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // REACTIVAR ROL
-        //==================================================
 
         public async Task<bool> ReactivarRol(
             int idRol)

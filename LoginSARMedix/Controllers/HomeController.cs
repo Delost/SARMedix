@@ -22,6 +22,7 @@ namespace LoginSARMedix.Controllers
         private readonly HistorialRepository _historialRepository;
 
 
+
         public HomeController(
                              UsuarioRepository usuarioRepository,
                              ProductoRepository productoRepository,
@@ -39,9 +40,7 @@ namespace LoginSARMedix.Controllers
         }
 
 
-        //==================================================
         // INICIO DE SESION
-        //==================================================
 
         [HttpGet]
         public IActionResult Index()
@@ -64,18 +63,20 @@ namespace LoginSARMedix.Controllers
 
             return View();
         }
-        //==================================================
+
+
         // VERIFICAR CODIGO
-        //==================================================
 
         [HttpGet]
         public IActionResult VerificarCodigo()
         {
             return View();
         }
+
+
         [HttpPost]
         public async Task<IActionResult> VerificarCodigo(
-    string codigo)
+            string codigo)
         {
             int? idUsuario =
                 await _usuarioRepository
@@ -126,11 +127,12 @@ namespace LoginSARMedix.Controllers
             {
 
                 // GUARDAR ID DEL USUARIO LOGUEADO
+
                 HttpContext.Session.SetInt32(
                     "IdUsuario",
                     usuario.id_usuario
                 );
-                
+
 
 
 
@@ -180,9 +182,8 @@ namespace LoginSARMedix.Controllers
             }
         }
 
-        //==================================================
+
         // RECUPERAR CONTRASEÑA
-        //==================================================
 
         [HttpGet]
         public IActionResult RecuperarContrasena()
@@ -193,7 +194,7 @@ namespace LoginSARMedix.Controllers
 
         [HttpPost]
         public async Task<IActionResult> RecuperarContrasena(
-    string correo)
+            string correo)
         {
             var usuario =
                 await _usuarioRepository
@@ -266,9 +267,9 @@ namespace LoginSARMedix.Controllers
 
             return View();
         }
-        //==================================================
+
+
         // NUEVA CONTRASEÑA
-        //==================================================
 
         [HttpGet]
         public IActionResult NuevaContrasena()
@@ -290,9 +291,8 @@ namespace LoginSARMedix.Controllers
             return View();
         }
 
-        //==================================================
+
         // CAMBIAR CONTRASEÑA
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> CambiarContrasena(
@@ -390,9 +390,7 @@ namespace LoginSARMedix.Controllers
         }
 
 
-        //==================================================
         // CERRAR SESION
-        //==================================================
 
         [HttpPost]
         public IActionResult CerrarSesion()
@@ -415,9 +413,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // PANTALLA PRINCIPAL DE MODULOS
-        //==================================================
 
         [HttpGet]
         public IActionResult Modulos()
@@ -474,9 +470,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // ACCESO DENEGADO
-        //==================================================
 
         [HttpGet]
         public IActionResult AccesoDenegado()
@@ -516,9 +510,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // MODULO USUARIOS Y PERMISOS
-        //==================================================
 
         [HttpGet]
         public IActionResult UsuariosPermisos()
@@ -556,9 +548,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // MODULO PRODUCTOS
-        //==================================================
 
         [HttpGet]
         public IActionResult Productos()
@@ -578,9 +568,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // MOVIMIENTOS E HISTORIAL
-        //==================================================
 
         [HttpGet]
         public IActionResult MovimientoHistorial()
@@ -596,13 +584,34 @@ namespace LoginSARMedix.Controllers
             return View(
                 "~/Views/Home/Modulos/MovimientoHistorial.cshtml"
             );
+
         }
 
 
+        // HISTORIAL
 
-        //==================================================
+        [HttpGet]
+        public async Task<IActionResult> Historial()
+        {
+            if (!TienePermiso(
+                    "Consultar historial"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var listado =
+                await _historialRepository
+                    .ListadoHistorial();
+
+
+            return View(
+                listado
+            );
+        }
+
+
         // MEDICAMENTOS CONTROLADOS
-        //==================================================
 
         [HttpGet]
         public IActionResult MedicamentosControlados()
@@ -621,9 +630,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // CREAR USUARIO
-        //==================================================
 
         [HttpGet]
         public IActionResult CrearUsuario()
@@ -640,9 +647,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // NUEVO USUARIO
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> NuevoUsuario(
@@ -715,9 +720,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // LISTADO DE USUARIOS
-        //==================================================
 
         [HttpGet]
         public async Task<IActionResult> Usuarios()
@@ -734,6 +737,11 @@ namespace LoginSARMedix.Controllers
                     .ListadoUsuarios();
 
 
+            await RegistrarAccionHistorial(
+                   "Ingresó al listado de usuarios"
+             );
+
+
             return View(
                 listado
             );
@@ -741,9 +749,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // DESACTIVAR USUARIO
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> DesactivarUsuario(
@@ -756,6 +762,13 @@ namespace LoginSARMedix.Controllers
             }
 
 
+            var usuario =
+                await _usuarioRepository
+                    .ObtenerUsuarioPorId(
+                        idUsuario
+                    );
+
+
             var resultado =
                 await _usuarioRepository
                     .DesactivarUsuario(
@@ -765,6 +778,14 @@ namespace LoginSARMedix.Controllers
 
             if (resultado)
             {
+                if (usuario != null)
+                {
+                    await RegistrarAccionHistorial(
+                        $"Desactivó al usuario {usuario.nombre} {usuario.apellido} ({usuario.nombre_usuario})"
+                    );
+                }
+
+
                 TempData["Mensaje"] =
                     "Usuario desactivado correctamente";
 
@@ -790,9 +811,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // EDITAR USUARIO
-        //==================================================
 
         [HttpGet]
         public async Task<IActionResult> EditarUsuario(
@@ -819,6 +838,10 @@ namespace LoginSARMedix.Controllers
                 );
             }
 
+            await RegistrarAccionHistorial(
+                   $"Ingresó a editar al usuario {usuario.nombre} {usuario.apellido} ({usuario.nombre_usuario})"
+            );
+
 
             return View(
                 usuario
@@ -827,9 +850,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // ACTUALIZAR USUARIO
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> ActualizarUsuario(
@@ -870,9 +891,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // USUARIOS INACTIVOS
-        //==================================================
 
         [HttpGet]
         public async Task<IActionResult>
@@ -897,9 +916,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // REACTIVAR USUARIO
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> ReactivarUsuario(
@@ -912,6 +929,13 @@ namespace LoginSARMedix.Controllers
             }
 
 
+            var usuario =
+                await _usuarioRepository
+                    .ObtenerUsuarioPorId(
+                        idUsuario
+                    );
+
+
             var resultado =
                 await _usuarioRepository
                     .ReactivarUsuario(
@@ -921,6 +945,14 @@ namespace LoginSARMedix.Controllers
 
             if (resultado)
             {
+                if (usuario != null)
+                {
+                    await RegistrarAccionHistorial(
+                        $"Reactivó al usuario {usuario.nombre} {usuario.apellido} ({usuario.nombre_usuario})"
+                    );
+                }
+
+
                 TempData["Mensaje"] =
                     "Usuario reactivado correctamente";
 
@@ -946,9 +978,10 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
+
+
+
         // ELIMINAR USUARIO
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> EliminarUsuario(
@@ -974,9 +1007,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // ROLES Y PERMISOS
-        //==================================================
 
         [HttpGet]
         public async Task<IActionResult> RolesPermisos(
@@ -1052,9 +1083,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // GUARDAR PERMISOS
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> GuardarPermisos(
@@ -1111,9 +1140,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // CREAR ROL
-        //==================================================
 
         [HttpGet]
         public IActionResult CrearRol()
@@ -1148,9 +1175,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // NUEVO ROL
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> NuevoRol(
@@ -1217,9 +1242,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // EDITAR ROL
-        //==================================================
 
         [HttpGet]
         public async Task<IActionResult> EditarRol(
@@ -1280,9 +1303,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // ACTUALIZAR ROL
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> ActualizarRol(
@@ -1353,9 +1374,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // DESACTIVAR ROL
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> DesactivarRol(
@@ -1402,9 +1421,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // ROLES INACTIVOS
-        //==================================================
 
         [HttpGet]
         public async Task<IActionResult> RolesInactivos()
@@ -1446,9 +1463,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // REACTIVAR ROL
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> ReactivarRol(
@@ -1493,11 +1508,40 @@ namespace LoginSARMedix.Controllers
             );
         }
 
+        // REGISTRAR ACCION EN HISTORIAL
+
+        private async Task RegistrarAccionHistorial(
+            string descripcion)
+        {
+            int? idResponsable =
+                HttpContext.Session.GetInt32(
+                    "IdUsuario"
+                );
 
 
-        //==================================================
+            if (!idResponsable.HasValue)
+            {
+                return;
+            }
+
+
+            string nombreResponsable =
+                (
+                    HttpContext.Session.GetString("Nombre")
+                    + " "
+                    + HttpContext.Session.GetString("Apellido")
+                ).Trim();
+
+
+            await _historialRepository
+                .RegistrarHistorial(
+                    idResponsable.Value,
+                    nombreResponsable,
+                    descripcion
+                );
+        }
+
         // VERIFICAR UN PERMISO
-        //==================================================
 
         private bool TienePermiso(
             string permiso)
@@ -1526,9 +1570,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // VERIFICAR VARIOS PERMISOS
-        //==================================================
 
         private bool TieneAlgunPermiso(
             params string[] permisosRequeridos)
@@ -1551,9 +1593,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // ACCESO NO AUTORIZADO
-        //==================================================
 
         private IActionResult AccesoNoAutorizado()
         {
@@ -1578,14 +1618,10 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // PRODUCTOS
-        //==================================================
 
 
-        //==================================================
         // CREAR PRODUCTO
-        //==================================================
 
         [HttpGet]
         public IActionResult CrearProducto()
@@ -1602,9 +1638,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // NUEVO PRODUCTO
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> NuevoProducto(
@@ -1626,6 +1660,11 @@ namespace LoginSARMedix.Controllers
 
             if (resultado)
             {
+                await RegistrarAccionHistorial(
+                    $"Creó el producto {reg.nombre} ({reg.codigo_interno})"
+                );
+
+
                 ViewBag.Mensaje =
                     "Producto registrado correctamente";
 
@@ -1649,9 +1688,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // LISTADO DE PRODUCTOS
-        //==================================================
 
         [HttpGet]
         public async Task<IActionResult> ListadoProductos2()
@@ -1676,9 +1713,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // EDITAR PRODUCTO
-        //==================================================
 
         [HttpGet]
         public async Task<IActionResult> EditarProducto(
@@ -1713,9 +1748,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // ACTUALIZAR PRODUCTO
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> ActualizarProducto(
@@ -1764,14 +1797,10 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // LOTES
-        //==================================================
 
 
-        //==================================================
         // CREAR LOTE
-        //==================================================
 
         [HttpGet]
         public async Task<IActionResult> CrearLote()
@@ -1798,9 +1827,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // NUEVO LOTE
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> NuevoLote(
@@ -1865,9 +1892,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // LISTADO DE LOTES
-        //==================================================
 
         [HttpGet]
         public async Task<IActionResult> Lotes()
@@ -1891,9 +1916,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // EDITAR LOTE
-        //==================================================
 
         [HttpGet]
         public async Task<IActionResult> EditarLote(
@@ -1938,9 +1961,7 @@ namespace LoginSARMedix.Controllers
 
 
 
-        //==================================================
         // ACTUALIZAR LOTE
-        //==================================================
 
         [HttpPost]
         public async Task<IActionResult> ActualizarLote(

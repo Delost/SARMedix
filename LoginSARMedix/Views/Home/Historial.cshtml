@@ -1,0 +1,248 @@
+﻿@model List<LoginSARMedix.Models.Historial>
+
+@{
+    ViewData["Title"] = "Historial";
+    ViewData["TituloBarra"] = "Historial";
+}
+
+
+<div class="historial-card">
+
+    <div class="historial-titulo">
+
+        <h1>
+            Historial del sistema
+        </h1>
+
+        <p>
+            Registro de acciones realizadas en SARMedix
+        </p>
+
+    </div>
+
+
+    @if (Model != null && Model.Count > 0)
+    {
+        <div class="tabla-contenedor">
+
+            <table class="tabla-historial">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            ID
+                        </th>
+
+                        <th>
+                            Responsable
+                        </th>
+
+                        <th>
+                            Descripción
+                        </th>
+
+                        <th>
+                            Fecha y hora
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    @foreach (var registro in Model)
+                    {
+                        <tr>
+
+                            <td>
+                                @registro.id_historial
+                            </td>
+
+
+                            <td>
+                                @registro.usuario_responsable
+                            </td>
+
+
+                            <td class="descripcion-historial">
+                                @registro.descripcion
+                            </td>
+
+
+                            <td>
+                                @registro.fecha_hora.ToString(
+                                    "dd-MM-yyyy HH:mm:ss"
+                                )
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    }
+    else
+    {
+        <div class="sin-registros">
+
+            No existen registros en el historial.
+
+        </div>
+    }
+
+
+    <div class="contenedor-volver">
+
+        <a asp-controller="Home"
+           asp-action="MovimientoHistorial"
+           class="btn-volver">
+
+            ← Volver a Movimientos e Historial
+
+        </a>
+
+    </div>
+
+</div>
+
+
+
+<style>
+
+    /* CONTENEDOR */
+
+    .historial-card {
+        width: 95%;
+        max-width: 1100px;
+        margin: 5px auto;
+    }
+
+
+    .historial-titulo {
+        margin-bottom: 25px;
+        text-align: center;
+    }
+
+
+    .historial-titulo h1 {
+        margin-bottom: 8px;
+        color: #087bc2;
+        font-size: 32px;
+    }
+
+
+    .historial-titulo p {
+        color: #687b89;
+        font-size: 16px;
+    }
+
+
+
+    /* TABLA */
+
+    .tabla-contenedor {
+        width: 100%;
+        overflow-x: auto;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 7px 20px rgba(28, 65, 95, 0.12);
+    }
+
+
+    .tabla-historial {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+
+    .tabla-historial th {
+        padding: 14px;
+        background-color: #0f5278;
+        color: white;
+        text-align: left;
+        font-weight: 600;
+    }
+
+
+    .tabla-historial td {
+        padding: 13px 14px;
+        border-bottom: 1px solid #dce6ec;
+        color: #17324d;
+        vertical-align: middle;
+    }
+
+
+    .tabla-historial tbody tr:hover {
+        background-color: #f4f9fc;
+    }
+
+
+    .descripcion-historial {
+        min-width: 300px;
+    }
+
+
+
+    /* SIN REGISTROS */
+
+    .sin-registros {
+        padding: 25px;
+        background-color: #f5f8fa;
+        border: 1px solid #d8e2e8;
+        border-radius: 8px;
+        text-align: center;
+        color: #60798b;
+    }
+
+
+
+    /* VOLVER */
+
+    .contenedor-volver {
+        margin-top: 30px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+
+    .btn-volver {
+        display: inline-block;
+        padding: 12px 22px;
+        background-color: #1198a5;
+        color: white;
+        border-radius: 7px;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+
+    .btn-volver:hover {
+        background-color: #0d8490;
+        color: white;
+    }
+
+
+
+    /* CELULAR */
+
+    @@media (max-width: 700px) {
+
+        .historial-card {
+            width: 96%;
+        }
+
+
+        .tabla-historial {
+            min-width: 800px;
+        }
+
+    }
+
+</style>

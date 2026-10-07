@@ -16,9 +16,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // INICIAR SESION
-        //==================================================
 
         public async Task<Usuario?> IniciarSesion(
             string nombreUsuario,
@@ -141,9 +139,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // OBTENER PERMISOS
-        //==================================================
 
         public async Task<List<string>> ObtenerPermisos(
             int idRol)
@@ -199,9 +195,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // CREAR USUARIO
-        //==================================================
 
         public async Task<bool> CrearUsuario(
             Usuario reg)
@@ -214,10 +208,7 @@ namespace LoginSARMedix.Repository
 
 
 
-            //==================================================
-            // COMPROBAR SI YA EXISTE
-            // RUT, USUARIO O EMAIL
-            //==================================================
+            // COMPROBAR SI YA EXISTE RUT, USUARIO O EMAIL
 
             string consultaExiste =
                 @"SELECT COUNT(*)
@@ -266,9 +257,7 @@ namespace LoginSARMedix.Repository
 
 
 
-            //==================================================
             // INSERTAR NUEVO USUARIO
-            //==================================================
 
             string consulta =
                 @"INSERT INTO usuario
@@ -353,9 +342,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // LISTADO DE USUARIOS
-        //==================================================
 
         public async Task<List<Usuario>>
             ListadoUsuarios()
@@ -458,9 +445,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // DESACTIVAR USUARIO
-        //==================================================
 
         public async Task<bool> DesactivarUsuario(
             int idUsuario)
@@ -500,9 +485,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // OBTENER USUARIO POR ID
-        //==================================================
 
         public async Task<Usuario?> ObtenerUsuarioPorId(
             int idUsuario)
@@ -602,9 +585,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // ACTUALIZAR USUARIO
-        //==================================================
 
         public async Task<bool> ActualizarUsuario(
             Usuario reg)
@@ -685,9 +666,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // LISTADO DE USUARIOS INACTIVOS
-        //==================================================
 
         public async Task<List<Usuario>>
             ListadoEliminarUsuarios()
@@ -791,9 +770,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // REACTIVAR USUARIO
-        //==================================================
 
         public async Task<bool> ReactivarUsuario(
             int idUsuario)
@@ -834,9 +811,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // ELIMINAR USUARIO
-        //==================================================
 
         public async Task<bool> EliminarUsuario(
             int idUsuario)
@@ -876,9 +851,7 @@ namespace LoginSARMedix.Repository
 
 
 
-        //==================================================
         // BUSCAR USUARIO POR CORREO
-        //==================================================
 
         public async Task<Usuario?> BuscarPorCorreo(
             string correo)
@@ -954,9 +927,7 @@ namespace LoginSARMedix.Repository
             return usuario;
         }
 
-        //==================================================
         // CREAR CODIGO DE RECUPERACION
-        //==================================================
 
         public async Task<bool> CrearCodigoRecuperacion(
             int idUsuario,
@@ -1018,9 +989,8 @@ namespace LoginSARMedix.Repository
 
             return resultado > 0;
         }
-        //==================================================
+
         // VALIDAR CODIGO DE RECUPERACION
-        //==================================================
 
         public async Task<int?> ValidarCodigoRecuperacion(
             string codigo)
@@ -1070,9 +1040,7 @@ namespace LoginSARMedix.Repository
             );
         }
 
-        //==================================================
         // CAMBIAR CONTRASEÑA
-        //==================================================
 
         public async Task<bool> CambiarContrasena(
             int idUsuario,
@@ -1117,9 +1085,7 @@ namespace LoginSARMedix.Repository
             return resultado > 0;
         }
 
-        //==================================================
         // MARCAR CODIGO COMO UTILIZADO
-        //==================================================
 
         public async Task<bool> MarcarCodigoComoUtilizado(
             int idUsuario,
