@@ -3,6 +3,9 @@
 @using Microsoft.AspNetCore.Http
 
 @{
+    ViewData["Title"] = "Listado de Productos";
+    ViewData["TituloBarra"] = "Listado de Productos";
+
     string permisosTexto =
         Context.Session.GetString("Permisos") ?? "";
 

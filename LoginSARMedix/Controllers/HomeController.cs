@@ -19,21 +19,24 @@ namespace LoginSARMedix.Controllers
         private readonly LoteRepository _loteRepository;
         private readonly PermisoRepository _permisoRepository;
 
+        private readonly HistorialRepository _historialRepository;
+
 
         public HomeController(
-    UsuarioRepository usuarioRepository,
-    ProductoRepository productoRepository,
-    LoteRepository loteRepository,
-    PermisoRepository permisoRepository,
-    EmailService emailService)
+                             UsuarioRepository usuarioRepository,
+                             ProductoRepository productoRepository,
+                             LoteRepository loteRepository,
+                             PermisoRepository permisoRepository,
+                             EmailService emailService,
+                             HistorialRepository historialRepository)
         {
             _usuarioRepository = usuarioRepository;
             _productoRepository = productoRepository;
             _loteRepository = loteRepository;
             _permisoRepository = permisoRepository;
             _emailService = emailService;
+            _historialRepository = historialRepository;
         }
-
 
 
         //==================================================
@@ -121,6 +124,16 @@ namespace LoginSARMedix.Controllers
 
             if (usuario != null)
             {
+
+                // GUARDAR ID DEL USUARIO LOGUEADO
+                HttpContext.Session.SetInt32(
+                    "IdUsuario",
+                    usuario.id_usuario
+                );
+                
+
+
+
                 var permisos =
                     await _usuarioRepository.ObtenerPermisos(
                         usuario.id_rol
@@ -651,6 +664,30 @@ namespace LoginSARMedix.Controllers
 
             if (resultado)
             {
+
+                int? idResponsable =
+                    HttpContext.Session.GetInt32(
+                        "IdUsuario"
+                    );
+
+                string nombreResponsable =
+                    (
+                        HttpContext.Session.GetString("Nombre")
+                        + " "
+                        + HttpContext.Session.GetString("Apellido")
+                    ).Trim();
+
+
+                if (idResponsable.HasValue)
+                {
+                    await _historialRepository
+                        .RegistrarHistorial(
+                            idResponsable.Value,
+                            nombreResponsable,
+                            $"Creó al usuario {reg.nombre} {reg.apellido} ({reg.nombre_usuario})"
+                        );
+                }
+
                 TempData["Mensaje"] =
                     "Usuario creado correctamente";
 

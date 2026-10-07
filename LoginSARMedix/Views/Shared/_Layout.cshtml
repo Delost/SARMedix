@@ -20,13 +20,14 @@
 
     bool sesionIniciada =
         !string.IsNullOrEmpty(nombre);
-}
 
+    string tituloBarra =
+        ViewData["TituloBarra"]?.ToString() ?? "";
+}
 
 <!DOCTYPE html>
 
 <html lang="es">
-
 
 <head>
 
@@ -34,7 +35,6 @@
 
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0" />
-
 
     <title>
         @ViewData["Title"] - SARMedix
@@ -54,587 +54,7 @@
           href="~/LoginSARMedix.styles.css"
           asp-append-version="true" />
 
-
-
-    <style>
-
-        /* ========================================= */
-        /* BARRA SUPERIOR                            */
-        /* ========================================= */
-
-        .barra-layout {
-            min-height: 82px;
-
-            width: 100%;
-
-            padding: 12px 55px;
-
-            box-sizing: border-box;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: space-between;
-
-            gap: 25px;
-
-            background:
-                linear-gradient(
-                    90deg,
-                    #073b64,
-                    #0d5b82
-                );
-
-            box-shadow:
-                0 3px 15px
-                rgba(0, 0, 0, 0.16);
-
-            color: white;
-        }
-
-
-
-        /* ========================================= */
-        /* LOGO                                      */
-        /* ========================================= */
-
-        .logo-layout {
-            display: flex;
-
-            align-items: center;
-
-            gap: 13px;
-
-            text-decoration: none;
-
-            color: white;
-
-            flex-shrink: 0;
-        }
-
-
-        .logo-layout:hover {
-            color: white;
-        }
-
-
-        .logo-cruz-layout {
-            position: relative;
-
-            width: 42px;
-
-            height: 42px;
-
-            flex-shrink: 0;
-
-            border-radius: 10px;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #0d7898,
-                    #12a594
-                );
-
-            box-shadow:
-                0 5px 12px
-                rgba(0, 0, 0, 0.18);
-        }
-
-
-        .logo-cruz-layout::before {
-            content: "";
-
-            position: absolute;
-
-            width: 22px;
-
-            height: 7px;
-
-            top: 17px;
-
-            left: 10px;
-
-            border-radius: 2px;
-
-            background-color: white;
-        }
-
-
-        .logo-cruz-layout::after {
-            content: "";
-
-            position: absolute;
-
-            width: 7px;
-
-            height: 22px;
-
-            top: 10px;
-
-            left: 17px;
-
-            border-radius: 2px;
-
-            background-color: white;
-        }
-
-
-        .logo-texto-layout {
-            font-size: 25px;
-
-            font-weight: 700;
-
-            letter-spacing: 0.2px;
-
-            white-space: nowrap;
-        }
-
-
-
-        /* ========================================= */
-        /* USUARIO                                   */
-        /* ========================================= */
-
-        .usuario-layout {
-            display: flex;
-
-            align-items: center;
-
-            justify-content: flex-end;
-
-            gap: 12px;
-
-            min-width: 0;
-        }
-
-
-        .usuario-datos-layout {
-            display: flex;
-
-            flex-direction: column;
-
-            align-items: flex-end;
-
-            line-height: 1.2;
-        }
-
-
-        .usuario-nombre-layout {
-            max-width: 190px;
-
-            overflow: hidden;
-
-            text-overflow: ellipsis;
-
-            white-space: nowrap;
-
-            color: white;
-
-            font-size: 15px;
-
-            font-weight: 600;
-        }
-
-
-        .usuario-rol-layout {
-            margin-top: 4px;
-
-            color: #cfe7f3;
-
-            font-size: 13px;
-
-            font-weight: 400;
-        }
-
-
-        .usuario-circulo-layout {
-            width: 42px;
-
-            height: 42px;
-
-            flex-shrink: 0;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            border:
-                2px solid
-                rgba(255, 255, 255, 0.72);
-
-            border-radius: 50%;
-
-            background-color:
-                rgba(255, 255, 255, 0.14);
-
-            color: white;
-
-            font-size: 18px;
-
-            font-weight: 700;
-        }
-
-
-
-        /* ========================================= */
-        /* CERRAR SESION                             */
-        /* ========================================= */
-
-        .form-cerrar-layout {
-            margin: 0;
-        }
-
-
-        .btn-cerrar-layout {
-            width: auto !important;
-
-            height: auto !important;
-
-            margin: 0 !important;
-
-            padding: 9px 16px !important;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.70) !important;
-
-            border-radius: 7px !important;
-
-            background-color:
-                rgba(255, 255, 255, 0.10) !important;
-
-            color: white !important;
-
-            font-size: 14px !important;
-
-            font-weight: 600 !important;
-
-            cursor: pointer;
-
-            transition:
-                background-color 0.2s ease,
-                border-color 0.2s ease;
-        }
-
-
-        .btn-cerrar-layout:hover {
-            background-color:
-                rgba(255, 255, 255, 0.22) !important;
-
-            border-color:
-                white !important;
-        }
-
-
-
-        /* ========================================= */
-        /* CONTENIDO                                 */
-        /* ========================================= */
-
-        .contenedor-layout {
-            width: 100%;
-
-            max-width: 100%;
-
-            padding-left: 0;
-
-            padding-right: 0;
-        }
-
-
-
-        /* ========================================= */
-        /* FOOTER                                    */
-        /* ========================================= */
-
-        .footer-layout {
-            position: relative;
-
-            width: 100%;
-
-            height: 62px;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            background-color:
-                rgba(255, 255, 255, 0.96);
-
-            color: #60798b;
-
-            font-size: 14px;
-
-            text-align: center;
-        }
-
-
-
-        /* ========================================= */
-        /* MODAL CERRAR SESION                       */
-        /* ========================================= */
-
-        .modal-fondo-sesion {
-            display: none;
-
-            position: fixed;
-
-            top: 0;
-
-            left: 0;
-
-            width: 100%;
-
-            height: 100%;
-
-            background-color:
-                rgba(0, 0, 0, 0.45);
-
-            align-items: center;
-
-            justify-content: center;
-
-            z-index: 99999;
-        }
-
-
-        .modal-contenido-sesion {
-            width: 90%;
-
-            max-width: 430px;
-
-            padding: 30px;
-
-            background-color: white;
-
-            border-radius: 15px;
-
-            text-align: center;
-
-            box-shadow:
-                0 12px 35px
-                rgba(0, 0, 0, 0.25);
-        }
-
-
-        .modal-icono-sesion {
-            width: 55px;
-
-            height: 55px;
-
-            margin:
-                0 auto 15px auto;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            background-color: #1198a5;
-
-            color: white;
-
-            border-radius: 50%;
-
-            font-size: 30px;
-
-            font-weight: bold;
-        }
-
-
-        .modal-contenido-sesion h2 {
-            width: auto !important;
-
-            max-width: none !important;
-
-            margin: 0 !important;
-
-            padding: 0 !important;
-
-            background: none !important;
-
-            border-radius: 0 !important;
-
-            box-shadow: none !important;
-
-            color: #003b64 !important;
-
-            font-size: 25px !important;
-        }
-
-
-        .modal-contenido-sesion h2::before,
-        .modal-contenido-sesion h2::after {
-            display: none !important;
-        }
-
-
-        .modal-contenido-sesion p {
-            margin-top: 15px;
-
-            margin-bottom: 25px;
-
-            color: #444;
-
-            font-size: 17px;
-        }
-
-
-        .modal-botones-sesion {
-            display: flex;
-
-            justify-content: center;
-
-            gap: 10px;
-
-            flex-wrap: wrap;
-        }
-
-
-        .modal-botones-sesion button {
-            min-width: 100px;
-
-            width: auto !important;
-
-            height: auto !important;
-
-            margin: 0 !important;
-
-            padding: 10px 18px !important;
-
-            border: none !important;
-
-            border-radius: 7px !important;
-
-            color: white !important;
-
-            font-size: 14px !important;
-
-            font-weight: 600 !important;
-
-            cursor: pointer;
-        }
-
-
-        .btn-sesion-si {
-            background-color: #198754 !important;
-        }
-
-
-        .btn-sesion-si:hover {
-            background-color: #157347 !important;
-        }
-
-
-        .btn-sesion-no {
-            background-color: #c82333 !important;
-        }
-
-
-        .btn-sesion-no:hover {
-            background-color: #a91d2a !important;
-        }
-
-
-
-        /* ========================================= */
-        /* TABLET / CELULAR                          */
-        /* ========================================= */
-
-        @@media (max-width: 850px) {
-
-            .barra-layout {
-                padding:
-                    12px 22px;
-            }
-
-
-            .logo-texto-layout {
-                font-size: 20px;
-            }
-
-
-            .usuario-datos-layout {
-                display: none;
-            }
-
-        }
-
-
-
-        @@media (max-width: 620px) {
-
-            .barra-layout {
-                min-height: 70px;
-
-                padding:
-                    10px 14px;
-
-                gap: 10px;
-            }
-
-
-            .logo-cruz-layout {
-                width: 36px;
-
-                height: 36px;
-            }
-
-
-            .logo-cruz-layout::before {
-                width: 20px;
-
-                height: 6px;
-
-                top: 15px;
-
-                left: 8px;
-            }
-
-
-            .logo-cruz-layout::after {
-                width: 6px;
-
-                height: 20px;
-
-                top: 8px;
-
-                left: 15px;
-            }
-
-
-            .logo-texto-layout {
-                font-size: 17px;
-            }
-
-
-            .usuario-circulo-layout {
-                display: none;
-            }
-
-
-            .btn-cerrar-layout {
-                padding:
-                    8px 11px !important;
-
-                font-size:
-                    12px !important;
-            }
-
-        }
-
-    </style>
-
-
 </head>
-
 
 
 <body>
@@ -646,6 +66,8 @@
 
     <header class="barra-layout">
 
+
+        <!-- LOGO -->
 
         <a asp-controller="Home"
            asp-action="Modulos"
@@ -666,6 +88,18 @@
         </a>
 
 
+
+        <!-- TITULO CENTRAL -->
+
+        <div class="titulo-layout">
+
+            @tituloBarra
+
+        </div>
+
+
+
+        <!-- USUARIO -->
 
         @if (sesionIniciada)
         {
@@ -721,6 +155,10 @@
 
 
             </div>
+        }
+        else
+        {
+            <div></div>
         }
 
 
@@ -842,7 +280,6 @@
     </script>
 
 
-
     <script>
 
         // =========================================
@@ -914,7 +351,6 @@
     </script>
 
 
-
     @await RenderSectionAsync(
         "Scripts",
         required: false
@@ -922,6 +358,5 @@
 
 
 </body>
-
 
 </html>

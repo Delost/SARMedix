@@ -1,9 +1,14 @@
 ﻿@{
-    Layout = null;
+    ViewData["Title"] = "Seleccione Módulo";
+
+    ViewData["TituloBarra"] =
+        "Seleccione Módulo";
+
 
     var permisos =
         ViewBag.Permisos as List<string>
         ?? new List<string>();
+
 
 
     bool permisoUsuarios =
@@ -20,6 +25,7 @@
                 StringComparison.OrdinalIgnoreCase
             )
         );
+
 
 
     bool permisoProductos =
@@ -45,6 +51,7 @@
         );
 
 
+
     bool permisoMovimientos =
         permisos.Any(
             p => p.Equals(
@@ -68,6 +75,7 @@
         );
 
 
+
     bool permisoControlados =
         permisos.Any(
             p => p.Equals(
@@ -75,900 +83,383 @@
                 StringComparison.OrdinalIgnoreCase
             )
         );
-
-
-    string nombreCompleto =
-        ViewBag.Nombre + " " + ViewBag.Apellido;
-
-
-    string inicial =
-        !string.IsNullOrEmpty(
-            ViewBag.Nombre?.ToString()
-        )
-        ? ViewBag.Nombre
-            .ToString()
-            .Substring(0, 1)
-            .ToUpper()
-        : "U";
 }
 
 
-<!DOCTYPE html>
 
-<html lang="es">
+<style>
 
+    /* ========================================= */
+    /* AJUSTE DE ESTA PANTALLA                    */
+    /* ========================================= */
 
-<head>
+    main[role="main"] {
+        padding:
+            0 !important;
 
-    <meta charset="utf-8" />
+        justify-content:
+            flex-start;
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0" />
-
-    <title>
-        SARMedix - Seleccione Módulo
-    </title>
-
-
-    <style>
-
-        * {
-            box-sizing: border-box;
-        }
-
-
-        body {
-            margin: 0;
-
-            min-height: 100vh;
-
-            display: flex;
-
-            flex-direction: column;
-
-            font-family:
-                "Segoe UI",
-                Arial,
-                sans-serif;
-
-            background: #f1f5fb;
-
-            color: #17324d;
-        }
+        align-items:
+            stretch;
+    }
 
 
 
-        /* ================================= */
-        /* BARRA SUPERIOR                    */
-        /* ================================= */
+    /* ========================================= */
+    /* FONDO DE MODULOS                          */
+    /* ========================================= */
 
-        .barra-superior {
-            height: 82px;
+    .pagina-modulos {
+        width: 100%;
 
-            display: grid;
+        min-height:
+            calc(100vh - 144px);
 
+        display: flex;
+
+        flex-direction: column;
+
+        background:
+            #f1f5fb;
+    }
+
+
+
+    /* ========================================= */
+    /* MENSAJE DE NAVEGACION                     */
+    /* ========================================= */
+
+    .contenedor-advertencia {
+        width: 100%;
+
+        display: flex;
+
+        justify-content: center;
+
+        position: relative;
+
+        z-index: 20;
+    }
+
+
+    .mensaje-advertencia {
+        width:
+            calc(100% - 80px);
+
+        max-width: 1160px;
+
+        margin-top: 18px;
+
+        padding:
+            13px 18px;
+
+        display: none;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 11px;
+
+        background:
+            #fff3cd;
+
+        border:
+            1px solid
+            #ffda6a;
+
+        border-radius: 9px;
+
+        color: #664d03;
+
+        font-size: 15px;
+
+        font-weight: 600;
+
+        text-align: center;
+
+        box-shadow:
+            0 4px 12px
+            rgba(120, 90, 0, 0.10);
+
+        opacity: 1;
+
+        transition:
+            opacity 0.5s ease;
+    }
+
+
+    .advertencia-icono {
+        width: 25px;
+
+        height: 25px;
+
+        flex-shrink: 0;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 50%;
+
+        background:
+            #ffc107;
+
+        color:
+            #5c4500;
+
+        font-size: 16px;
+
+        font-weight: 800;
+    }
+
+
+
+    /* ========================================= */
+    /* CONTENIDO                                 */
+    /* ========================================= */
+
+    .contenido-modulos {
+        width: 100%;
+
+        max-width: 1240px;
+
+        margin:
+            0 auto;
+
+        padding:
+            55px 40px 70px;
+
+        flex: 1;
+    }
+
+
+
+    /* ========================================= */
+    /* GRILLA                                    */
+    /* ========================================= */
+
+    .modulos {
+        display: grid;
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+        gap: 34px;
+    }
+
+
+
+    /* ========================================= */
+    /* TARJETAS                                  */
+    /* ========================================= */
+
+    .modulo {
+        position: relative;
+
+        height: 300px;
+
+        overflow: hidden;
+
+        border-radius: 14px;
+
+        background:
+            white;
+
+        box-shadow:
+            0 7px 20px
+            rgba(28, 65, 95, 0.13);
+
+        transition:
+            transform 0.22s ease,
+            box-shadow 0.22s ease;
+
+        text-decoration: none;
+
+        color: inherit;
+    }
+
+
+    .modulo.habilitado:hover {
+        transform:
+            scale(1.035);
+
+        box-shadow:
+            0 15px 32px
+            rgba(15, 91, 150, 0.25);
+
+        z-index: 5;
+
+        cursor: pointer;
+    }
+
+
+    .modulo-titulo {
+        display: none;
+    }
+
+
+
+    /* ========================================= */
+    /* IMAGENES                                  */
+    /* ========================================= */
+
+    .modulo-imagen {
+        position: relative;
+
+        width: 100%;
+
+        height: 100%;
+
+        background-size:
+            cover;
+
+        background-position:
+            center center;
+
+        background-repeat:
+            no-repeat;
+    }
+
+
+    .imagen-movimientos {
+        background-position:
+            center 78%;
+    }
+
+
+    .imagen-controlados {
+        background-position:
+            center 78%;
+    }
+
+
+
+    /* ========================================= */
+    /* MODULO BLOQUEADO                          */
+    /* ========================================= */
+
+    .modulo.bloqueado {
+        cursor:
+            not-allowed;
+
+        box-shadow:
+            0 5px 15px
+            rgba(0, 0, 0, 0.09);
+    }
+
+
+    .modulo.bloqueado
+    .modulo-imagen {
+        filter:
+            grayscale(100%);
+    }
+
+
+    .modulo-bloqueo {
+        position: absolute;
+
+        inset: 0;
+
+        display: flex;
+
+        flex-direction: column;
+
+        justify-content: center;
+
+        align-items: center;
+
+        background:
+            rgba(80, 88, 95, 0.58);
+
+        color: white;
+
+        font-weight: 700;
+
+        z-index: 2;
+    }
+
+
+    .candado {
+        margin-bottom: 9px;
+
+        font-size: 38px;
+    }
+
+
+    .sin-permiso {
+        font-size: 19px;
+    }
+
+
+
+    /* ========================================= */
+    /* RESPONSIVE                                */
+    /* ========================================= */
+
+    @@media (max-width: 1200px) {
+
+        .modulos {
             grid-template-columns:
-                1fr 1fr 1fr;
+                1fr;
+        }
 
-            align-items: center;
 
+        .contenido-modulos {
             padding:
-                0 60px;
-
-            background: #0f5278;
-
-            color: white;
-
-            box-shadow:
-                0 3px 10px
-                rgba(0,0,0,0.15);
+                35px 20px;
         }
 
 
-
-        /* ================================= */
-        /* LOGO                              */
-        /* ================================= */
-
-        .logo {
-            display: flex;
-
-            align-items: center;
-
-            gap: 14px;
-        }
-
-
-        .logo-cruz-medica {
-            width: 48px;
-
-            height: 48px;
-
-            background: white;
-
-            border-radius: 12px;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            box-shadow:
-                0 4px 10px
-                rgba(0, 0, 0, 0.15);
-        }
-
-
-        .cruz {
-            position: relative;
-
-            width: 22px;
-
-            height: 22px;
-
-            display: block;
-        }
-
-
-        .cruz::before,
-        .cruz::after {
-            content: "";
-
-            position: absolute;
-
-            background: #0b6fb8;
-
-            border-radius: 3px;
-        }
-
-
-        .cruz::before {
-            width: 8px;
-
-            height: 22px;
-
-            left: 7px;
-
-            top: 0;
-        }
-
-
-        .cruz::after {
-            width: 22px;
-
-            height: 8px;
-
-            left: 0;
-
-            top: 7px;
-        }
-
-
-        .logo-texto {
-            font-size: 25px;
-
-            font-weight: 700;
-
-            color: white;
-
-            letter-spacing: 0.3px;
-        }
-
-
-
-        /* ================================= */
-        /* TITULO CENTRAL                    */
-        /* ================================= */
-
-        .titulo-superior {
-            text-align: center;
-
-            font-size: 25px;
-
-            font-weight: 600;
-        }
-
-
-
-        /* ================================= */
-        /* INFORMACION DEL USUARIO           */
-        /* ================================= */
-
-        .usuario-superior {
-            display: flex;
-
-            justify-content: flex-end;
-
-            align-items: center;
-
-            gap: 16px;
-        }
-
-
-        .usuario-datos {
-            text-align: right;
-        }
-
-
-        .usuario-nombre {
-            display: block;
-
-            font-size: 16px;
-
-            font-weight: 600;
-        }
-
-
-        .usuario-rol {
-            display: block;
-
-            margin-top: 2px;
-
-            font-size: 13px;
-
-            opacity: 0.85;
-        }
-
-
-        .usuario-circulo {
-            width: 48px;
-
-            height: 48px;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            border-radius: 50%;
-
-            background:
-                rgba(255,255,255,0.22);
-
-            font-size: 20px;
-
-            font-weight: 600;
-        }
-
-
-
-        /* ================================= */
-        /* CERRAR SESION                     */
-        /* ================================= */
-
-        .form-cerrar-sesion {
-            margin: 0;
-        }
-
-
-        .btn-cerrar-sesion {
-            padding:
-                9px 13px;
-
-            border:
-                1px solid
-                rgba(255,255,255,0.65);
-
-            border-radius: 7px;
-
-            background: transparent;
-
-            color: white;
-
-            font-size: 13px;
-
-            font-weight: 600;
-
-            cursor: pointer;
-
-            transition:
-                background 0.2s ease;
-        }
-
-
-        .btn-cerrar-sesion:hover {
-            background:
-                rgba(255,255,255,0.16);
-        }
-
-
-
-        /* ================================= */
-        /* MENSAJE DE NAVEGACION             */
-        /* ================================= */
-
-        .contenedor-advertencia {
-            width: 100%;
-
-            display: flex;
-
-            justify-content: center;
-
-            position: relative;
-
-            z-index: 20;
+        .modulo-imagen,
+        .imagen-movimientos,
+        .imagen-controlados {
+            background-position:
+                center top;
         }
 
 
         .mensaje-advertencia {
             width:
-                calc(100% - 80px);
+                calc(100% - 40px);
+        }
 
-            max-width: 1160px;
+    }
 
-            margin-top: 18px;
 
+
+    @@media (max-width: 600px) {
+
+        .contenido-modulos {
             padding:
-                13px 18px;
-
-            display: none;
-
-            align-items: center;
-
-            justify-content: center;
-
-            gap: 11px;
-
-            background: #fff3cd;
-
-            border:
-                1px solid #ffda6a;
-
-            border-radius: 9px;
-
-            color: #664d03;
-
-            font-size: 15px;
-
-            font-weight: 600;
-
-            text-align: center;
-
-            box-shadow:
-                0 4px 12px
-                rgba(120, 90, 0, 0.10);
-
-            opacity: 1;
-
-            transition:
-                opacity 0.5s ease;
+                25px 15px;
         }
 
-
-        .advertencia-icono {
-            width: 25px;
-
-            height: 25px;
-
-            flex-shrink: 0;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            border-radius: 50%;
-
-            background: #ffc107;
-
-            color: #5c4500;
-
-            font-size: 16px;
-
-            font-weight: 800;
-        }
-
-
-
-        /* ================================= */
-        /* CONTENIDO                         */
-        /* ================================= */
-
-        .contenido {
-            width: 100%;
-
-            max-width: 1240px;
-
-            margin:
-                0 auto;
-
-            padding:
-                55px 40px 70px;
-
-            flex: 1;
-        }
-
-
-
-        /* ================================= */
-        /* MODULOS                           */
-        /* ================================= */
-
-        .modulos {
-            display: grid;
-
-            grid-template-columns:
-                repeat(2, 1fr);
-
-            gap: 34px;
-        }
-
-
-
-        /* ================================= */
-        /* TARJETAS                          */
-        /* ================================= */
 
         .modulo {
-            position: relative;
-
-            height: 300px;
-
-            overflow: hidden;
-
-            border-radius: 14px;
-
-            background: white;
-
-            box-shadow:
-                0 7px 20px
-                rgba(28, 65, 95, 0.13);
-
-            transition:
-                transform 0.22s ease,
-                box-shadow 0.22s ease;
-
-            text-decoration: none;
-
-            color: inherit;
+            height: 230px;
         }
 
 
-        .modulo.habilitado:hover {
-            transform:
-                scale(1.035);
-
-            box-shadow:
-                0 15px 32px
-                rgba(15, 91, 150, 0.25);
-
-            z-index: 5;
-
-            cursor: pointer;
+        .modulos {
+            gap: 20px;
         }
 
+    }
 
-        .modulo-titulo {
-            display: none;
-        }
+</style>
 
 
 
-        /* ================================= */
-        /* IMAGENES                          */
-        /* ================================= */
+<div class="pagina-modulos">
 
-        .modulo-imagen {
-            position: relative;
 
-            height: 100%;
-
-            background-size: cover;
-
-            background-position:
-                center center;
-
-            background-repeat:
-                no-repeat;
-        }
-
-
-        .imagen-movimientos {
-            background-position:
-                center 78%;
-        }
-
-
-        .imagen-controlados {
-            background-position:
-                center 78%;
-        }
-
-
-
-        /* ================================= */
-        /* MODULO BLOQUEADO                  */
-        /* ================================= */
-
-        .modulo.bloqueado {
-            cursor: not-allowed;
-
-            box-shadow:
-                0 5px 15px
-                rgba(0,0,0,0.09);
-        }
-
-
-        .modulo.bloqueado
-        .modulo-imagen {
-            filter:
-                grayscale(100%);
-        }
-
-
-        .modulo-bloqueo {
-            position: absolute;
-
-            inset: 0;
-
-            display: flex;
-
-            flex-direction: column;
-
-            justify-content: center;
-
-            align-items: center;
-
-            background:
-                rgba(80, 88, 95, 0.58);
-
-            color: white;
-
-            font-weight: 700;
-
-            z-index: 2;
-        }
-
-
-        .candado {
-            margin-bottom: 9px;
-
-            font-size: 38px;
-        }
-
-
-        .sin-permiso {
-            font-size: 19px;
-        }
-
-
-
-        /* ================================= */
-        /* MODAL CERRAR SESION               */
-        /* ================================= */
-
-        .modal-fondo-sesion {
-            display: none;
-
-            position: fixed;
-
-            top: 0;
-
-            left: 0;
-
-            width: 100%;
-
-            height: 100%;
-
-            background-color:
-                rgba(0, 0, 0, 0.45);
-
-            align-items: center;
-
-            justify-content: center;
-
-            z-index: 99999;
-        }
-
-
-        .modal-contenido-sesion {
-            width: 90%;
-
-            max-width: 430px;
-
-            padding: 30px;
-
-            background-color: white;
-
-            border-radius: 15px;
-
-            text-align: center;
-
-            box-shadow:
-                0 12px 35px
-                rgba(0, 0, 0, 0.25);
-        }
-
-
-        .modal-icono-sesion {
-            width: 55px;
-
-            height: 55px;
-
-            margin:
-                0 auto 15px auto;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            background-color: #1198a5;
-
-            color: white;
-
-            border-radius: 50%;
-
-            font-size: 30px;
-
-            font-weight: bold;
-        }
-
-
-        .modal-titulo-sesion {
-            margin: 0;
-
-            color: #003b64;
-
-            font-size: 25px;
-
-            font-weight: 700;
-        }
-
-
-        .modal-texto-sesion {
-            margin-top: 15px;
-
-            margin-bottom: 25px;
-
-            color: #444;
-
-            font-size: 17px;
-        }
-
-
-        .modal-botones-sesion {
-            display: flex;
-
-            justify-content: center;
-
-            gap: 10px;
-        }
-
-
-        .modal-botones-sesion button {
-            min-width: 100px;
-
-            padding:
-                10px 18px;
-
-            border: none;
-
-            border-radius: 7px;
-
-            color: white;
-
-            font-size: 14px;
-
-            font-weight: 600;
-
-            cursor: pointer;
-        }
-
-
-        .btn-sesion-si {
-            background-color: #198754;
-        }
-
-
-        .btn-sesion-si:hover {
-            background-color: #157347;
-        }
-
-
-        .btn-sesion-no {
-            background-color: #c82333;
-        }
-
-
-        .btn-sesion-no:hover {
-            background-color: #a91d2a;
-        }
-
-
-
-        /* ================================= */
-        /* FOOTER                            */
-        /* ================================= */
-
-        .footer {
-            width: 100%;
-
-            margin-top: auto;
-
-            padding: 18px;
-
-            background:
-                rgba(255, 255, 255, 0.90);
-
-            text-align: center;
-
-            color: #668092;
-
-            font-size: 13px;
-        }
-
-
-
-        /* ================================= */
-        /* RESPONSIVE                        */
-        /* ================================= */
-
-        @@media (max-width: 1200px) {
-
-            .barra-superior {
-                grid-template-columns:
-                    1fr 1fr;
-
-                height: auto;
-
-                min-height: 85px;
-
-                padding:
-                    15px 25px;
-            }
-
-
-            .titulo-superior {
-                display: none;
-            }
-
-
-            .modulos {
-                grid-template-columns:
-                    1fr;
-            }
-
-
-            .contenido {
-                padding:
-                    35px 20px;
-            }
-
-
-            .modulo-imagen,
-            .imagen-movimientos,
-            .imagen-controlados {
-                background-position:
-                    center top;
-            }
-
-
-            .mensaje-advertencia {
-                width:
-                    calc(100% - 40px);
-            }
-
-        }
-
-    </style>
-
-</head>
-
-
-
-<body>
-
-
-    <!-- ================================= -->
-    <!-- BARRA SUPERIOR                    -->
-    <!-- ================================= -->
-
-    <header class="barra-superior">
-
-
-        <!-- LOGO -->
-
-        <div class="logo">
-
-
-            <div class="logo-cruz-medica">
-
-                <span class="cruz"></span>
-
-            </div>
-
-
-            <div class="logo-texto">
-
-                SARMedix | SAR de Chiguay
-
-            </div>
-
-
-        </div>
-
-
-
-        <!-- TITULO -->
-
-        <div class="titulo-superior">
-
-            Seleccione Módulo
-
-        </div>
-
-
-
-        <!-- USUARIO -->
-
-        <div class="usuario-superior">
-
-
-            <div class="usuario-datos">
-
-
-                <span class="usuario-nombre">
-
-                    @nombreCompleto
-
-                </span>
-
-
-                <span class="usuario-rol">
-
-                    @ViewBag.Rol
-
-                </span>
-
-
-            </div>
-
-
-
-            <div class="usuario-circulo">
-
-                @inicial
-
-            </div>
-
-
-
-            <!-- FORMULARIO CERRAR SESION -->
-
-            <form asp-controller="Home"
-                  asp-action="CerrarSesion"
-                  method="post"
-                  id="formCerrarSesion"
-                  class="form-cerrar-sesion">
-
-
-                <button type="button"
-                        class="btn-cerrar-sesion"
-                        onclick="abrirConfirmacionCerrarSesion()">
-
-                    Cerrar sesión
-
-                </button>
-
-
-            </form>
-
-
-        </div>
-
-
-    </header>
-
-
-
-    <!-- ================================= -->
-    <!-- MENSAJE AL INTENTAR VOLVER        -->
-    <!-- ================================= -->
+    <!-- ========================================= -->
+    <!-- MENSAJE AL INTENTAR VOLVER                -->
+    <!-- ========================================= -->
 
     <div class="contenedor-advertencia">
 
@@ -986,7 +477,8 @@
 
             <span>
 
-                Debe cerrar sesión para volver a la pantalla de inicio de sesión.
+                Debe cerrar sesión para volver
+                a la pantalla de inicio de sesión.
 
             </span>
 
@@ -998,11 +490,11 @@
 
 
 
-    <!-- ================================= -->
-    <!-- MODULOS                           -->
-    <!-- ================================= -->
+    <!-- ========================================= -->
+    <!-- MODULOS                                   -->
+    <!-- ========================================= -->
 
-    <main class="contenido">
+    <section class="contenido-modulos">
 
 
         <div class="modulos">
@@ -1015,7 +507,8 @@
 
             @if (permisoUsuarios)
             {
-                <a href="/Home/UsuariosPermisos"
+                <a asp-controller="Home"
+                   asp-action="UsuariosPermisos"
                    class="modulo habilitado">
 
 
@@ -1090,7 +583,8 @@
 
             @if (permisoProductos)
             {
-                <a href="/Home/Productos"
+                <a asp-controller="Home"
+                   asp-action="Productos"
                    class="modulo habilitado">
 
 
@@ -1165,7 +659,8 @@
 
             @if (permisoMovimientos)
             {
-                <a href="/Home/MovimientoHistorial"
+                <a asp-controller="Home"
+                   asp-action="MovimientoHistorial"
                    class="modulo habilitado">
 
 
@@ -1176,7 +671,9 @@
                     </div>
 
 
-                    <div class="modulo-imagen imagen-movimientos"
+                    <div class="
+                        modulo-imagen
+                        imagen-movimientos"
                          style="
                             background-image:
                             url('/images/modulos/movimientos.jpg');
@@ -1199,7 +696,9 @@
                     </div>
 
 
-                    <div class="modulo-imagen imagen-movimientos"
+                    <div class="
+                        modulo-imagen
+                        imagen-movimientos"
                          style="
                             background-image:
                             url('/images/modulos/movimientos.jpg');
@@ -1240,7 +739,8 @@
 
             @if (permisoControlados)
             {
-                <a href="/Home/MedicamentosControlados"
+                <a asp-controller="Home"
+                   asp-action="MedicamentosControlados"
                    class="modulo habilitado">
 
 
@@ -1251,7 +751,9 @@
                     </div>
 
 
-                    <div class="modulo-imagen imagen-controlados"
+                    <div class="
+                        modulo-imagen
+                        imagen-controlados"
                          style="
                             background-image:
                             url('/images/modulos/controlados.jpg');
@@ -1274,7 +776,9 @@
                     </div>
 
 
-                    <div class="modulo-imagen imagen-controlados"
+                    <div class="
+                        modulo-imagen
+                        imagen-controlados"
                          style="
                             background-image:
                             url('/images/modulos/controlados.jpg');
@@ -1311,260 +815,121 @@
         </div>
 
 
-    </main>
+    </section>
 
 
+</div>
 
-    <!-- ================================= -->
-    <!-- CONFIRMACION CERRAR SESION        -->
-    <!-- ================================= -->
 
-    <div id="modalCerrarSesion"
-         class="modal-fondo-sesion">
 
+<script>
 
-        <div class="modal-contenido-sesion">
+    let temporizadorAdvertencia;
 
 
-            <div class="modal-icono-sesion">
 
-                ?
+    // =========================================
+    // MOSTRAR MENSAJE AMARILLO
+    // =========================================
 
-            </div>
+    function mostrarAdvertenciaNavegacion() {
 
-
-            <div class="modal-titulo-sesion">
-
-                Confirmar acción
-
-            </div>
-
-
-            <div class="modal-texto-sesion">
-
-                ¿Quieres cerrar sesión?
-
-            </div>
-
-
-            <div class="modal-botones-sesion">
-
-
-                <button type="button"
-                        class="btn-sesion-si"
-                        onclick="confirmarCerrarSesion()">
-
-                    Sí
-
-                </button>
-
-
-                <button type="button"
-                        class="btn-sesion-no"
-                        onclick="cerrarConfirmacionCerrarSesion()">
-
-                    No
-
-                </button>
-
-
-            </div>
-
-
-        </div>
-
-
-    </div>
-
-
-
-    <!-- ================================= -->
-    <!-- FOOTER                            -->
-    <!-- ================================= -->
-
-    <footer class="footer">
-
-        SARMedix · Sistema de Gestión Farmacéutica · SAR de Chiguay
-
-    </footer>
-
-
-
-    <script>
-
-        let temporizadorAdvertencia;
-
-
-
-        // =========================================
-        // ABRIR CONFIRMACION DE CIERRE
-        // =========================================
-
-        function abrirConfirmacionCerrarSesion() {
-
-            const modal =
-                document.getElementById(
-                    "modalCerrarSesion"
-                );
-
-
-            if (modal) {
-
-                modal.style.display =
-                    "flex";
-
-            }
-
-        }
-
-
-
-        // =========================================
-        // NO - CONTINUAR EN EL SISTEMA
-        // =========================================
-
-        function cerrarConfirmacionCerrarSesion() {
-
-            const modal =
-                document.getElementById(
-                    "modalCerrarSesion"
-                );
-
-
-            if (modal) {
-
-                modal.style.display =
-                    "none";
-
-            }
-
-        }
-
-
-
-        // =========================================
-        // SI - CERRAR SESION
-        // =========================================
-
-        function confirmarCerrarSesion() {
-
-            const formulario =
-                document.getElementById(
-                    "formCerrarSesion"
-                );
-
-
-            if (formulario) {
-
-                formulario.submit();
-
-            }
-
-        }
-
-
-
-        // =========================================
-        // MOSTRAR MENSAJE AMARILLO
-        // =========================================
-
-        function mostrarAdvertenciaNavegacion() {
-
-            const mensaje =
-                document.getElementById(
-                    "mensajeNavegacion"
-                );
-
-
-            mensaje.style.display =
-                "flex";
-
-
-            mensaje.style.opacity =
-                "1";
-
-
-            clearTimeout(
-                temporizadorAdvertencia
+        const mensaje =
+            document.getElementById(
+                "mensajeNavegacion"
             );
 
 
-            temporizadorAdvertencia =
-                setTimeout(
-                    function () {
+        if (!mensaje) {
 
-                        mensaje.style.opacity =
-                            "0";
-
-
-                        setTimeout(
-                            function () {
-
-                                mensaje.style.display =
-                                    "none";
-
-                            },
-                            500
-                        );
-
-                    },
-                    4000
-                );
+            return;
 
         }
 
 
+        mensaje.style.display =
+            "flex";
 
-        // =========================================
-        // IMPEDIR VOLVER AL LOGIN
-        // =========================================
 
-        history.pushState(
-            null,
-            "",
-            window.location.href
+        mensaje.style.opacity =
+            "1";
+
+
+        clearTimeout(
+            temporizadorAdvertencia
         );
 
 
-        window.addEventListener(
-            "popstate",
-            function () {
+        temporizadorAdvertencia =
+            setTimeout(
+                function () {
 
-                history.pushState(
-                    null,
-                    "",
-                    window.location.href
-                );
+                    mensaje.style.opacity =
+                        "0";
 
 
-                mostrarAdvertenciaNavegacion();
+                    setTimeout(
+                        function () {
+
+                            mensaje.style.display =
+                                "none";
+
+                        },
+                        500
+                    );
+
+                },
+                4000
+            );
+
+    }
+
+
+
+    // =========================================
+    // IMPEDIR VOLVER AL LOGIN
+    // =========================================
+
+    history.pushState(
+        null,
+        "",
+        window.location.href
+    );
+
+
+    window.addEventListener(
+        "popstate",
+        function () {
+
+            history.pushState(
+                null,
+                "",
+                window.location.href
+            );
+
+
+            mostrarAdvertenciaNavegacion();
+
+        }
+    );
+
+
+
+    // =========================================
+    // CONTROL DE CACHE DEL NAVEGADOR
+    // =========================================
+
+    window.addEventListener(
+        "pageshow",
+        function (evento) {
+
+            if (evento.persisted) {
+
+                window.location.reload();
 
             }
-        );
 
+        }
+    );
 
-
-        // =========================================
-        // CONTROL DE CACHE DEL NAVEGADOR
-        // =========================================
-
-        window.addEventListener(
-            "pageshow",
-            function (evento) {
-
-                if (evento.persisted) {
-
-                    window.location.reload();
-
-                }
-
-            }
-        );
-
-    </script>
-
-
-</body>
-
-
-</html>
+</script>

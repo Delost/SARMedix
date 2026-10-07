@@ -1,13 +1,15 @@
 ﻿@model List<LoginSARMedix.Models.Usuario>
 
+@{
+    ViewData["Title"] = "Usuarios Inactivos";
+    ViewData["TituloBarra"] = "Usuarios Inactivos";
+}
+
 <div class="usuarios-card">
 
     <div class="usuarios-titulo">
-
         <h1>Usuarios inactivos</h1>
-
         <p>Administración de usuarios desactivados</p>
-
     </div>
 
 
@@ -17,9 +19,7 @@
             TempData["TipoMensaje"]?.ToString() ?? "";
 
         <div class="mensaje @(tipoMensaje == "exito" ? "mensaje-exito" : "mensaje-error")">
-
             @TempData["Mensaje"]
-
         </div>
     }
 
@@ -31,9 +31,7 @@
             <table class="tabla-usuarios">
 
                 <thead>
-
                     <tr>
-
                         <th>Nombre</th>
                         <th>Apellido</th>
                         <th>RUT</th>
@@ -41,11 +39,8 @@
                         <th>Rol</th>
                         <th>Estado</th>
                         <th>Acciones</th>
-
                     </tr>
-
                 </thead>
-
 
                 <tbody>
 
@@ -76,9 +71,7 @@
                             <td>
 
                                 <span class="estado-inactivo">
-
                                     Inactivo
-
                                 </span>
 
                             </td>
@@ -86,7 +79,6 @@
                             <td>
 
                                 <div class="acciones-usuario">
-
 
                                     <form asp-controller="Home"
                                           asp-action="ReactivarUsuario"
@@ -96,7 +88,6 @@
                                         <input type="hidden"
                                                name="idUsuario"
                                                value="@usuario.id_usuario" />
-
 
                                         <button type="submit"
                                                 class="btn-reactivar">
@@ -117,7 +108,6 @@
                                                name="idUsuario"
                                                value="@usuario.id_usuario" />
 
-
                                         <button type="submit"
                                                 class="btn-eliminar">
 
@@ -126,7 +116,6 @@
                                         </button>
 
                                     </form>
-
 
                                 </div>
 
@@ -144,13 +133,12 @@
     else
     {
         <div class="sin-usuarios">
-
             No existen usuarios inactivos.
-
         </div>
     }
 
 </div>
+
 
 
 <div class="contenedor-navegacion">
@@ -187,21 +175,16 @@
 
         <div class="modal-icono"
              id="modalIcono">
-
             ?
-
         </div>
 
 
-        <h2>
-
+        <div class="modal-titulo">
             Confirmar acción
-
-        </h2>
+        </div>
 
 
         <p id="textoConfirmacion">
-
         </p>
 
 
@@ -252,9 +235,7 @@
     .tabla-contenedor {
         width: 100%;
         max-width: 100%;
-
         overflow-x: auto;
-
         box-sizing: border-box;
     }
 
@@ -262,19 +243,15 @@
     .tabla-usuarios {
         width: 100%;
         max-width: 100%;
-
         box-sizing: border-box;
     }
 
 
     .acciones-usuario {
         display: flex;
-
         gap: 8px;
-
         align-items: center;
         justify-content: center;
-
         flex-wrap: wrap;
     }
 
@@ -286,17 +263,11 @@
 
     .btn-reactivar {
         background-color: #198754;
-
         color: white;
-
         border: none;
-
         border-radius: 6px;
-
         padding: 8px 14px;
-
         cursor: pointer;
-
         font-weight: 600;
     }
 
@@ -308,40 +279,30 @@
 
     .mensaje {
         padding: 12px;
-
         margin-bottom: 20px;
-
         border-radius: 6px;
-
         font-weight: 600;
     }
 
 
     .mensaje-exito {
         background-color: #d1e7dd;
-
         color: #0f5132;
-
         border: 1px solid #badbcc;
     }
 
 
     .mensaje-error {
         background-color: #f8d7da;
-
         color: #842029;
-
         border: 1px solid #f5c2c7;
     }
 
 
     .sin-usuarios {
         padding: 25px;
-
         text-align: center;
-
         color: #666;
-
         font-size: 16px;
     }
 
@@ -353,63 +314,45 @@
 
     .contenedor-navegacion {
         display: flex;
-
         justify-content: center;
         align-items: center;
-
         gap: 12px;
-
         margin-top: 30px;
         margin-bottom: 30px;
-
         flex-wrap: wrap;
     }
 
 
     .btn-listado {
         display: inline-block;
-
         padding: 12px 22px;
-
         background-color: #59636b;
-
         color: white;
-
         border-radius: 7px;
-
         text-decoration: none;
-
         font-weight: 600;
     }
 
 
     .btn-listado:hover {
         background-color: #474f55;
-
         color: white;
     }
 
 
     .btn-volver-usuarios {
         display: inline-block;
-
         padding: 12px 22px;
-
         background-color: #1198a5;
-
         color: white;
-
         border-radius: 7px;
-
         text-decoration: none;
-
         font-weight: 600;
     }
 
 
     .btn-volver-usuarios:hover {
         background-color: #0d8490;
-
         color: white;
     }
 
@@ -421,110 +364,75 @@
 
     .modal-fondo {
         display: none;
-
         position: fixed;
-
         top: 0;
         left: 0;
-
         width: 100%;
         height: 100%;
-
-        background-color:
-            rgba(0, 0, 0, 0.45);
-
+        background-color: rgba(0, 0, 0, 0.45);
         align-items: center;
         justify-content: center;
-
         z-index: 9999;
     }
 
 
     .modal-contenido {
         width: 90%;
-
         max-width: 430px;
-
         background-color: white;
-
         border-radius: 15px;
-
         padding: 30px;
-
         text-align: center;
-
-        box-shadow:
-            0 12px 35px
-            rgba(0, 0, 0, 0.25);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
     }
 
 
     .modal-icono {
         width: 55px;
         height: 55px;
-
-        margin:
-            0 auto 15px auto;
-
+        margin: 0 auto 15px auto;
         display: flex;
-
         align-items: center;
         justify-content: center;
-
         background-color: #1198a5;
-
         color: white;
-
         border-radius: 50%;
-
         font-size: 30px;
-
         font-weight: bold;
     }
 
 
-    .modal-contenido h2 {
-        margin-top: 0;
-
+    .modal-titulo {
+        margin: 0;
         color: #003b64;
+        font-size: 25px;
+        font-weight: 700;
     }
 
 
     .modal-contenido p {
         margin-top: 15px;
-
         margin-bottom: 25px;
-
         font-size: 17px;
-
         color: #444;
     }
 
 
     .modal-botones {
         display: flex;
-
         justify-content: center;
-
         gap: 10px;
-
         flex-wrap: wrap;
     }
 
 
     .modal-botones button {
         min-width: 90px;
-
         padding: 10px 18px;
-
         border: none;
-
         border-radius: 7px;
-
         color: white;
-
         font-weight: 600;
-
         cursor: pointer;
     }
 
@@ -565,9 +473,7 @@
 <script>
 
     let formularioPendiente = null;
-
     let accionPendiente = "";
-
 
 
     // =================================
@@ -578,7 +484,6 @@
 
         formularioPendiente =
             formulario;
-
 
         accionPendiente =
             "reactivar";
@@ -610,7 +515,6 @@
         formularioPendiente =
             formulario;
 
-
         accionPendiente =
             "eliminar";
 
@@ -639,7 +543,6 @@
     function realizarAccion() {
 
         if (formularioPendiente == null) {
-
             return;
         }
 
@@ -649,12 +552,6 @@
         ).style.display =
             "none";
 
-
-        /*
-            Aquí usamos submit()
-            para enviar directamente
-            el formulario seleccionado.
-        */
 
         formularioPendiente.submit();
     }
@@ -676,7 +573,6 @@
         formularioPendiente =
             null;
 
-
         accionPendiente =
             "";
     }
@@ -697,7 +593,6 @@
 
         formularioPendiente =
             null;
-
 
         accionPendiente =
             "";

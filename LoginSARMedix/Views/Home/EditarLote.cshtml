@@ -1,6 +1,9 @@
 ﻿@model LoginSARMedix.Models.Lote
 
 @{
+    ViewData["Title"] = "Editar Lote";
+    ViewData["TituloBarra"] = "Editar Lote";
+
     string mensaje =
         TempData["Mensaje"]?.ToString()
         ?? ViewBag.Mensaje?.ToString()

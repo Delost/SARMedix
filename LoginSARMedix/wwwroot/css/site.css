@@ -3,9 +3,16 @@ html {
     min-height: 100%;
 }
 
+
+/* ================================================== */
+/* BODY                                               */
+/* ================================================== */
+
 body {
     min-height: 100vh;
     margin: 0;
+    display: flex;
+    flex-direction: column;
     font-family: "Segoe UI", Arial, Helvetica, sans-serif;
     color: #17324d;
     background: linear-gradient( rgba(225, 242, 247, 0.50), rgba(225, 242, 247, 0.50) ), url('/images/fondo-clinico.png');
@@ -16,57 +23,213 @@ body {
 }
 
 
-/* ============================= */
-/* BARRA SUPERIOR                */
-/* ============================= */
 
-header .navbar {
+/* ================================================== */
+/* BARRA SUPERIOR GENERAL                             */
+/* ================================================== */
+
+.barra-layout {
+    width: 100%;
     height: 82px;
-    margin: 0 !important;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: center;
     padding: 0 55px;
-    background: linear-gradient( 90deg, #073b64, #0d5b82 ) !important;
-    border: none !important;
-    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.16);
+    background: #0f5278;
+    color: white;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
 }
 
 
-/* Oculta el texto original */
 
-.navbar-brand {
-    font-size: 0;
-    color: white !important;
+/* ================================================== */
+/* LOGO                                               */
+/* ================================================== */
+
+.logo-layout {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    color: white;
     text-decoration: none;
+    justify-self: start;
 }
 
 
-    /* Nombre SARMedix */
-
-    .navbar-brand::after {
-        content: "SARMedix  |  SAR de Chiguay";
-        font-size: 26px;
-        font-weight: 700;
+    .logo-layout:hover {
         color: white;
-        letter-spacing: 0.4px;
+        text-decoration: none;
     }
 
 
-/* Ocultar Home y Privacy */
-
-.navbar-nav {
-    display: none !important;
+.logo-cruz-layout {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: linear-gradient( 135deg, #0d7898, #12a594 );
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.18);
 }
 
 
-/* ============================= */
-/* ÁREA PRINCIPAL                */
-/* ============================= */
+    .logo-cruz-layout::before {
+        content: "";
+        position: absolute;
+        width: 22px;
+        height: 7px;
+        top: 17px;
+        left: 10px;
+        border-radius: 2px;
+        background-color: white;
+    }
 
-.container {
+
+    .logo-cruz-layout::after {
+        content: "";
+        position: absolute;
+        width: 7px;
+        height: 22px;
+        top: 10px;
+        left: 17px;
+        border-radius: 2px;
+        background-color: white;
+    }
+
+
+.logo-texto-layout {
+    color: white;
+    font-size: 25px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+
+
+
+/* ================================================== */
+/* TITULO CENTRAL                                     */
+/* ================================================== */
+
+.titulo-layout {
+    justify-self: center;
+    color: white;
+    text-align: center;
+    font-size: 25px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+
+
+/* ================================================== */
+/* USUARIO                                            */
+/* ================================================== */
+
+.usuario-layout {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    justify-self: end;
+    gap: 12px;
+    min-width: 0;
+}
+
+
+.usuario-datos-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.2;
+}
+
+
+.usuario-nombre-layout {
+    max-width: 190px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+
+.usuario-rol-layout {
+    margin-top: 4px;
+    color: #cfe7f3;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+
+.usuario-circulo-layout {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.72);
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.14);
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+
+
+/* ================================================== */
+/* BOTON CERRAR SESION                                */
+/* ================================================== */
+
+.form-cerrar-layout {
+    margin: 0;
+    padding: 0;
+}
+
+
+.btn-cerrar-layout {
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 9px 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.70) !important;
+    border-radius: 7px !important;
+    background-color: transparent !important;
+    color: white !important;
+    font-family: inherit;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+
+    .btn-cerrar-layout:hover {
+        background-color: rgba(255, 255, 255, 0.18) !important;
+        border-color: white !important;
+    }
+
+
+
+/* ================================================== */
+/* CONTENEDOR DEL LAYOUT                              */
+/* ================================================== */
+
+.contenedor-layout {
+    width: 100%;
     max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    flex: 1;
 }
+
 
 main {
-    min-height: calc(100vh - 145px);
+    min-height: calc(100vh - 144px);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -75,9 +238,10 @@ main {
 }
 
 
-    /* ============================= */
-    /* CABECERA FORMULARIO           */
-    /* ============================= */
+
+    /* ================================================== */
+    /* CABECERA FORMULARIO                                */
+    /* ================================================== */
 
     main h2 {
         width: 100%;
@@ -95,7 +259,8 @@ main {
     }
 
 
-        /* Logo clínico */
+
+        /* Logo clínico formulario */
 
         main h2::before {
             content: "+";
@@ -115,7 +280,8 @@ main {
         }
 
 
-        /* SAR de Chiguay debajo */
+
+        /* SAR de Chiguay */
 
         main h2::after {
             content: "SAR de Chiguay";
@@ -127,10 +293,10 @@ main {
         }
 
 
-    /* ============================= */
-    /* FORMULARIO PRINCIPAL          */
-    /* Login y Crear Usuario         */
-    /* ============================= */
+
+    /* ================================================== */
+    /* FORMULARIO PRINCIPAL                               */
+    /* ================================================== */
 
     main form.formulario-principal {
         width: 100%;
@@ -156,8 +322,6 @@ main {
             color: #173d5c;
         }
 
-
-        /* Inputs */
 
         main form.formulario-principal input[type="text"],
         main form.formulario-principal input[type="password"],
@@ -185,9 +349,10 @@ main {
             }
 
 
-        /* ============================= */
-        /* BOTÓN FORMULARIO PRINCIPAL    */
-        /* ============================= */
+
+        /* ================================================== */
+        /* BOTON FORMULARIO PRINCIPAL                         */
+        /* ================================================== */
 
         main form.formulario-principal button[type="submit"] {
             width: 100%;
@@ -210,7 +375,10 @@ main {
             }
 
 
-        /* Texto inferior de Login / Crear usuario */
+
+        /* ================================================== */
+        /* TEXTO INFERIOR FORMULARIO                          */
+        /* ================================================== */
 
         main form.formulario-principal::after {
             content: "Plataforma de control y trazabilidad farmacéutica";
@@ -224,9 +392,10 @@ main {
         }
 
 
-/* ============================= */
-/* LISTADO DE USUARIOS           */
-/* ============================= */
+
+/* ================================================== */
+/* LISTADO DE USUARIOS                                */
+/* ================================================== */
 
 .usuarios-card {
     width: 90%;
@@ -240,12 +409,11 @@ main {
 }
 
 
-/* Título */
-
 .usuarios-titulo {
     text-align: center;
     margin-bottom: 25px;
 }
+
 
     .usuarios-titulo h1 {
         margin: 0;
@@ -253,15 +421,17 @@ main {
         font-size: 30px;
     }
 
+
     .usuarios-titulo p {
         margin: 5px 0 0;
         color: #657d90;
     }
 
 
-/* ============================= */
-/* TABLA USUARIOS                */
-/* ============================= */
+
+/* ================================================== */
+/* TABLA USUARIOS                                     */
+/* ================================================== */
 
 .tabla-usuarios {
     width: 100%;
@@ -269,8 +439,6 @@ main {
     background: white;
 }
 
-
-    /* Cabecera */
 
     .tabla-usuarios th {
         padding: 13px 10px;
@@ -282,8 +450,6 @@ main {
     }
 
 
-    /* Celdas */
-
     .tabla-usuarios td {
         padding: 13px 10px;
         text-align: center;
@@ -292,21 +458,21 @@ main {
     }
 
 
-    /* Hover */
-
     .tabla-usuarios tbody tr:hover {
         background: #f3f8fa;
     }
 
 
-/* ============================= */
-/* ESTADOS                       */
-/* ============================= */
+
+/* ================================================== */
+/* ESTADOS                                            */
+/* ================================================== */
 
 .estado-activo {
     color: #17833b;
     font-weight: 600;
 }
+
 
 .estado-inactivo {
     color: #777777;
@@ -314,9 +480,10 @@ main {
 }
 
 
-/* ============================= */
-/* ACCIONES USUARIOS             */
-/* ============================= */
+
+/* ================================================== */
+/* ACCIONES USUARIOS                                  */
+/* ================================================== */
 
 .acciones-contenido {
     display: flex;
@@ -325,8 +492,6 @@ main {
     gap: 7px;
 }
 
-
-/* Formulario pequeño del botón desactivar */
 
 .form-desactivar {
     display: inline-block;
@@ -338,8 +503,6 @@ main {
     box-shadow: none;
 }
 
-
-/* Botones */
 
 .btn-editar,
 .btn-desactivar {
@@ -357,15 +520,11 @@ main {
 }
 
 
-/* Editar */
-
 .btn-editar {
     background: #0d7898;
     color: white;
 }
 
-
-/* Desactivar */
 
 .btn-desactivar {
     background: #545d63 !important;
@@ -373,26 +532,27 @@ main {
 }
 
 
-/* Hover botones */
-
 .btn-editar:hover {
     background: #09637e;
     color: white;
 }
+
 
 .btn-desactivar:hover {
     background: #3f474c !important;
 }
 
 
-/* ============================= */
-/* BOTÓN VOLVER                  */
-/* ============================= */
+
+/* ================================================== */
+/* BOTON VOLVER                                       */
+/* ================================================== */
 
 .usuarios-volver {
     margin-top: 25px;
     text-align: center;
 }
+
 
 .btn-volver {
     display: inline-block;
@@ -404,15 +564,63 @@ main {
     font-weight: 600;
 }
 
+
     .btn-volver:hover {
         background: #09637e;
         color: white;
     }
 
 
-/* ============================= */
-/* FOOTER                        */
-/* ============================= */
+
+/* ================================================== */
+/* BOTON ELIMINAR                                     */
+/* ================================================== */
+
+.btn-eliminar {
+    display: inline-block;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 7px 12px !important;
+    background: #b42318 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+
+    .btn-eliminar:hover {
+        background: #8f1c13 !important;
+    }
+
+
+
+/* ================================================== */
+/* FOOTER GENERAL                                     */
+/* ================================================== */
+
+.footer-layout {
+    width: 100%;
+    min-height: 62px;
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.96);
+    color: #60798b;
+    font-size: 14px;
+    text-align: center;
+}
+
+
+
+/* ================================================== */
+/* FOOTER ANTIGUO                                     */
+/* ================================================== */
 
 .footer {
     position: relative !important;
@@ -446,20 +654,201 @@ main {
     }
 
 
-/* ============================= */
-/* CELULAR                       */
-/* ============================= */
 
-@media (max-width: 600px) {
+/* ================================================== */
+/* MODAL CERRAR SESION                                */
+/* ================================================== */
 
-    header .navbar {
-        height: 70px;
-        padding: 0 20px;
+.modal-fondo-sesion {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.45);
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+
+
+.modal-contenido-sesion {
+    width: 90%;
+    max-width: 430px;
+    padding: 30px;
+    background-color: white;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+}
+
+
+.modal-icono-sesion {
+    width: 55px;
+    height: 55px;
+    margin: 0 auto 15px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1198a5;
+    color: white;
+    border-radius: 50%;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+
+.modal-contenido-sesion h2 {
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    color: #003b64 !important;
+    font-size: 25px !important;
+}
+
+
+    .modal-contenido-sesion h2::before,
+    .modal-contenido-sesion h2::after {
+        display: none !important;
     }
 
 
-    .navbar-brand::after {
+.modal-contenido-sesion p {
+    margin-top: 15px;
+    margin-bottom: 25px;
+    color: #444;
+    font-size: 17px;
+}
+
+
+.modal-botones-sesion {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+
+    .modal-botones-sesion button {
+        min-width: 100px;
+        width: auto !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 10px 18px !important;
+        border: none !important;
+        border-radius: 7px !important;
+        color: white !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        cursor: pointer;
+    }
+
+
+.btn-sesion-si {
+    background-color: #198754 !important;
+}
+
+
+    .btn-sesion-si:hover {
+        background-color: #157347 !important;
+    }
+
+
+.btn-sesion-no {
+    background-color: #c82333 !important;
+}
+
+
+    .btn-sesion-no:hover {
+        background-color: #a91d2a !important;
+    }
+
+
+
+/* ================================================== */
+/* RESPONSIVE TABLET                                  */
+/* ================================================== */
+
+@media (max-width: 850px) {
+
+    .barra-layout {
+        height: auto;
+        min-height: 82px;
+        grid-template-columns: 1fr 1fr;
+        padding: 12px 22px;
+    }
+
+
+    .titulo-layout {
+        display: none;
+    }
+
+
+    .logo-texto-layout {
         font-size: 20px;
+    }
+
+
+    .usuario-datos-layout {
+        display: none;
+    }
+}
+
+
+
+/* ================================================== */
+/* RESPONSIVE CELULAR                                 */
+/* ================================================== */
+
+@media (max-width: 620px) {
+
+    .barra-layout {
+        min-height: 70px;
+        padding: 10px 14px;
+        gap: 10px;
+    }
+
+
+    .logo-cruz-layout {
+        width: 36px;
+        height: 36px;
+    }
+
+
+        .logo-cruz-layout::before {
+            width: 20px;
+            height: 6px;
+            top: 15px;
+            left: 8px;
+        }
+
+
+        .logo-cruz-layout::after {
+            width: 6px;
+            height: 20px;
+            top: 8px;
+            left: 15px;
+        }
+
+
+    .logo-texto-layout {
+        font-size: 17px;
+    }
+
+
+    .usuario-circulo-layout {
+        display: none;
+    }
+
+
+    .btn-cerrar-layout {
+        padding: 8px 11px !important;
+        font-size: 12px !important;
     }
 
 
@@ -490,28 +879,14 @@ main {
     .tabla-usuarios {
         min-width: 800px;
     }
+
+
+    .modal-botones-sesion {
+        flex-direction: column;
+    }
+
+
+        .modal-botones-sesion button {
+            width: 100% !important;
+        }
 }
-
-
-
-/* BOTON ELIMINAR */
-
-.btn-eliminar {
-    display: inline-block;
-    width: auto !important;
-    height: auto !important;
-    margin: 0 !important;
-    padding: 7px 12px !important;
-    background: #b42318 !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 6px !important;
-    font-size: 14px !important;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.btn-eliminar:hover {
-        background: #8f1c13 !important;
-}
-

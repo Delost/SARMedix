@@ -1,6 +1,9 @@
 ﻿@model LoginSARMedix.Models.Producto
 
 @{
+    ViewData["Title"] = "Editar Producto";
+    ViewData["TituloBarra"] = "Editar Producto";
+
     string mensaje =
         TempData["Mensaje"]?.ToString()
         ?? ViewBag.Mensaje?.ToString()

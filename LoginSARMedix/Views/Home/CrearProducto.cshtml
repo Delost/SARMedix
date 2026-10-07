@@ -1,6 +1,9 @@
 ﻿@model LoginSARMedix.Models.Producto
 
 @{
+    ViewData["Title"] = "Registrar Producto";
+    ViewData["TituloBarra"] = "Registrar Producto";
+
     string mensaje = ViewBag.Mensaje as string ?? "";
 
     bool mensajeExito =
@@ -9,7 +12,6 @@
             StringComparison.OrdinalIgnoreCase
         );
 }
-
 
 <h2>Registrar producto</h2>
 
