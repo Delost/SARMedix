@@ -5,6 +5,7 @@
     ViewData["TituloBarra"] = "Listado de Usuarios";
 }
 
+
 <div class="usuarios-card">
 
     <div class="usuarios-titulo">
@@ -30,7 +31,8 @@
                     <th>Usuario</th>
                     <th>Rol</th>
                     <th>Estado</th>
-                    <th>Acciones</th>
+                    <th>Editar</th>
+                    <th>Desactivar</th>
 
                 </tr>
 
@@ -90,45 +92,49 @@
                         </td>
 
 
-                        <td>
+                        <!-- EDITAR -->
 
-                            <div class="acciones-contenido">
+                        <td class="columna-accion">
 
-                                <a asp-controller="Home"
-                                   asp-action="EditarUsuario"
-                                   asp-route-idUsuario="@usuario.id_usuario"
-                                   class="btn-editar"
-                                   onclick="return confirmarEditar(this)">
+                            <a asp-controller="Home"
+                               asp-action="EditarUsuario"
+                               asp-route-idUsuario="@usuario.id_usuario"
+                               class="btn-editar"
+                               onclick="return confirmarEditar(this)">
 
-                                    Editar
+                                Editar
 
-                                </a>
+                            </a>
 
-
-                                @if (usuario.activo)
-                                {
-                                    <form asp-controller="Home"
-                                          asp-action="DesactivarUsuario"
-                                          method="post"
-                                          class="form-desactivar"
-                                          onsubmit="return confirmarDesactivar(this)">
-
-                                        <input type="hidden"
-                                               name="idUsuario"
-                                               value="@usuario.id_usuario" />
+                        </td>
 
 
-                                        <button type="submit"
-                                                class="btn-desactivar">
+                        <!-- DESACTIVAR -->
 
-                                            Desactivar
+                        <td class="columna-accion">
 
-                                        </button>
+                            @if (usuario.activo)
+                            {
+                                <form asp-controller="Home"
+                                      asp-action="DesactivarUsuario"
+                                      method="post"
+                                      class="form-desactivar"
+                                      onsubmit="return confirmarDesactivar(this)">
 
-                                    </form>
-                                }
+                                    <input type="hidden"
+                                           name="idUsuario"
+                                           value="@usuario.id_usuario" />
 
-                            </div>
+
+                                    <button type="submit"
+                                            class="btn-desactivar">
+
+                                        Desactivar
+
+                                    </button>
+
+                                </form>
+                            }
 
                         </td>
 
@@ -138,6 +144,56 @@
             </tbody>
 
         </table>
+
+
+        @if (ViewBag.TotalPaginas > 1)
+{
+    <div class="paginacion">
+
+
+        @if (ViewBag.PaginaActual > 1)
+        {
+            <a asp-controller="Home"
+               asp-action="Usuarios"
+               asp-route-pagina="@(ViewBag.PaginaActual - 1)"
+               class="pagina-boton">
+
+                ← Anterior
+
+            </a>
+        }
+
+
+        @for (int i = 1;
+              i <= ViewBag.TotalPaginas;
+              i++)
+        {
+            <a asp-controller="Home"
+               asp-action="Usuarios"
+               asp-route-pagina="@i"
+               class="pagina-boton @(i == ViewBag.PaginaActual ? "pagina-activa" : "")">
+
+                @i
+
+            </a>
+        }
+
+
+        @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+        {
+            <a asp-controller="Home"
+               asp-action="Usuarios"
+               asp-route-pagina="@(ViewBag.PaginaActual + 1)"
+               class="pagina-boton">
+
+                Siguiente →
+
+            </a>
+        }
+
+
+    </div>
+}
 
     </div>
 
@@ -252,20 +308,36 @@
     }
 
 
+    /* COLUMNAS EDITAR Y DESACTIVAR */
+
+    .tabla-usuarios th:nth-last-child(2),
+    .tabla-usuarios td:nth-last-child(2) {
+        width: 100px;
+        text-align: center;
+    }
+
+
     .tabla-usuarios th:last-child,
     .tabla-usuarios td:last-child {
-        width: 170px;
+        width: 130px;
+        text-align: center;
     }
 
 
-    .acciones-contenido {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        flex-wrap: wrap;
+    .columna-accion {
+        vertical-align: middle;
+        text-align: center;
     }
 
+
+    .form-desactivar {
+        margin: 0;
+        padding: 0;
+    }
+
+
+
+    /* NAVEGACION */
 
     .contenedor-navegacion {
         display: flex;
@@ -320,6 +392,7 @@
         background-color: #0d8490;
         color: white;
     }
+
 
 
     /* VENTANA DE CONFIRMACIÓN */
@@ -449,6 +522,64 @@
 
     .btn-modal-cancelar:hover {
         background-color: #474f55;
+    }
+
+    /* PAGINACION */
+
+    .paginacion {
+        margin-top: 25px;
+
+        display: flex;
+
+        justify-content: center;
+
+        align-items: center;
+
+        gap: 7px;
+
+        flex-wrap: wrap;
+    }
+
+
+    .pagina-boton {
+        min-width: 38px;
+
+        padding: 8px 12px;
+
+        background-color: white;
+
+        color: #087bc2;
+
+        border: 1px solid #087bc2;
+
+        border-radius: 6px;
+
+        text-align: center;
+
+        text-decoration: none;
+
+        font-weight: 600;
+    }
+
+
+    .pagina-boton:hover {
+        background-color: #eaf6fc;
+
+        color: #087bc2;
+    }
+
+
+    .pagina-activa {
+        background-color: #087bc2;
+
+        color: white;
+    }
+
+
+    .pagina-activa:hover {
+        background-color: #087bc2;
+
+        color: white;
     }
 
 </style>

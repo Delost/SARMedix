@@ -12,6 +12,8 @@
 
         public int stock_minimo { get; set; }
 
+        public string? imagen_url { get; set; }
+
 
         //PARA SABER SI ES MEDICAMENTO O INSUMO
         public string? tipo { get; set; }

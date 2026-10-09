@@ -1,8 +1,8 @@
 ﻿@model List<LoginSARMedix.Models.Historial>
 
 @{
-    ViewData["Title"] = "Historial";
-    ViewData["TituloBarra"] = "Historial";
+    ViewData["Title"] = "Historial de Productos";
+    ViewData["TituloBarra"] = "Historial de Productos";
 }
 
 
@@ -11,11 +11,12 @@
     <div class="historial-titulo">
 
         <h1>
-            Historial del sistema
+            Historial de Productos
         </h1>
 
         <p>
-            Registro de acciones realizadas en SARMedix
+            Registro de acciones relacionadas con productos
+            y lotes en SARMedix
         </p>
 
     </div>
@@ -99,7 +100,7 @@
                 @if (ViewBag.PaginaActual > 1)
                 {
                     <a asp-controller="Home"
-                       asp-action="Historial"
+                       asp-action="HistorialProductos"
                        asp-route-pagina="@(ViewBag.PaginaActual - 1)"
                        class="pagina-boton">
 
@@ -114,7 +115,7 @@
                       i++)
                 {
                     <a asp-controller="Home"
-                       asp-action="Historial"
+                       asp-action="HistorialProductos"
                        asp-route-pagina="@i"
                        class="pagina-boton @(i == ViewBag.PaginaActual ? "pagina-activa" : "")">
 
@@ -127,7 +128,7 @@
                 @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
                 {
                     <a asp-controller="Home"
-                       asp-action="Historial"
+                       asp-action="HistorialProductos"
                        asp-route-pagina="@(ViewBag.PaginaActual + 1)"
                        class="pagina-boton">
 
@@ -144,7 +145,7 @@
     {
         <div class="sin-registros">
 
-            No existen registros en el historial.
+            No existen registros relacionados con productos.
 
         </div>
     }

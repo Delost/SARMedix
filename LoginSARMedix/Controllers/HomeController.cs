@@ -2,6 +2,7 @@ using LoginSARMedix.Models;
 using LoginSARMedix.Repository;
 using LoginSARMedix.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace LoginSARMedix.Controllers
 {
@@ -157,6 +158,11 @@ namespace LoginSARMedix.Controllers
                 HttpContext.Session.SetString(
                     "Rol",
                     usuario.rol ?? ""
+                );
+
+                HttpContext.Session.SetInt32(
+                    "IdRol",
+                    usuario.id_rol
                 );
 
 
@@ -416,7 +422,7 @@ namespace LoginSARMedix.Controllers
         // PANTALLA PRINCIPAL DE MODULOS
 
         [HttpGet]
-        public IActionResult Modulos()
+        public async Task<IActionResult> Modulos()
         {
             string? nombre =
                 HttpContext.Session.GetString(
@@ -462,6 +468,8 @@ namespace LoginSARMedix.Controllers
                     )
                     .ToList();
 
+
+            await RegistrarAccionHistorial("Ingresó a la pantalla principal de módulos");
 
             return View(
                 "Bienvenida"
@@ -513,7 +521,7 @@ namespace LoginSARMedix.Controllers
         // MODULO USUARIOS Y PERMISOS
 
         [HttpGet]
-        public IActionResult UsuariosPermisos()
+        public async Task<IActionResult> UsuariosPermisos()
         {
             if (!TieneAlgunPermiso(
                     "Crear usuario",
@@ -541,6 +549,8 @@ namespace LoginSARMedix.Controllers
                 );
 
 
+            await RegistrarAccionHistorial("Ingresó al módulo Usuarios y Permisos");
+
             return View(
                 "~/Views/Home/Modulos/UsuariosPermisos.cshtml"
             );
@@ -551,7 +561,7 @@ namespace LoginSARMedix.Controllers
         // MODULO PRODUCTOS
 
         [HttpGet]
-        public IActionResult Productos()
+        public async Task<IActionResult> Productos()
         {
             if (!TieneAlgunPermiso(
                     "Consultar productos",
@@ -560,6 +570,8 @@ namespace LoginSARMedix.Controllers
                 return AccesoNoAutorizado();
             }
 
+
+            await RegistrarAccionHistorial("Ingresó al módulo Productos");
 
             return View(
                 "~/Views/Home/Modulos/Productos.cshtml"
@@ -571,7 +583,7 @@ namespace LoginSARMedix.Controllers
         // MOVIMIENTOS E HISTORIAL
 
         [HttpGet]
-        public IActionResult MovimientoHistorial()
+        public async Task<IActionResult> MovimientoHistorial()
         {
             if (!TieneAlgunPermiso(
                     "Registrar movimientos",
@@ -581,6 +593,8 @@ namespace LoginSARMedix.Controllers
             }
 
 
+            await RegistrarAccionHistorial("Ingresó al módulo Movimientos e Historial");
+
             return View(
                 "~/Views/Home/Modulos/MovimientoHistorial.cshtml"
             );
@@ -588,10 +602,11 @@ namespace LoginSARMedix.Controllers
         }
 
 
-        // HISTORIAL
+        // HISTORIAL GENERAL
 
         [HttpGet]
-        public async Task<IActionResult> Historial()
+        public async Task<IActionResult> Historial(
+            int pagina = 1)
         {
             if (!TienePermiso(
                     "Consultar historial"))
@@ -605,22 +620,186 @@ namespace LoginSARMedix.Controllers
                     .ListadoHistorial();
 
 
-            return View(
+            // PAGINACION
+
+            int registrosPorPagina = 10;
+
+
+            int totalRegistros =
+                listado.Count;
+
+
+            int totalPaginas =
+                (int)Math.Ceiling(
+                    totalRegistros /
+                    (double)registrosPorPagina
+                );
+
+
+            var listadoPagina =
                 listado
+                    .Skip(
+                        (pagina - 1)
+                        * registrosPorPagina
+                    )
+                    .Take(
+                        registrosPorPagina
+                    )
+                    .ToList();
+
+
+            ViewBag.PaginaActual =
+                pagina;
+
+
+            ViewBag.TotalPaginas =
+                totalPaginas;
+
+
+            return View(
+                listadoPagina
             );
         }
+
+
+
+        // HISTORIAL DE USUARIOS
+
+        [HttpGet]
+        public async Task<IActionResult> HistorialUsuarios(
+            int pagina = 1)
+        {
+            if (!TienePermiso(
+                    "Consultar historial"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var listado =
+                await _historialRepository
+                    .ListadoHistorialUsuarios();
+
+
+            // PAGINACION
+
+            int registrosPorPagina = 10;
+
+
+            int totalRegistros =
+                listado.Count;
+
+
+            int totalPaginas =
+                (int)Math.Ceiling(
+                    totalRegistros /
+                    (double)registrosPorPagina
+                );
+
+
+            var listadoPagina =
+                listado
+                    .Skip(
+                        (pagina - 1)
+                        * registrosPorPagina
+                    )
+                    .Take(
+                        registrosPorPagina
+                    )
+                    .ToList();
+
+
+            ViewBag.PaginaActual =
+                pagina;
+
+
+            ViewBag.TotalPaginas =
+                totalPaginas;
+
+
+            return View(
+                listadoPagina
+            );
+        }
+
+
+
+        // HISTORIAL DE PRODUCTOS
+
+        [HttpGet]
+        public async Task<IActionResult> HistorialProductos(
+            int pagina = 1)
+        {
+            if (!TienePermiso(
+                    "Consultar historial"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var listado =
+                await _historialRepository
+                    .ListadoHistorialProductos();
+
+
+            // PAGINACION
+
+            int registrosPorPagina = 10;
+
+
+            int totalRegistros =
+                listado.Count;
+
+
+            int totalPaginas =
+                (int)Math.Ceiling(
+                    totalRegistros /
+                    (double)registrosPorPagina
+                );
+
+
+            var listadoPagina =
+                listado
+                    .Skip(
+                        (pagina - 1)
+                        * registrosPorPagina
+                    )
+                    .Take(
+                        registrosPorPagina
+                    )
+                    .ToList();
+
+
+            ViewBag.PaginaActual =
+                pagina;
+
+
+            ViewBag.TotalPaginas =
+                totalPaginas;
+
+
+            return View(
+                listadoPagina
+            );
+        }
+
+
+
 
 
         // MEDICAMENTOS CONTROLADOS
 
         [HttpGet]
-        public IActionResult MedicamentosControlados()
+        public async Task<IActionResult> MedicamentosControlados()
         {
             if (!TienePermiso(
                     "Gestionar medicamentos controlados"))
             {
                 return AccesoNoAutorizado();
             }
+
+
+            await RegistrarAccionHistorial("Ingresó al módulo Medicamentos Controlados");
 
 
             return View(
@@ -633,7 +812,7 @@ namespace LoginSARMedix.Controllers
         // CREAR USUARIO
 
         [HttpGet]
-        public IActionResult CrearUsuario()
+        public async Task<IActionResult> CrearUsuario()
         {
             if (!TienePermiso(
                     "Crear usuario"))
@@ -641,6 +820,8 @@ namespace LoginSARMedix.Controllers
                 return AccesoNoAutorizado();
             }
 
+
+            await RegistrarAccionHistorial("Ingresó a Crear Usuario");
 
             return View();
         }
@@ -702,7 +883,7 @@ namespace LoginSARMedix.Controllers
 
 
                 return RedirectToAction(
-                    "CrearUsuario"
+                    "Usuarios"
                 );
             }
             else
@@ -720,10 +901,12 @@ namespace LoginSARMedix.Controllers
 
 
 
+
         // LISTADO DE USUARIOS
 
         [HttpGet]
-        public async Task<IActionResult> Usuarios()
+        public async Task<IActionResult> Usuarios(
+            int pagina = 1)
         {
             if (!TienePermiso(
                     "Gestionar usuarios y permisos"))
@@ -737,13 +920,49 @@ namespace LoginSARMedix.Controllers
                     .ListadoUsuarios();
 
 
+            //PAGINACION
+
+            int registrosPorPagina = 10;
+
+
+            int totalRegistros =
+                listado.Count;
+
+
+            int totalPaginas =
+                (int)Math.Ceiling(
+                    totalRegistros /
+                    (double)registrosPorPagina
+                );
+
+
+            var listadoPagina =
+                listado
+                    .Skip(
+                        (pagina - 1)
+                        * registrosPorPagina
+                    )
+                    .Take(
+                        registrosPorPagina
+                    )
+                    .ToList();
+
+
+            ViewBag.PaginaActual =
+                pagina;
+
+
+            ViewBag.TotalPaginas =
+                totalPaginas;
+
+
             await RegistrarAccionHistorial(
-                   "Ingresó al listado de usuarios"
-             );
+                "Ingresó al listado de usuarios"
+            );
 
 
             return View(
-                listado
+                listadoPagina
             );
         }
 
@@ -863,6 +1082,64 @@ namespace LoginSARMedix.Controllers
             }
 
 
+            // TOMAR DATOS ANTES DE ACTUALIZAR
+
+            var usuarioAnterior =
+                await _usuarioRepository
+                    .ObtenerUsuarioPorId(
+                        reg.id_usuario
+                    );
+
+
+            List<string> cambios =
+                new List<string>();
+
+
+            if (usuarioAnterior != null)
+            {
+                if (usuarioAnterior.nombre != reg.nombre)
+                {
+                    cambios.Add(
+                        $"Nombre: '{usuarioAnterior.nombre}' → '{reg.nombre}'"
+                    );
+                }
+
+
+                if (usuarioAnterior.apellido != reg.apellido)
+                {
+                    cambios.Add(
+                        $"Apellido: '{usuarioAnterior.apellido}' → '{reg.apellido}'"
+                    );
+                }
+
+
+                if (usuarioAnterior.nombre_usuario != reg.nombre_usuario)
+                {
+                    cambios.Add(
+                        $"Nombre de usuario: '{usuarioAnterior.nombre_usuario}' → '{reg.nombre_usuario}'"
+                    );
+                }
+
+
+                if (usuarioAnterior.email != reg.email)
+                {
+                    cambios.Add(
+                        $"Correo: '{usuarioAnterior.email}' → '{reg.email}'"
+                    );
+                }
+
+
+                if (usuarioAnterior.id_rol != reg.id_rol)
+                {
+                    cambios.Add(
+                        $"Rol: '{usuarioAnterior.id_rol}' → '{reg.id_rol}'"
+                    );
+                }
+            }
+
+
+            // ACTUALIZAR USUARIO
+
             var resultado =
                 await _usuarioRepository
                     .ActualizarUsuario(
@@ -872,6 +1149,21 @@ namespace LoginSARMedix.Controllers
 
             if (resultado)
             {
+                if (cambios.Count > 0)
+                {
+                    string detalleCambios =
+                        string.Join(
+                            " | ",
+                            cambios
+                        );
+
+
+                    await RegistrarAccionHistorial(
+                        $"Actualizó al usuario {reg.nombre} {reg.apellido} ({reg.nombre_usuario}). {detalleCambios}"
+                    );
+                }
+
+
                 return RedirectToAction(
                     "Usuarios"
                 );
@@ -907,6 +1199,8 @@ namespace LoginSARMedix.Controllers
             var listado =
                 await _usuarioRepository
                     .ListadoEliminarUsuarios();
+
+            await RegistrarAccionHistorial("Ingresó al listado de usuarios inactivos");
 
 
             return View(
@@ -980,7 +1274,6 @@ namespace LoginSARMedix.Controllers
 
 
 
-
         // ELIMINAR USUARIO
 
         [HttpPost]
@@ -994,17 +1287,32 @@ namespace LoginSARMedix.Controllers
             }
 
 
-            await _usuarioRepository
-                .EliminarUsuario(
-                    idUsuario
+            var usuario =
+                await _usuarioRepository
+                    .ObtenerUsuarioPorId(
+                        idUsuario
+                    );
+
+
+            var resultado =
+                await _usuarioRepository
+                    .EliminarUsuario(
+                        idUsuario
+                    );
+
+
+            if (resultado && usuario != null)
+            {
+                await RegistrarAccionHistorial(
+                    $"Eliminó al usuario {usuario.nombre} {usuario.apellido} ({usuario.nombre_usuario})"
                 );
+            }
 
 
             return RedirectToAction(
                 "ListadoEliminarUsuarios"
             );
         }
-
 
 
         // ROLES Y PERMISOS
@@ -1077,6 +1385,7 @@ namespace LoginSARMedix.Controllers
             ViewBag.IdRol =
                 idRol;
 
+            await RegistrarAccionHistorial("Ingresó a Roles y Permisos");
 
             return View();
         }
@@ -1097,8 +1406,66 @@ namespace LoginSARMedix.Controllers
             }
 
 
+            var rol =await _permisoRepository.ObtenerRolPorId(idRol);
+
+
+
+
             permisosSeleccionados ??=
                 new List<int>();
+
+
+
+            // TOMAR PERMISOS ANTES DE ACTUALIZAR
+
+            var permisosAnteriores =
+                await _permisoRepository
+                    .PermisosPorRol(
+                        idRol
+                    );
+
+
+            var todosPermisos =
+                await _permisoRepository
+                    .ListadoPermisos();
+
+
+            var permisosAgregadosIds =
+                permisosSeleccionados
+                    .Except(permisosAnteriores)
+                    .ToList();
+
+
+            var permisosQuitadosIds =
+                permisosAnteriores
+                    .Except(permisosSeleccionados)
+                    .ToList();
+
+
+            var permisosAgregados =
+                todosPermisos
+                    .Where(
+                        p => permisosAgregadosIds.Contains(
+                            p.id_permiso
+                        )
+                    )
+                    .Select(
+                        p => p.nombre
+                    )
+                    .ToList();
+
+
+            var permisosQuitados =
+                todosPermisos
+                    .Where(
+                        p => permisosQuitadosIds.Contains(
+                            p.id_permiso
+                        )
+                    )
+                    .Select(
+                        p => p.nombre
+                    )
+                    .ToList();
 
 
             var resultado =
@@ -1111,6 +1478,69 @@ namespace LoginSARMedix.Controllers
 
             if (resultado)
             {
+                if (rol != null)
+                {
+                    List<string> cambiosPermisos =
+                        new List<string>();
+
+
+                    if (permisosAgregados.Count > 0)
+                    {
+                        cambiosPermisos.Add(
+                            $"Agregó: {string.Join(", ", permisosAgregados)}"
+                        );
+                    }
+
+
+                    if (permisosQuitados.Count > 0)
+                    {
+                        cambiosPermisos.Add(
+                            $"Quitó: {string.Join(", ", permisosQuitados)}"
+                        );
+                    }
+
+
+                    if (cambiosPermisos.Count > 0)
+                    {
+                        string detalleCambios =
+                            string.Join(
+                                " | ",
+                                cambiosPermisos
+                            );
+
+
+                        await RegistrarAccionHistorial(
+                            $"Actualizó los permisos del rol {rol.nombre}. {detalleCambios}"
+                        );
+                    }
+                }
+
+
+                int? idRolSesion =
+                    HttpContext.Session.GetInt32(
+                        "IdRol"
+                    );
+
+
+                if (idRolSesion.HasValue &&
+                    idRolSesion.Value == idRol)
+                {
+                    var permisosActualizados =
+                        await _usuarioRepository
+                            .ObtenerPermisos(
+                                idRol
+                            );
+
+
+                    HttpContext.Session.SetString(
+                        "Permisos",
+                        string.Join(
+                            "|",
+                            permisosActualizados
+                        )
+                    );
+                }
+
                 TempData["Mensaje"] =
                     "Permisos actualizados correctamente";
 
@@ -1143,7 +1573,7 @@ namespace LoginSARMedix.Controllers
         // CREAR ROL
 
         [HttpGet]
-        public IActionResult CrearRol()
+        public async Task<IActionResult> CrearRol()
         {
             if (!TienePermiso(
                     "Gestionar usuarios y permisos"))
@@ -1169,6 +1599,7 @@ namespace LoginSARMedix.Controllers
                     "Rol"
                 );
 
+            await RegistrarAccionHistorial("Ingresó a Crear Rol");
 
             return View();
         }
@@ -1197,6 +1628,10 @@ namespace LoginSARMedix.Controllers
 
             if (resultado)
             {
+
+                await RegistrarAccionHistorial($"Creó el rol {reg.nombre}");
+
+
                 TempData["Mensaje"] =
                     "Rol creado correctamente";
 
@@ -1278,6 +1713,8 @@ namespace LoginSARMedix.Controllers
             }
 
 
+            await RegistrarAccionHistorial($"Ingresó a editar el rol {rol.nombre}");
+
             ViewBag.Nombre =
                 HttpContext.Session.GetString(
                     "Nombre"
@@ -1316,6 +1753,39 @@ namespace LoginSARMedix.Controllers
             }
 
 
+
+            // TOMAR DATOS ANTES DE ACTUALIZAR
+
+            var rolAnterior =
+                await _permisoRepository
+                    .ObtenerRolPorId(
+                        reg.id_rol
+                    );
+
+
+            List<string> cambios =
+                new List<string>();
+
+
+            if (rolAnterior != null)
+            {
+                if (rolAnterior.nombre != reg.nombre)
+                {
+                    cambios.Add(
+                        $"Nombre: '{rolAnterior.nombre}' → '{reg.nombre}'"
+                    );
+                }
+
+
+                if (rolAnterior.descripcion != reg.descripcion)
+                {
+                    cambios.Add(
+                        $"Descripción: '{rolAnterior.descripcion}' → '{reg.descripcion}'"
+                    );
+                }
+            }
+
+
             var resultado =
                 await _permisoRepository
                     .ActualizarRol(
@@ -1325,6 +1795,20 @@ namespace LoginSARMedix.Controllers
 
             if (resultado)
             {
+                if (cambios.Count > 0)
+                {
+                    string detalleCambios =
+                        string.Join(
+                            " | ",
+                            cambios
+                        );
+
+
+                    await RegistrarAccionHistorial(
+                        $"Actualizó el rol {reg.nombre}. {detalleCambios}"
+                    );
+                }
+
                 TempData["Mensaje"] =
                     "Rol actualizado correctamente";
 
@@ -1387,6 +1871,12 @@ namespace LoginSARMedix.Controllers
             }
 
 
+            var rol =
+                await _permisoRepository
+                    .ObtenerRolPorId(
+                        idRol
+                    );
+
             var resultado =
                 await _permisoRepository
                     .DesactivarRol(
@@ -1396,6 +1886,14 @@ namespace LoginSARMedix.Controllers
 
             if (resultado)
             {
+
+                if (rol != null)
+                {
+                    await RegistrarAccionHistorial(
+                        $"Desactivó el rol {rol.nombre}"
+                    );
+                }
+
                 TempData["Mensaje"] =
                     "Rol desactivado correctamente";
 
@@ -1455,6 +1953,7 @@ namespace LoginSARMedix.Controllers
                 await _permisoRepository
                     .ListadoRolesInactivos();
 
+            await RegistrarAccionHistorial("Ingresó al listado de roles inactivos");
 
             return View(
                 listado
@@ -1475,6 +1974,12 @@ namespace LoginSARMedix.Controllers
                 return AccesoNoAutorizado();
             }
 
+            var rol =
+                await _permisoRepository
+                    .ObtenerRolPorId(
+                        idRol
+                    );
+
 
             var resultado =
                 await _permisoRepository
@@ -1485,6 +1990,13 @@ namespace LoginSARMedix.Controllers
 
             if (resultado)
             {
+                if (rol != null)
+                {
+                    await RegistrarAccionHistorial(
+                        $"Reactivó el rol {rol.nombre}"
+                    );
+                }
+
                 TempData["Mensaje"] =
                     "Rol reactivado correctamente";
 
@@ -1624,7 +2136,7 @@ namespace LoginSARMedix.Controllers
         // CREAR PRODUCTO
 
         [HttpGet]
-        public IActionResult CrearProducto()
+        public async Task<IActionResult> CrearProducto()
         {
             if (!TienePermiso(
                     "Registrar productos"))
@@ -1632,6 +2144,7 @@ namespace LoginSARMedix.Controllers
                 return AccesoNoAutorizado();
             }
 
+            await RegistrarAccionHistorial("Ingresó a Crear Producto");
 
             return View();
         }
@@ -1642,7 +2155,8 @@ namespace LoginSARMedix.Controllers
 
         [HttpPost]
         public async Task<IActionResult> NuevoProducto(
-            Producto reg)
+            Producto reg,
+            IFormFile? imagen)
         {
             if (!TienePermiso(
                     "Registrar productos"))
@@ -1650,6 +2164,102 @@ namespace LoginSARMedix.Controllers
                 return AccesoNoAutorizado();
             }
 
+
+            // GUARDAR IMAGEN
+
+            if (imagen != null &&
+                imagen.Length > 0)
+            {
+                string extension =
+                    Path.GetExtension(
+                        imagen.FileName
+                    ).ToLower();
+
+
+                string[] extensionesPermitidas =
+                {
+                    ".jpg",
+                    ".jpeg",
+                    ".png",
+                    ".webp"
+                };
+
+
+                if (!extensionesPermitidas.Contains(
+                        extension))
+                {
+                    ViewBag.Mensaje =
+                        "La imagen debe ser JPG, PNG o WEBP";
+
+
+                    return View(
+                        "CrearProducto",
+                        reg
+                    );
+                }
+
+
+                if (imagen.Length >
+                    5 * 1024 * 1024)
+                {
+                    ViewBag.Mensaje =
+                        "La imagen no puede superar los 5 MB";
+
+
+                    return View(
+                        "CrearProducto",
+                        reg
+                    );
+                }
+
+
+                string carpeta =
+                    Path.Combine(
+                        Directory.GetCurrentDirectory(),
+                        "wwwroot",
+                        "images",
+                        "productos"
+                    );
+
+
+                Directory.CreateDirectory(
+                    carpeta
+                );
+
+
+                string nombreArchivo =
+                    Guid.NewGuid().ToString()
+                    + extension;
+
+
+                string rutaArchivo =
+                    Path.Combine(
+                        carpeta,
+                        nombreArchivo
+                    );
+
+
+                using (
+                    var stream =
+                        new FileStream(
+                            rutaArchivo,
+                            FileMode.Create
+                        )
+                )
+                {
+                    await imagen.CopyToAsync(
+                        stream
+                    );
+                }
+
+
+                reg.imagen_url =
+                    "/images/productos/"
+                    + nombreArchivo;
+            }
+
+
+            // CREAR PRODUCTO
 
             var resultado =
                 await _productoRepository
@@ -1665,12 +2275,16 @@ namespace LoginSARMedix.Controllers
                 );
 
 
-                ViewBag.Mensaje =
+                TempData["Mensaje"] =
                     "Producto registrado correctamente";
 
 
-                return View(
-                    "CrearProducto"
+                TempData["TipoMensaje"] =
+                    "exito";
+
+
+                return RedirectToAction(
+                    "ListadoProductos2"
                 );
             }
             else
@@ -1703,6 +2317,9 @@ namespace LoginSARMedix.Controllers
             var listado =
                 await _productoRepository
                     .ListadoProductos();
+
+
+            await RegistrarAccionHistorial("Ingresó al listado de productos");
 
 
             return View(
@@ -1740,6 +2357,7 @@ namespace LoginSARMedix.Controllers
                 );
             }
 
+            await RegistrarAccionHistorial($"Ingresó a editar el producto {producto.nombre} ({producto.codigo_interno})");
 
             return View(
                 producto
@@ -1761,6 +2379,47 @@ namespace LoginSARMedix.Controllers
             }
 
 
+            // TOMAR DATOS DE HISTORIAL ANTES DE ACTUALIZAR
+
+            var productoAnterior =
+                await _productoRepository
+                    .ObtenerProductoPorId(
+                        reg.id_producto
+                    );
+
+
+            List<string> cambios =
+                new List<string>();
+
+
+            if (productoAnterior != null)
+            {
+                if (productoAnterior.codigo_interno != reg.codigo_interno)
+                {
+                    cambios.Add(
+                        $"Código interno: '{productoAnterior.codigo_interno}' → '{reg.codigo_interno}'"
+                    );
+                }
+
+
+                if (productoAnterior.nombre != reg.nombre)
+                {
+                    cambios.Add(
+                        $"Nombre: '{productoAnterior.nombre}' → '{reg.nombre}'"
+                    );
+                }
+
+
+                if (productoAnterior.stock_minimo != reg.stock_minimo)
+                {
+                    cambios.Add(
+                        $"Stock mínimo: '{productoAnterior.stock_minimo}' → '{reg.stock_minimo}'"
+                    );
+                }
+            }
+
+
+
             var resultado =
                 await _productoRepository
                     .ActualizarProducto(
@@ -1770,6 +2429,21 @@ namespace LoginSARMedix.Controllers
 
             if (resultado)
             {
+
+                if (cambios.Count > 0)
+                {
+                    string detalleCambios =
+                        string.Join(
+                            " | ",
+                            cambios
+                        );
+
+
+                    await RegistrarAccionHistorial(
+                        $"Actualizó el producto {reg.nombre} ({reg.codigo_interno}). {detalleCambios}"
+                    );
+                }
+
                 TempData["Mensaje"] =
                     "Producto actualizado correctamente";
 
@@ -1821,6 +2495,7 @@ namespace LoginSARMedix.Controllers
                 await _loteRepository
                     .ListadoUbicaciones();
 
+            await RegistrarAccionHistorial("Ingresó a Crear Lote");
 
             return View();
         }
@@ -1849,6 +2524,9 @@ namespace LoginSARMedix.Controllers
 
             if (resultado)
             {
+                await RegistrarAccionHistorial($"Creó el lote {reg.numero_lote}");
+
+
                 ViewBag.Mensaje =
                     "Lote registrado correctamente";
 
@@ -1863,9 +2541,7 @@ namespace LoginSARMedix.Controllers
                         .ListadoUbicaciones();
 
 
-                return View(
-                    "CrearLote"
-                );
+                return RedirectToAction("Lotes");
             }
             else
             {
@@ -1908,6 +2584,7 @@ namespace LoginSARMedix.Controllers
                 await _loteRepository
                     .ListadoLotes();
 
+            await RegistrarAccionHistorial("Ingresó al listado de lotes");
 
             return View(
                 listado
@@ -1943,6 +2620,8 @@ namespace LoginSARMedix.Controllers
                 );
             }
 
+            await RegistrarAccionHistorial($"Ingresó a editar el lote {lote.numero_lote}");
+
 
             ViewBag.Productos =
                 await _loteRepository
@@ -1952,6 +2631,8 @@ namespace LoginSARMedix.Controllers
             ViewBag.Ubicaciones =
                 await _loteRepository
                     .ListadoUbicaciones();
+
+
 
 
             return View(
@@ -1974,6 +2655,62 @@ namespace LoginSARMedix.Controllers
             }
 
 
+            // TOMAR DATOS ANTES DE ACTUALIZAR
+
+            var loteAnterior =
+                await _loteRepository
+                    .ObtenerLotePorId(
+                        reg.id_lote
+                    );
+
+
+            List<string> cambios =
+                new List<string>();
+
+
+            if (loteAnterior != null)
+            {
+                if (loteAnterior.numero_lote != reg.numero_lote)
+                {
+                    cambios.Add(
+                        $"Número de lote: '{loteAnterior.numero_lote}' → '{reg.numero_lote}'"
+                    );
+                }
+
+
+                if (loteAnterior.fecha_vencimiento != reg.fecha_vencimiento)
+                {
+                    cambios.Add(
+                        $"Fecha de vencimiento: '{loteAnterior.fecha_vencimiento}' → '{reg.fecha_vencimiento}'"
+                    );
+                }
+
+
+                if (loteAnterior.cantidad_actual != reg.cantidad_actual)
+                {
+                    cambios.Add(
+                        $"Cantidad: '{loteAnterior.cantidad_actual}' → '{reg.cantidad_actual}'"
+                    );
+                }
+
+
+                if (loteAnterior.id_producto != reg.id_producto)
+                {
+                    cambios.Add(
+                        $"Producto: '{loteAnterior.id_producto}' → '{reg.id_producto}'"
+                    );
+                }
+
+
+                if (loteAnterior.id_ubicacion != reg.id_ubicacion)
+                {
+                    cambios.Add(
+                        $"Ubicación: '{loteAnterior.id_ubicacion}' → '{reg.id_ubicacion}'"
+                    );
+                }
+            }
+
+
             var resultado =
                 await _loteRepository
                     .ActualizarLote(
@@ -1983,6 +2720,20 @@ namespace LoginSARMedix.Controllers
 
             if (resultado)
             {
+                if (cambios.Count > 0)
+                {
+                    string detalleCambios =
+                        string.Join(
+                            " | ",
+                            cambios
+                        );
+
+
+                    await RegistrarAccionHistorial(
+                        $"Actualizó el lote {reg.numero_lote}. {detalleCambios}"
+                    );
+                }
+
                 TempData["Mensaje"] =
                     "Lote actualizado correctamente";
 

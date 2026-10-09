@@ -13,12 +13,14 @@
         );
 }
 
+
 <h2>Registrar producto</h2>
 
 
 <form asp-controller="Home"
       asp-action="NuevoProducto"
       method="post"
+      enctype="multipart/form-data"
       class="formulario-principal"
       id="formCrearProducto"
       onsubmit="return validarYConfirmar()"
@@ -130,6 +132,21 @@
 
 
 
+    <!-- IMAGEN -->
+
+    <div>
+
+        <label>Imagen del producto</label>
+
+        <input type="file"
+               name="imagen"
+               id="imagenProducto"
+               accept="image/*" />
+
+    </div>
+
+
+
     <!-- CAMPOS MEDICAMENTO -->
 
     <div id="camposMedicamento"
@@ -221,6 +238,7 @@
 
 
     <br />
+
 
 
     <!-- BOTON REGISTRAR -->
@@ -601,6 +619,7 @@
 
             insumo.style.display =
                 "none";
+
         }
 
         else if (tipo === "Insumo") {
@@ -610,6 +629,7 @@
 
             insumo.style.display =
                 "block";
+
         }
 
         else {
@@ -619,7 +639,9 @@
 
             insumo.style.display =
                 "none";
+
         }
+
     }
 
 
@@ -654,6 +676,7 @@
 
 
         campo.focus();
+
     }
 
 
@@ -665,6 +688,7 @@
         if (productoConfirmado) {
 
             return true;
+
         }
 
 
@@ -719,6 +743,7 @@
             );
 
             return false;
+
         }
 
 
@@ -731,6 +756,7 @@
             );
 
             return false;
+
         }
 
 
@@ -743,6 +769,7 @@
             );
 
             return false;
+
         }
 
 
@@ -758,6 +785,7 @@
             );
 
             return false;
+
         }
 
 
@@ -779,6 +807,7 @@
                 );
 
                 return false;
+
             }
 
 
@@ -793,7 +822,9 @@
                 );
 
                 return false;
+
             }
+
         }
 
 
@@ -815,7 +846,9 @@
                 );
 
                 return false;
+
             }
+
         }
 
 
@@ -827,6 +860,7 @@
 
 
         return false;
+
     }
 
 
@@ -848,6 +882,7 @@
         document.getElementById(
             "formCrearProducto"
         ).requestSubmit();
+
     }
 
 
@@ -864,6 +899,7 @@
             "modalConfirmacion"
         ).style.display =
             "none";
+
     }
 
 
@@ -904,6 +940,12 @@
             "stockMinimo"
         ).value =
             "0";
+
+
+        document.getElementById(
+            "imagenProducto"
+        ).value =
+            "";
 
 
         document.getElementById(
@@ -973,6 +1015,7 @@
         document.getElementById(
             "tipoProducto"
         ).focus();
+
     }
 
 
@@ -1031,6 +1074,7 @@
                     },
                     500
                 );
+
             }
 
         },

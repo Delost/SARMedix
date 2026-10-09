@@ -25,9 +25,11 @@
         ViewData["TituloBarra"]?.ToString() ?? "";
 }
 
+
 <!DOCTYPE html>
 
 <html lang="es">
+
 
 <head>
 
@@ -35,6 +37,7 @@
 
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0" />
+
 
     <title>
         @ViewData["Title"] - SARMedix
@@ -51,6 +54,11 @@
 
 
     <link rel="stylesheet"
+          href="~/css/sidebar.css"
+          asp-append-version="true" />
+
+
+    <link rel="stylesheet"
           href="~/LoginSARMedix.styles.css"
           asp-append-version="true" />
 
@@ -60,9 +68,7 @@
 <body>
 
 
-    <!-- ========================================= -->
-    <!-- BARRA SUPERIOR                            -->
-    <!-- ========================================= -->
+    <!-- BARRA SUPERIOR -->
 
     <header class="barra-layout">
 
@@ -135,6 +141,8 @@
 
 
 
+                <!-- CERRAR SESION -->
+
                 <form asp-controller="Home"
                       asp-action="CerrarSesion"
                       method="post"
@@ -166,28 +174,56 @@
 
 
 
-    <!-- ========================================= -->
-    <!-- CONTENIDO                                 -->
-    <!-- ========================================= -->
+    <!-- CONTENIDO -->
 
-    <div class="container contenedor-layout">
-
-
-        <main role="main"
-              class="pb-3">
-
-            @RenderBody()
-
-        </main>
+    @if (sesionIniciada)
+    {
+        <div class="estructura-app">
 
 
-    </div>
+            <!-- BARRA LATERAL -->
+
+            <partial name="_Sidebar" />
 
 
 
-    <!-- ========================================= -->
-    <!-- FOOTER                                    -->
-    <!-- ========================================= -->
+            <!-- CONTENIDO DE LA VISTA -->
+
+            <div class="contenido-app">
+
+
+                <main role="main"
+                      class="pb-3">
+
+                    @RenderBody()
+
+                </main>
+
+
+            </div>
+
+
+        </div>
+    }
+    else
+    {
+        <div class="container contenedor-layout">
+
+
+            <main role="main"
+                  class="pb-3">
+
+                @RenderBody()
+
+            </main>
+
+
+        </div>
+    }
+
+
+
+    <!-- FOOTER -->
 
     <footer class="footer-layout">
 
@@ -197,9 +233,7 @@
 
 
 
-    <!-- ========================================= -->
-    <!-- CONFIRMACION CERRAR SESION                -->
-    <!-- ========================================= -->
+    <!-- CONFIRMACION CERRAR SESION -->
 
     @if (sesionIniciada)
     {
@@ -263,9 +297,7 @@
 
 
 
-    <!-- ========================================= -->
-    <!-- SCRIPTS                                   -->
-    <!-- ========================================= -->
+    <!-- SCRIPTS -->
 
     <script src="~/lib/jquery/dist/jquery.min.js">
     </script>
@@ -282,9 +314,7 @@
 
     <script>
 
-        // =========================================
         // ABRIR CONFIRMACION
-        // =========================================
 
         function abrirConfirmacionCerrarSesion() {
 
@@ -305,9 +335,7 @@
 
 
 
-        // =========================================
         // NO
-        // =========================================
 
         function cerrarConfirmacionCerrarSesion() {
 
@@ -328,9 +356,7 @@
 
 
 
-        // =========================================
         // SI - CERRAR SESION
-        // =========================================
 
         function confirmarCerrarSesion() {
 

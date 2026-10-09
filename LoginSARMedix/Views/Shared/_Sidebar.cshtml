@@ -1,0 +1,212 @@
+﻿@using Microsoft.AspNetCore.Http
+
+@{
+    string permisosTexto =
+        Context.Session.GetString("Permisos") ?? "";
+
+    var permisos =
+        permisosTexto
+            .Split(
+                '|',
+                StringSplitOptions.RemoveEmptyEntries
+            )
+            .ToList();
+
+
+    bool permisoUsuarios =
+        permisos.Any(
+            p => p.Equals(
+                "Crear usuario",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        ||
+        permisos.Any(
+            p => p.Equals(
+                "Gestionar usuarios y permisos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
+
+
+    bool permisoProductos =
+        permisos.Any(
+            p => p.Equals(
+                "Consultar productos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        ||
+        permisos.Any(
+            p => p.Equals(
+                "Registrar productos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        ||
+        permisos.Any(
+            p => p.Equals(
+                "Gestionar productos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
+
+
+    bool permisoMovimientos =
+        permisos.Any(
+            p => p.Equals(
+                "Registrar movimientos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        ||
+        permisos.Any(
+            p => p.Equals(
+                "Consultar historial",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        ||
+        permisos.Any(
+            p => p.Equals(
+                "Gestionar movimientos",
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
+
+
+    bool permisoControlados =
+        permisos.Any(
+            p => p.Equals(
+                "Gestionar medicamentos controlados",
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
+}
+
+
+<aside class="sidebar">
+
+
+    <!-- TITULO -->
+
+    <div class="sidebar-titulo">
+
+        Menú
+
+    </div>
+
+
+
+    <!-- OPCIONES -->
+
+    <nav class="sidebar-menu">
+
+
+        @if (permisoUsuarios)
+        {
+            <a asp-controller="Home"
+               asp-action="UsuariosPermisos"
+               class="sidebar-opcion">
+
+
+                <span class="sidebar-icono">
+
+                    👥
+
+                </span>
+
+
+                <span class="sidebar-texto">
+
+                    Usuarios y Permisos
+
+                </span>
+
+
+            </a>
+        }
+
+
+
+        @if (permisoProductos)
+        {
+            <a asp-controller="Home"
+               asp-action="Productos"
+               class="sidebar-opcion">
+
+
+                <span class="sidebar-icono">
+
+                    📦
+
+                </span>
+
+
+                <span class="sidebar-texto">
+
+                    Productos
+
+                </span>
+
+
+            </a>
+        }
+
+
+
+        @if (permisoMovimientos)
+        {
+            <a asp-controller="Home"
+               asp-action="MovimientoHistorial"
+               class="sidebar-opcion">
+
+
+                <span class="sidebar-icono">
+
+                    ↔
+
+                </span>
+
+
+                <span class="sidebar-texto">
+
+                    Movimientos e Historial
+
+                </span>
+
+
+            </a>
+        }
+
+
+
+        @if (permisoControlados)
+        {
+            <a asp-controller="Home"
+               asp-action="MedicamentosControlados"
+               class="sidebar-opcion">
+
+
+                <span class="sidebar-icono">
+
+                    💊
+
+                </span>
+
+
+                <span class="sidebar-texto">
+
+                    Medicamentos Controlados
+
+                </span>
+
+
+            </a>
+        }
+
+
+    </nav>
+
+
+</aside>

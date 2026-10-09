@@ -54,11 +54,13 @@ namespace LoginSARMedix.Repository
             string consultaProducto = @"INSERT INTO producto
                                         (codigo_interno,
                                          nombre,
-                                         stock_minimo)
+                                         stock_minimo,
+                                         imagen_url)
                                         VALUES
                                         (@codigoInterno,
                                          @nombre,
-                                         @stockMinimo)";
+                                         @stockMinimo,
+                                         @imagenUrl)";
 
             using MySqlCommand comandoProducto =
                 new MySqlCommand(
@@ -80,6 +82,12 @@ namespace LoginSARMedix.Repository
             comandoProducto.Parameters.AddWithValue(
                 "@stockMinimo",
                 reg.stock_minimo
+            );
+
+            comandoProducto.Parameters.AddWithValue(
+                "@imagenUrl",
+                (object?)reg.imagen_url
+                ?? DBNull.Value
             );
 
             await comandoProducto.ExecuteNonQueryAsync();
@@ -214,6 +222,7 @@ namespace LoginSARMedix.Repository
                                     p.codigo_interno,
                                     p.nombre,
                                     p.stock_minimo,
+                                    p.imagen_url,
 
                                     m.principio_activo,
                                     m.concentracion,
@@ -261,6 +270,11 @@ namespace LoginSARMedix.Repository
                     stock_minimo =
                         Convert.ToInt32(lector["stock_minimo"]),
 
+                    imagen_url =
+                        lector["imagen_url"] == DBNull.Value
+                        ? null
+                        : lector["imagen_url"].ToString(),
+
                     tipo =
                         lector["tipo"].ToString(),
 
@@ -307,33 +321,34 @@ namespace LoginSARMedix.Repository
             await conexion.OpenAsync();
 
             string consulta = @"
-        SELECT
-            p.id_producto,
-            p.codigo_interno,
-            p.nombre,
-            p.stock_minimo,
+                                SELECT
+                                    p.id_producto,
+                                    p.codigo_interno,
+                                    p.nombre,
+                                    p.stock_minimo,
+                                    p.imagen_url,
 
-            m.principio_activo,
-            m.concentracion,
-            m.requiere_control,
+                                    m.principio_activo,
+                                    m.concentracion,
+                                    m.requiere_control,
 
-            i.material,
-            i.es_esteril,
+                                    i.material,
+                                    i.es_esteril,
 
-            CASE
-                WHEN m.id_producto IS NOT NULL THEN 'Medicamento'
-                WHEN i.id_producto IS NOT NULL THEN 'Insumo'
-            END AS tipo
+                                    CASE
+                                        WHEN m.id_producto IS NOT NULL THEN 'Medicamento'
+                                        WHEN i.id_producto IS NOT NULL THEN 'Insumo'
+                                    END AS tipo
 
-        FROM producto p
+                                FROM producto p
 
-        LEFT JOIN medicamento m
-        ON p.id_producto = m.id_producto
+                                LEFT JOIN medicamento m
+                                ON p.id_producto = m.id_producto
 
-        LEFT JOIN insumo i
-        ON p.id_producto = i.id_producto
+                                LEFT JOIN insumo i
+                                ON p.id_producto = i.id_producto
 
-        WHERE p.id_producto = @idProducto";
+                                WHERE p.id_producto = @idProducto";
 
             using MySqlCommand comando =
                 new MySqlCommand(consulta, conexion);
@@ -361,6 +376,11 @@ namespace LoginSARMedix.Repository
 
                     stock_minimo =
                         Convert.ToInt32(lector["stock_minimo"]),
+
+                    imagen_url =
+                        lector["imagen_url"] == DBNull.Value
+                        ? null
+                        : lector["imagen_url"].ToString(),
 
                     tipo =
                         lector["tipo"].ToString(),

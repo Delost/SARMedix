@@ -26,14 +26,16 @@
 }
 
 
-<div class="usuarios-card">
+<div class="productos-contenedor">
 
 
     <!-- TITULO -->
 
-    <div class="usuarios-titulo">
+    <div class="productos-titulo">
 
-        <h1>Listado de productos</h1>
+        <h1>
+            Listado de productos
+        </h1>
 
         <p>
             Administración de medicamentos e insumos
@@ -60,7 +62,7 @@
 
 
 
-    <!-- BOTON REGISTRAR -->
+    <!-- REGISTRAR PRODUCTO -->
 
     @if (puedeRegistrar)
     {
@@ -79,13 +81,54 @@
 
 
 
+    <!-- SELECTOR -->
+
+    <div class="selector-productos">
+
+
+        <button type="button"
+                id="btnMedicamentos"
+                class="selector-btn activo"
+                onclick="mostrarTipo('medicamentos')">
+
+            💊 Medicamentos
+
+        </button>
+
+
+        <button type="button"
+                id="btnInsumos"
+                class="selector-btn"
+                onclick="mostrarTipo('insumos')">
+
+            🩹 Insumos
+
+        </button>
+
+
+    </div>
+
+
+
     <!-- MEDICAMENTOS -->
 
-    <div class="seccion-productos">
+    <div id="seccionMedicamentos"
+         class="seccion-productos">
 
-        <h3>
+
+        <div class="seccion-titulo">
+
             Medicamentos
-        </h3>
+
+        </div>
+
+
+        <div class="seccion-descripcion">
+
+            Seleccione un medicamento para ver o editar
+            su información.
+
+        </div>
 
 
         @if (
@@ -95,127 +138,171 @@
             )
         )
         {
-            <div class="tabla-contenedor">
-
-                <table class="tabla-usuarios">
+            <div class="productos-grid">
 
 
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Código
-                            </th>
-
-                            <th>
-                                Nombre
-                            </th>
-
-                            <th>
-                                Stock mínimo
-                            </th>
-
-                            <th>
-                                Principio activo
-                            </th>
-
-                            <th>
-                                Concentración
-                            </th>
-
-                            <th>
-                                Controlado
-                            </th>
-
-                            @if (puedeRegistrar)
-                            {
-                                <th>
-                                    Acciones
-                                </th>
-                            }
-
-                        </tr>
-
-                    </thead>
+                @foreach (
+                    var producto
+                    in Model.Where(
+                        x => x.tipo == "Medicamento"
+                    )
+                )
+                {
+                    @if (puedeRegistrar)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="EditarProducto"
+                           asp-route-idProducto="@producto.id_producto"
+                           class="producto-card">
 
 
-                    <tbody>
+                            <!-- IMAGEN -->
 
-                        @foreach (
-                            var producto
-                            in Model.Where(
-                                x => x.tipo == "Medicamento"
-                            )
-                        )
-                        {
-                            <tr>
+                            <div class="producto-imagen">
 
-                                <td>
-                                    @producto.codigo_interno
-                                </td>
-
-                                <td>
-                                    @producto.nombre
-                                </td>
-
-                                <td>
-                                    @producto.stock_minimo
-                                </td>
-
-                                <td>
-                                    @producto.principio_activo
-                                </td>
-
-                                <td>
-                                    @producto.concentracion
-                                </td>
-
-                                <td>
-
-                                    @if (producto.requiere_control)
-                                    {
-                                        <span class="estado-controlado">
-
-                                            Sí
-
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="estado-normal">
-
-                                            No
-
-                                        </span>
-                                    }
-
-                                </td>
-
-
-                                @if (puedeRegistrar)
+                                @if (!string.IsNullOrEmpty(
+                                    producto.imagen_url))
                                 {
-                                    <td>
-
-                                        <a asp-controller="Home"
-                                           asp-action="EditarProducto"
-                                           asp-route-idProducto="@producto.id_producto"
-                                           class="btn-editar">
-
-                                            Editar
-
-                                        </a>
-
-                                    </td>
+                                    <img src="@producto.imagen_url"
+                                         alt="@producto.nombre"
+                                         class="producto-foto" />
+                                }
+                                else
+                                {
+                                    <span>
+                                        💊
+                                    </span>
                                 }
 
-                            </tr>
-                        }
-
-                    </tbody>
+                            </div>
 
 
-                </table>
+                            <!-- INFORMACION -->
+
+                            <div class="producto-info">
+
+
+                                <div class="producto-nombre">
+
+                                    @producto.nombre
+
+                                </div>
+
+
+                                <div class="producto-detalle">
+
+                                    @producto.concentracion
+
+                                </div>
+
+
+                                <div class="producto-secundario">
+
+                                    @producto.principio_activo
+
+                                </div>
+
+
+                                <div class="producto-codigo">
+
+                                    Código:
+                                    @producto.codigo_interno
+
+                                </div>
+
+
+                                @if (producto.requiere_control)
+                                {
+                                    <div class="producto-controlado">
+
+                                        Medicamento controlado
+
+                                    </div>
+                                }
+
+
+                            </div>
+
+
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="producto-card producto-card-solo-lectura">
+
+
+                            <!-- IMAGEN -->
+
+                            <div class="producto-imagen">
+
+                                @if (!string.IsNullOrEmpty(
+                                    producto.imagen_url))
+                                {
+                                    <img src="@producto.imagen_url"
+                                         alt="@producto.nombre"
+                                         class="producto-foto" />
+                                }
+                                else
+                                {
+                                    <span>
+                                        💊
+                                    </span>
+                                }
+
+                            </div>
+
+
+                            <!-- INFORMACION -->
+
+                            <div class="producto-info">
+
+
+                                <div class="producto-nombre">
+
+                                    @producto.nombre
+
+                                </div>
+
+
+                                <div class="producto-detalle">
+
+                                    @producto.concentracion
+
+                                </div>
+
+
+                                <div class="producto-secundario">
+
+                                    @producto.principio_activo
+
+                                </div>
+
+
+                                <div class="producto-codigo">
+
+                                    Código:
+                                    @producto.codigo_interno
+
+                                </div>
+
+
+                                @if (producto.requiere_control)
+                                {
+                                    <div class="producto-controlado">
+
+                                        Medicamento controlado
+
+                                    </div>
+                                }
+
+
+                            </div>
+
+
+                        </div>
+                    }
+                }
+
 
             </div>
         }
@@ -228,17 +315,31 @@
             </div>
         }
 
+
     </div>
 
 
 
     <!-- INSUMOS -->
 
-    <div class="seccion-productos">
+    <div id="seccionInsumos"
+         class="seccion-productos"
+         style="display: none;">
 
-        <h3>
+
+        <div class="seccion-titulo">
+
             Insumos
-        </h3>
+
+        </div>
+
+
+        <div class="seccion-descripcion">
+
+            Seleccione un insumo para ver o editar
+            su información.
+
+        </div>
 
 
         @if (
@@ -248,119 +349,173 @@
             )
         )
         {
-            <div class="tabla-contenedor">
-
-                <table class="tabla-usuarios">
+            <div class="productos-grid">
 
 
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Código
-                            </th>
-
-                            <th>
-                                Nombre
-                            </th>
-
-                            <th>
-                                Stock mínimo
-                            </th>
-
-                            <th>
-                                Material
-                            </th>
-
-                            <th>
-                                Estéril
-                            </th>
-
-                            @if (puedeRegistrar)
-                            {
-                                <th>
-                                    Acciones
-                                </th>
-                            }
-
-                        </tr>
-
-                    </thead>
+                @foreach (
+                    var producto
+                    in Model.Where(
+                        x => x.tipo == "Insumo"
+                    )
+                )
+                {
+                    @if (puedeRegistrar)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="EditarProducto"
+                           asp-route-idProducto="@producto.id_producto"
+                           class="producto-card">
 
 
-                    <tbody>
+                            <!-- IMAGEN -->
 
-                        @foreach (
-                            var producto
-                            in Model.Where(
-                                x => x.tipo == "Insumo"
-                            )
-                        )
-                        {
-                            <tr>
+                            <div class="producto-imagen">
 
-                                <td>
-                                    @producto.codigo_interno
-                                </td>
+                                @if (!string.IsNullOrEmpty(
+                                    producto.imagen_url))
+                                {
+                                    <img src="@producto.imagen_url"
+                                         alt="@producto.nombre"
+                                         class="producto-foto" />
+                                }
+                                else
+                                {
+                                    <span>
+                                        🩹
+                                    </span>
+                                }
 
-                                <td>
+                            </div>
+
+
+                            <!-- INFORMACION -->
+
+                            <div class="producto-info">
+
+
+                                <div class="producto-nombre">
+
                                     @producto.nombre
-                                </td>
 
-                                <td>
-                                    @producto.stock_minimo
-                                </td>
+                                </div>
 
-                                <td>
+
+                                <div class="producto-detalle">
+
                                     @producto.material
-                                </td>
 
-                                <td>
+                                </div>
+
+
+                                <div class="producto-secundario">
 
                                     @if (producto.es_esteril)
                                     {
-                                        <span class="estado-normal">
-
-                                            Sí
-
+                                        <span>
+                                            Estéril
                                         </span>
                                     }
                                     else
                                     {
-                                        <span class="estado-no">
-
-                                            No
-
+                                        <span>
+                                            No estéril
                                         </span>
                                     }
 
-                                </td>
+                                </div>
 
 
-                                @if (puedeRegistrar)
+                                <div class="producto-codigo">
+
+                                    Código:
+                                    @producto.codigo_interno
+
+                                </div>
+
+
+                            </div>
+
+
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="producto-card producto-card-solo-lectura">
+
+
+                            <!-- IMAGEN -->
+
+                            <div class="producto-imagen">
+
+                                @if (!string.IsNullOrEmpty(
+                                    producto.imagen_url))
                                 {
-                                    <td>
-
-                                        <a asp-controller="Home"
-                                           asp-action="EditarProducto"
-                                           asp-route-idProducto="@producto.id_producto"
-                                           class="btn-editar">
-
-                                            Editar
-
-                                        </a>
-
-                                    </td>
+                                    <img src="@producto.imagen_url"
+                                         alt="@producto.nombre"
+                                         class="producto-foto" />
+                                }
+                                else
+                                {
+                                    <span>
+                                        🩹
+                                    </span>
                                 }
 
-                            </tr>
-                        }
-
-                    </tbody>
+                            </div>
 
 
-                </table>
+                            <!-- INFORMACION -->
+
+                            <div class="producto-info">
+
+
+                                <div class="producto-nombre">
+
+                                    @producto.nombre
+
+                                </div>
+
+
+                                <div class="producto-detalle">
+
+                                    @producto.material
+
+                                </div>
+
+
+                                <div class="producto-secundario">
+
+                                    @if (producto.es_esteril)
+                                    {
+                                        <span>
+                                            Estéril
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span>
+                                            No estéril
+                                        </span>
+                                    }
+
+                                </div>
+
+
+                                <div class="producto-codigo">
+
+                                    Código:
+                                    @producto.codigo_interno
+
+                                </div>
+
+
+                            </div>
+
+
+                        </div>
+                    }
+                }
+
 
             </div>
         }
@@ -373,21 +528,24 @@
             </div>
         }
 
+
     </div>
 
 
 
     <!-- VOLVER -->
 
-    <div class="usuarios-volver">
+    <div class="productos-volver">
+
 
         <a asp-controller="Home"
            asp-action="Productos"
-           class="btn-volver">
+           class="btn-volver-productos">
 
             ← Volver a Productos
 
         </a>
+
 
     </div>
 
@@ -398,35 +556,71 @@
 
 <style>
 
-    /* SECCIONES */
+    /* CONTENIDO */
 
-    .seccion-productos {
-        margin-top: 30px;
+    main[role="main"] {
+        padding: 40px 25px !important;
+        justify-content: flex-start;
+        align-items: center;
     }
 
 
-    .seccion-productos h3 {
-        margin-bottom: 15px;
+    .productos-contenedor {
+        width: 100%;
+        max-width: 1100px;
+
+        padding: 35px;
+
+        background-color:
+            rgba(255, 255, 255, 0.97);
+
+        border-radius: 16px;
+
+        box-shadow:
+            0 10px 28px
+            rgba(16, 65, 95, 0.14);
+    }
+
+
+
+    /* TITULO */
+
+    .productos-titulo {
+        text-align: center;
+    }
+
+
+    .productos-titulo h1 {
+        margin: 0;
 
         color: #093b62;
 
-        font-size: 22px;
+        font-size: 30px;
 
         font-weight: 700;
     }
 
 
+    .productos-titulo p {
+        margin-top: 8px;
 
-    /* ACCIONES SUPERIORES */
+        margin-bottom: 0;
+
+        color: #60798b;
+
+        font-size: 15px;
+    }
+
+
+
+    /* REGISTRAR */
 
     .acciones-superiores {
         display: flex;
 
         justify-content: flex-end;
 
-        margin-top: 20px;
-
-        margin-bottom: 20px;
+        margin-top: 25px;
     }
 
 
@@ -435,13 +629,15 @@
 
         padding: 10px 18px;
 
-        background: #0d7898;
+        background-color: #0d7898;
+
+        border-radius: 7px;
 
         color: white;
 
-        border-radius: 6px;
-
         text-decoration: none;
+
+        font-size: 14px;
 
         font-weight: 600;
 
@@ -451,9 +647,292 @@
 
 
     .btn-nuevo-producto:hover {
-        background: #09637e;
+        background-color: #09637e;
 
         color: white;
+    }
+
+
+
+    /* SELECTOR */
+
+    .selector-productos {
+        width: 100%;
+
+        margin-top: 30px;
+        margin-bottom: 35px;
+
+        display: flex;
+
+        justify-content: center;
+
+        align-items: center;
+
+        gap: 12px;
+
+        flex-wrap: wrap;
+    }
+
+
+    .selector-btn {
+        min-width: 180px;
+
+        padding: 12px 22px;
+
+        border:
+            1px solid #0d7898;
+
+        border-radius: 8px;
+
+        background-color: white;
+
+        color: #0d7898;
+
+        font-size: 15px;
+
+        font-weight: 600;
+
+        cursor: pointer;
+
+        transition:
+            background-color 0.2s ease,
+            color 0.2s ease,
+            transform 0.2s ease;
+    }
+
+
+    .selector-btn:hover {
+        background-color: #e8f5fa;
+
+        transform:
+            translateY(-2px);
+    }
+
+
+    .selector-btn.activo {
+        background-color: #0d7898;
+
+        color: white;
+    }
+
+
+
+    /* SECCION */
+
+    .seccion-productos {
+        width: 100%;
+    }
+
+
+    .seccion-titulo {
+        width: 100%;
+
+        color: #093b62;
+
+        font-size: 27px;
+
+        font-weight: 700;
+
+        text-align: center;
+    }
+
+
+    .seccion-descripcion {
+        width: 100%;
+
+        margin-top: 7px;
+        margin-bottom: 25px;
+
+        color: #60798b;
+
+        font-size: 14px;
+
+        text-align: center;
+    }
+
+
+
+    /* TARJETAS */
+
+    .productos-grid {
+        width: 100%;
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                auto-fill,
+                minmax(210px, 1fr)
+            );
+
+        gap: 22px;
+    }
+
+
+    .producto-card {
+        overflow: hidden;
+
+        display: block;
+
+        background-color: white;
+
+        border:
+            1px solid #dce7ed;
+
+        border-radius: 14px;
+
+        box-shadow:
+            0 6px 18px
+            rgba(16, 65, 95, 0.10);
+
+        color: inherit;
+
+        text-decoration: none;
+
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            border-color 0.2s ease;
+    }
+
+
+    a.producto-card:hover {
+        transform:
+            translateY(-5px);
+
+        border-color: #1198a5;
+
+        box-shadow:
+            0 13px 28px
+            rgba(16, 65, 95, 0.18);
+
+        color: inherit;
+    }
+
+
+
+    /* IMAGEN */
+
+    .producto-imagen {
+        width: 100%;
+
+        height: 165px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        overflow: hidden;
+
+        background:
+            linear-gradient(
+                135deg,
+                #eef8fb,
+                #e3f3f7
+            );
+
+        font-size: 72px;
+
+        user-select: none;
+    }
+
+
+    .producto-foto {
+        width: 100%;
+
+        height: 100%;
+
+        display: block;
+
+        object-fit: contain;
+
+        padding: 10px;
+
+        background-color: white;
+    }
+
+
+
+    /* INFORMACION */
+
+    .producto-info {
+        padding: 18px;
+
+        text-align: center;
+    }
+
+
+    .producto-nombre {
+        color: #07527c;
+
+        font-size: 18px;
+
+        font-weight: 700;
+
+        word-break: break-word;
+    }
+
+
+    .producto-detalle {
+        margin-top: 7px;
+
+        color: #4d687b;
+
+        font-size: 14px;
+
+        font-weight: 600;
+    }
+
+
+    .producto-secundario {
+        min-height: 20px;
+
+        margin-top: 5px;
+
+        color: #748b9b;
+
+        font-size: 13px;
+    }
+
+
+    .producto-codigo {
+        margin-top: 12px;
+
+        color: #91a2ae;
+
+        font-size: 12px;
+    }
+
+
+
+    /* CONTROLADO */
+
+    .producto-controlado {
+        display: inline-block;
+
+        margin-top: 12px;
+
+        padding: 5px 10px;
+
+        border-radius: 15px;
+
+        background-color: #fff3cd;
+
+        color: #664d03;
+
+        font-size: 12px;
+
+        font-weight: 600;
+    }
+
+
+
+    /* SOLO LECTURA */
+
+    .producto-card-solo-lectura {
+        cursor: default;
     }
 
 
@@ -463,10 +942,7 @@
     .mensaje {
         width: 100%;
 
-        box-sizing: border-box;
-
         margin-top: 20px;
-
         margin-bottom: 20px;
 
         padding: 12px 15px;
@@ -487,80 +963,20 @@
     .mensaje-exito {
         background-color: #d1e7dd;
 
-        color: #0f5132;
-
         border:
             1px solid #badbcc;
+
+        color: #0f5132;
     }
 
 
     .mensaje-error {
         background-color: #f8d7da;
 
-        color: #842029;
-
         border:
             1px solid #f5c2c7;
-    }
 
-
-
-    /* ESTADOS */
-
-    .estado-controlado {
-        display: inline-block;
-
-        min-width: 45px;
-
-        padding: 5px 9px;
-
-        border-radius: 14px;
-
-        background-color: #fff3cd;
-
-        color: #664d03;
-
-        font-weight: 600;
-
-        text-align: center;
-    }
-
-
-    .estado-normal {
-        display: inline-block;
-
-        min-width: 45px;
-
-        padding: 5px 9px;
-
-        border-radius: 14px;
-
-        background-color: #d1e7dd;
-
-        color: #0f5132;
-
-        font-weight: 600;
-
-        text-align: center;
-    }
-
-
-    .estado-no {
-        display: inline-block;
-
-        min-width: 45px;
-
-        padding: 5px 9px;
-
-        border-radius: 14px;
-
-        background-color: #e2e3e5;
-
-        color: #41464b;
-
-        font-weight: 600;
-
-        text-align: center;
+        color: #842029;
     }
 
 
@@ -568,32 +984,122 @@
     /* SIN REGISTROS */
 
     .sin-registros {
-        padding: 20px;
+        width: 100%;
+
+        padding: 22px;
 
         background-color: #f5f8fa;
 
-        border: 1px solid #d8e2e8;
+        border:
+            1px solid #d8e2e8;
 
         border-radius: 8px;
 
-        text-align: center;
-
         color: #60798b;
+
+        text-align: center;
     }
 
 
 
-    /* CELULAR */
+    /* VOLVER */
+
+    .productos-volver {
+        margin-top: 40px;
+
+        text-align: center;
+    }
+
+
+    .btn-volver-productos {
+        display: inline-block;
+
+        padding: 11px 22px;
+
+        background-color: #1198a5;
+
+        border-radius: 7px;
+
+        color: white;
+
+        text-decoration: none;
+
+        font-size: 14px;
+
+        font-weight: 600;
+
+        transition:
+            background-color 0.2s ease;
+    }
+
+
+    .btn-volver-productos:hover {
+        background-color: #0d8490;
+
+        color: white;
+    }
+
+
+
+    /* RESPONSIVE */
 
     @@media (max-width: 700px) {
+
+        main[role="main"] {
+            padding:
+                25px 15px !important;
+        }
+
+
+        .productos-contenedor {
+            padding:
+                25px 18px;
+        }
+
+
+        .productos-grid {
+            grid-template-columns:
+                repeat(
+                    auto-fill,
+                    minmax(170px, 1fr)
+                );
+        }
+
 
         .acciones-superiores {
             justify-content: center;
         }
 
 
-        .seccion-productos {
-            overflow-x: auto;
+        .producto-imagen {
+            height: 145px;
+
+            font-size: 60px;
+        }
+
+
+        .selector-btn {
+            min-width: 150px;
+        }
+
+    }
+
+
+    @@media (max-width: 480px) {
+
+        .productos-grid {
+            grid-template-columns:
+                1fr;
+        }
+
+
+        .selector-productos {
+            flex-direction: column;
+        }
+
+
+        .selector-btn {
+            width: 100%;
         }
 
     }
@@ -603,6 +1109,72 @@
 
 
 <script>
+
+    // CAMBIAR TIPO DE PRODUCTO
+
+    function mostrarTipo(tipo) {
+
+        const medicamentos =
+            document.getElementById(
+                "seccionMedicamentos"
+            );
+
+        const insumos =
+            document.getElementById(
+                "seccionInsumos"
+            );
+
+        const btnMedicamentos =
+            document.getElementById(
+                "btnMedicamentos"
+            );
+
+        const btnInsumos =
+            document.getElementById(
+                "btnInsumos"
+            );
+
+
+        if (tipo === "medicamentos") {
+
+            medicamentos.style.display =
+                "block";
+
+            insumos.style.display =
+                "none";
+
+
+            btnMedicamentos.classList.add(
+                "activo"
+            );
+
+            btnInsumos.classList.remove(
+                "activo"
+            );
+
+        }
+        else {
+
+            medicamentos.style.display =
+                "none";
+
+            insumos.style.display =
+                "block";
+
+
+            btnMedicamentos.classList.remove(
+                "activo"
+            );
+
+            btnInsumos.classList.add(
+                "activo"
+            );
+
+        }
+
+    }
+
+
 
     // OCULTAR MENSAJE DESPUES DE 3 SEGUNDOS
 
@@ -630,6 +1202,7 @@
                     },
                     500
                 );
+
             }
 
         },

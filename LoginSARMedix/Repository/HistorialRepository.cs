@@ -1,4 +1,5 @@
 ﻿using LoginSARMedix.Models;
+using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 
 namespace LoginSARMedix.Repository
@@ -155,5 +156,180 @@ namespace LoginSARMedix.Repository
 
             return historial;
         }
+
+
+
+
+
+
+
+        //HISTORIAL DE USUARIOS
+        public async Task<List<Historial>> ListadoHistorialUsuarios()
+        {
+            List<Historial> historial =
+                new List<Historial>();
+
+
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"SELECT
+              id_historial,
+              id_usuario_responsable,
+              usuario_responsable,
+              descripcion,
+              fecha_hora
+          FROM historial
+          WHERE descripcion LIKE '%usuario%'
+             OR descripcion LIKE '%rol%'
+             OR descripcion LIKE '%permiso%'
+          ORDER BY fecha_hora DESC";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            using MySqlDataReader lector =
+                await comando.ExecuteReaderAsync();
+
+
+            while (await lector.ReadAsync())
+            {
+                historial.Add(
+                    new Historial()
+                    {
+                        id_historial =
+                            lector.GetInt32("id_historial"),
+
+                        id_usuario_responsable =
+                            lector.IsDBNull(
+                                lector.GetOrdinal(
+                                    "id_usuario_responsable"
+                                )
+                            )
+                            ? null
+                            : lector.GetInt32(
+                                "id_usuario_responsable"
+                            ),
+
+                        usuario_responsable =
+                            lector.GetString(
+                                "usuario_responsable"
+                            ),
+
+                        descripcion =
+                            lector.GetString(
+                                "descripcion"
+                            ),
+
+                        fecha_hora =
+                            lector.GetDateTime(
+                                "fecha_hora"
+                            )
+                    }
+                );
+            }
+
+
+            return historial;
+        }
+
+
+
+
+
+        // HISTORIAL DE PRODUCTOS
+
+        public async Task<List<Historial>> ListadoHistorialProductos()
+        {
+            List<Historial> historial =
+                new List<Historial>();
+
+
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"SELECT
+              id_historial,
+              id_usuario_responsable,
+              usuario_responsable,
+              descripcion,
+              fecha_hora
+          FROM historial
+          WHERE descripcion LIKE '%producto%'
+             OR descripcion LIKE '%lote%'
+          ORDER BY fecha_hora DESC";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            using MySqlDataReader lector =
+                await comando.ExecuteReaderAsync();
+
+
+            while (await lector.ReadAsync())
+            {
+                historial.Add(
+                    new Historial()
+                    {
+                        id_historial =
+                            lector.GetInt32(
+                                "id_historial"
+                            ),
+
+                        id_usuario_responsable =
+                            lector.IsDBNull(
+                                lector.GetOrdinal(
+                                    "id_usuario_responsable"
+                                )
+                            )
+                            ? null
+                            : lector.GetInt32(
+                                "id_usuario_responsable"
+                            ),
+
+                        usuario_responsable =
+                            lector.GetString(
+                                "usuario_responsable"
+                            ),
+
+                        descripcion =
+                            lector.GetString(
+                                "descripcion"
+                            ),
+
+                        fecha_hora =
+                            lector.GetDateTime(
+                                "fecha_hora"
+                            )
+                    }
+                );
+            }
+
+
+            return historial;
+        }
+
+
+
     }
 }

@@ -1,0 +1,167 @@
+/* ESTRUCTURA */
+
+.estructura-app {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+}
+
+
+.contenido-app {
+    min-width: 0;
+    flex: 1;
+}
+
+
+    .contenido-app main {
+        width: 100%;
+    }
+
+
+
+/* BARRA LATERAL */
+
+.sidebar {
+    width: 245px;
+    min-width: 245px;
+    min-height: calc(100vh - 144px);
+    padding: 25px 14px;
+    background: linear-gradient( 180deg, #073b64, #0d5278 );
+    color: white;
+    box-shadow: 4px 0 14px rgba(0, 0, 0, 0.10);
+}
+
+
+
+/* TITULO */
+
+.sidebar-titulo {
+    margin-bottom: 24px;
+    padding: 0 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+
+
+/* MENU */
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+
+
+/* OPCIONES */
+
+.sidebar-opcion {
+    width: 100%;
+    min-height: 58px;
+    padding: 11px 14px;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    border-radius: 9px;
+    color: #eaf6fb;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+
+    .sidebar-opcion:hover {
+        background-color: rgba(255, 255, 255, 0.14);
+        color: white;
+        text-decoration: none;
+        transform: translateX(3px);
+    }
+
+
+
+/* ICONOS */
+
+.sidebar-icono {
+    width: 31px;
+    min-width: 31px;
+    height: 31px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+
+
+/* TEXTO */
+
+.sidebar-texto {
+    line-height: 1.25;
+}
+
+
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+
+    .sidebar {
+        width: 190px;
+        min-width: 190px;
+    }
+
+
+    .sidebar-opcion {
+        font-size: 14px;
+    }
+}
+
+
+
+@media (max-width: 700px) {
+
+    .estructura-app {
+        flex-direction: column;
+    }
+
+
+    .sidebar {
+        width: 100%;
+        min-width: 100%;
+        min-height: auto;
+        padding: 10px;
+    }
+
+
+    .sidebar-titulo {
+        display: none;
+    }
+
+
+    .sidebar-menu {
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 7px;
+    }
+
+
+    .sidebar-opcion {
+        width: auto;
+        min-width: max-content;
+        min-height: 48px;
+        padding: 8px 12px;
+    }
+
+
+    .sidebar-icono {
+        width: 25px;
+        min-width: 25px;
+        height: 25px;
+        font-size: 17px;
+    }
+}
