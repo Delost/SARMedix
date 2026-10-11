@@ -1,8 +1,25 @@
-﻿@model List<LoginSARMedix.Models.Historial>
+﻿@using System.Text.RegularExpressions
+@model List<LoginSARMedix.Models.Historial>
 
 @{
     ViewData["Title"] = "Historial de Usuarios";
     ViewData["TituloBarra"] = "Historial de Usuarios";
+
+    string buscarActual =
+        ViewBag.Buscar?.ToString() ?? "";
+
+    string filtroActual =
+        ViewBag.Filtro?.ToString() ?? "todos";
+
+    string periodoActual =
+        ViewBag.Periodo?.ToString() ?? "todos";
+
+    int totalRegistros =
+        ViewBag.TotalRegistros != null
+            ? Convert.ToInt32(
+                ViewBag.TotalRegistros
+            )
+            : 0;
 }
 
 
@@ -15,14 +32,319 @@
         </h1>
 
         <p>
-            Registro de acciones relacionadas con usuarios,
-            roles y permisos en SARMedix
+            Registro de cambios, creación, edición y gestión de usuarios en SARMedix
         </p>
 
     </div>
 
 
-    @if (Model != null && Model.Count > 0)
+
+    <!-- =========================================================
+         HERRAMIENTAS
+         ========================================================= -->
+
+    <div class="historial-herramientas">
+
+
+        <!-- =====================================================
+             BUSQUEDA
+             ===================================================== -->
+
+        <form asp-controller="Home"
+              asp-action="HistorialUsuarios"
+              method="get"
+              class="form-busqueda">
+
+
+            <input type="hidden"
+                   name="filtro"
+                   value="@filtroActual" />
+
+
+            <input type="hidden"
+                   name="periodo"
+                   value="@periodoActual" />
+
+
+
+            <div class="filtro-busqueda">
+
+                <span class="filtro-icono-busqueda">
+
+                    🔎
+
+                </span>
+
+
+                <input type="text"
+                       name="buscar"
+                       value="@buscarActual"
+                       placeholder="Buscar por responsable, nombre o cuenta..."
+                       autocomplete="off" />
+
+            </div>
+
+
+
+            <button type="submit"
+                    class="btn-buscar">
+
+                Buscar
+
+            </button>
+
+
+        </form>
+
+
+
+        <!-- =====================================================
+             FILTROS
+             ===================================================== -->
+
+        <form asp-controller="Home"
+              asp-action="HistorialUsuarios"
+              method="get"
+              class="form-filtros">
+
+
+            <!--
+                MANTENER LA BUSQUEDA ACTUAL.
+            -->
+
+            <input type="hidden"
+                   name="buscar"
+                   value="@buscarActual" />
+
+
+
+            <!-- TIPO DE ACCION -->
+
+            <div class="filtro-campo">
+
+                <label for="filtroUsuarios">
+
+                    Acción
+
+                </label>
+
+
+                <select id="filtroUsuarios"
+                        name="filtro">
+
+
+                    <option value="todos"
+                            selected="@(filtroActual == "todos" ? "selected" : null)">
+
+                        Todas las acciones
+
+                    </option>
+
+
+                    <option value="crear"
+                            selected="@(filtroActual == "crear" ? "selected" : null)">
+
+                        Creación
+
+                    </option>
+
+
+                    <option value="actualizar"
+                            selected="@(filtroActual == "actualizar" ? "selected" : null)">
+
+                        Edición
+
+                    </option>
+
+
+                    <option value="desactivar"
+                            selected="@(filtroActual == "desactivar" ? "selected" : null)">
+
+                        Desactivación
+
+                    </option>
+
+
+                    <option value="reactivar"
+                            selected="@(filtroActual == "reactivar" ? "selected" : null)">
+
+                        Reactivación
+
+                    </option>
+
+
+                    <option value="eliminar"
+                            selected="@(filtroActual == "eliminar" ? "selected" : null)">
+
+                        Eliminación
+
+                    </option>
+
+
+                </select>
+
+            </div>
+
+
+
+            <!-- PERIODO -->
+
+            <div class="filtro-campo">
+
+                <label for="periodoUsuarios">
+
+                    Período
+
+                </label>
+
+
+                <select id="periodoUsuarios"
+                        name="periodo">
+
+
+                    <option value="todos"
+                            selected="@(periodoActual == "todos" ? "selected" : null)">
+
+                        Todo el historial
+
+                    </option>
+
+
+                    <option value="hoy"
+                            selected="@(periodoActual == "hoy" ? "selected" : null)">
+
+                        Hoy
+
+                    </option>
+
+
+                    <option value="7"
+                            selected="@(periodoActual == "7" ? "selected" : null)">
+
+                        Últimos 7 días
+
+                    </option>
+
+
+                    <option value="30"
+                            selected="@(periodoActual == "30" ? "selected" : null)">
+
+                        Últimos 30 días
+
+                    </option>
+
+
+                </select>
+
+            </div>
+
+
+
+            <!-- APLICAR -->
+
+            <button type="submit"
+                    class="btn-aplicar-filtros">
+
+                Aplicar
+
+            </button>
+
+
+
+            <!--
+                LIMPIAR SOLAMENTE LOS FILTROS.
+
+                CONSERVA LA BUSQUEDA.
+            -->
+
+            <a asp-controller="Home"
+               asp-action="HistorialUsuarios"
+               asp-route-buscar="@buscarActual"
+               class="btn-limpiar-filtros">
+
+                Limpiar
+
+            </a>
+
+
+        </form>
+
+
+    </div>
+
+
+
+    <!-- =========================================================
+         RESUMEN
+         ========================================================= -->
+
+    <div class="historial-resumen-filtros">
+
+        <span>
+
+            Registros encontrados:
+
+            <strong>
+                @totalRegistros
+            </strong>
+
+        </span>
+
+
+        @if (!string.IsNullOrWhiteSpace(
+                buscarActual))
+        {
+            <span class="filtro-activo">
+
+                🔎 “@buscarActual”
+
+            </span>
+        }
+
+
+        @if (filtroActual != "todos")
+        {
+            <span class="filtro-activo">
+
+                Acción:
+                @(filtroActual == "crear"
+                    ? "Creación"
+                    : filtroActual == "actualizar"
+                        ? "Edición"
+                        : filtroActual == "desactivar"
+                            ? "Desactivación"
+                            : filtroActual == "reactivar"
+                                ? "Reactivación"
+                                : "Eliminación")
+
+            </span>
+        }
+
+
+        @if (periodoActual != "todos")
+        {
+            <span class="filtro-activo">
+
+                Período:
+                @(periodoActual == "hoy"
+                    ? "Hoy"
+                    : periodoActual == "7"
+                        ? "Últimos 7 días"
+                        : "Últimos 30 días")
+
+            </span>
+        }
+
+    </div>
+
+
+
+    <!-- =========================================================
+         TABLA
+         ========================================================= -->
+
+    @if (Model != null &&
+         Model.Count > 0)
     {
         <div class="tabla-contenedor">
 
@@ -32,20 +354,31 @@
 
                     <tr>
 
-                        <th>
+                        <th class="columna-id">
+
                             ID
+
                         </th>
 
-                        <th>
+
+                        <th class="columna-responsable">
+
                             Responsable
+
                         </th>
 
-                        <th>
+
+                        <th class="columna-descripcion">
+
                             Descripción
+
                         </th>
 
-                        <th>
+
+                        <th class="columna-fecha">
+
                             Fecha y hora
+
                         </th>
 
                     </tr>
@@ -53,32 +386,872 @@
                 </thead>
 
 
+
                 <tbody>
 
                     @foreach (var registro in Model)
                     {
+                        string descripcion =
+                            registro.descripcion ?? "";
+
+
+                        string tipoRegistro =
+                            "Simple";
+
+
+                        string nombreUsuario =
+                            "";
+
+
+                        string cuenta =
+                            "";
+
+
+                        string[] cambios =
+                            Array.Empty<string>();
+
+
+
+                        /*
+                            CREAR USUARIO
+                        */
+
+                        Match crearUsuario =
+                            Regex.Match(
+                                descripcion,
+                                @"^Creó al usuario (.+?) \((.+?)\)$",
+                                RegexOptions.IgnoreCase
+                            );
+
+
+                        if (crearUsuario.Success)
+                        {
+                            tipoRegistro =
+                                "CrearUsuario";
+
+
+                            nombreUsuario =
+                                crearUsuario.Groups[1]
+                                    .Value;
+
+
+                            cuenta =
+                                crearUsuario.Groups[2]
+                                    .Value;
+                        }
+
+
+
+                        /*
+                            ACTUALIZAR USUARIO
+                        */
+
+                        Match actualizarUsuario =
+                            Regex.Match(
+                                descripcion,
+                                @"^Actualizó al usuario (.+?) \((.+?)\)\.\s*(.*)$",
+                                RegexOptions.IgnoreCase
+                            );
+
+
+                        if (actualizarUsuario.Success)
+                        {
+                            tipoRegistro =
+                                "ActualizarUsuario";
+
+
+                            nombreUsuario =
+                                actualizarUsuario.Groups[1]
+                                    .Value;
+
+
+                            cuenta =
+                                actualizarUsuario.Groups[2]
+                                    .Value;
+
+
+                            cambios =
+                                actualizarUsuario.Groups[3]
+                                    .Value
+                                    .Split(
+                                        '|',
+                                        StringSplitOptions.RemoveEmptyEntries
+                                    );
+                        }
+
+
+
+                        /*
+                            DESACTIVAR USUARIO
+                        */
+
+                        Match desactivarUsuario =
+                            Regex.Match(
+                                descripcion,
+                                @"^Desactivó al usuario (.+?) \((.+?)\)$",
+                                RegexOptions.IgnoreCase
+                            );
+
+
+                        if (desactivarUsuario.Success)
+                        {
+                            tipoRegistro =
+                                "DesactivarUsuario";
+
+
+                            nombreUsuario =
+                                desactivarUsuario.Groups[1]
+                                    .Value;
+
+
+                            cuenta =
+                                desactivarUsuario.Groups[2]
+                                    .Value;
+                        }
+
+
+
+                        /*
+                            REACTIVAR USUARIO
+                        */
+
+                        Match reactivarUsuario =
+                            Regex.Match(
+                                descripcion,
+                                @"^Reactivó al usuario (.+?) \((.+?)\)$",
+                                RegexOptions.IgnoreCase
+                            );
+
+
+                        if (reactivarUsuario.Success)
+                        {
+                            tipoRegistro =
+                                "ReactivarUsuario";
+
+
+                            nombreUsuario =
+                                reactivarUsuario.Groups[1]
+                                    .Value;
+
+
+                            cuenta =
+                                reactivarUsuario.Groups[2]
+                                    .Value;
+                        }
+
+
+
+                        /*
+                            ELIMINAR USUARIO
+                        */
+
+                        Match eliminarUsuario =
+                            Regex.Match(
+                                descripcion,
+                                @"^Eliminó al usuario (.+?) \((.+?)\)$",
+                                RegexOptions.IgnoreCase
+                            );
+
+
+                        if (eliminarUsuario.Success)
+                        {
+                            tipoRegistro =
+                                "EliminarUsuario";
+
+
+                            nombreUsuario =
+                                eliminarUsuario.Groups[1]
+                                    .Value;
+
+
+                            cuenta =
+                                eliminarUsuario.Groups[2]
+                                    .Value;
+                        }
+
+
+
                         <tr>
 
+
+                            <!-- ID -->
+
                             <td>
-                                @registro.id_historial
+
+                                <span class="historial-id">
+
+                                    @registro.id_historial
+
+                                </span>
+
                             </td>
 
 
+
+                            <!-- RESPONSABLE -->
+
                             <td>
-                                @registro.usuario_responsable
+
+                                <div class="responsable-historial">
+
+
+                                    <span class="responsable-icono">
+
+                                        👤
+
+                                    </span>
+
+
+                                    <span>
+
+                                        @registro.usuario_responsable
+
+                                    </span>
+
+
+                                </div>
+
                             </td>
 
+
+
+                            <!-- DESCRIPCION -->
 
                             <td class="descripcion-historial">
-                                @registro.descripcion
+
+
+
+                                <!-- CREAR -->
+
+                                @if (tipoRegistro ==
+                                     "CrearUsuario")
+                                {
+                                    <div class="evento-card evento-usuario">
+
+
+                                        <div class="evento-cabecera">
+
+
+                                            <span class="evento-tipo tipo-crear">
+
+                                                ＋ Usuario creado
+
+                                            </span>
+
+
+                                            <strong class="evento-nombre">
+
+                                                @nombreUsuario
+
+                                            </strong>
+
+
+                                        </div>
+
+
+
+                                        <div class="evento-explicacion">
+
+
+                                            <span class="evento-label">
+
+                                                Acción realizada
+
+                                            </span>
+
+
+                                            <p>
+
+                                                Se creó una nueva cuenta
+                                                de usuario para
+
+                                                <strong>
+                                                    @nombreUsuario
+                                                </strong>
+
+                                                con el nombre de usuario
+
+                                                <strong>
+                                                    @cuenta
+                                                </strong>.
+
+                                            </p>
+
+
+                                        </div>
+
+
+
+                                        <div class="evento-datos">
+
+
+                                            <div class="evento-dato">
+
+                                                <span class="evento-label">
+
+                                                    Usuario
+
+                                                </span>
+
+                                                <strong>
+
+                                                    @nombreUsuario
+
+                                                </strong>
+
+                                            </div>
+
+
+                                            <div class="evento-dato">
+
+                                                <span class="evento-label">
+
+                                                    Cuenta
+
+                                                </span>
+
+                                                <strong>
+
+                                                    @cuenta
+
+                                                </strong>
+
+                                            </div>
+
+
+                                            <div class="evento-dato">
+
+                                                <span class="evento-label">
+
+                                                    Estado
+
+                                                </span>
+
+                                                <strong class="estado-activo">
+
+                                                    Activo
+
+                                                </strong>
+
+                                            </div>
+
+
+                                        </div>
+
+
+                                    </div>
+                                }
+
+
+
+                                <!-- ACTUALIZAR -->
+
+                                @if (tipoRegistro ==
+                                     "ActualizarUsuario")
+                                {
+                                    <div class="evento-card evento-usuario">
+
+
+                                        <div class="evento-cabecera">
+
+
+                                            <span class="evento-tipo tipo-editar">
+
+                                                ✎ Usuario actualizado
+
+                                            </span>
+
+
+                                            <strong class="evento-nombre">
+
+                                                @nombreUsuario
+
+                                            </strong>
+
+
+                                        </div>
+
+
+
+                                        <div class="evento-explicacion">
+
+
+                                            <span class="evento-label">
+
+                                                Acción realizada
+
+                                            </span>
+
+
+                                            <p>
+
+                                                Se modificó la información
+                                                del usuario
+
+                                                <strong>
+                                                    @nombreUsuario
+                                                </strong>
+
+                                                asociado a la cuenta
+
+                                                <strong>
+                                                    @cuenta
+                                                </strong>.
+
+                                            </p>
+
+
+                                        </div>
+
+
+
+                                        @if (cambios.Length > 0)
+                                        {
+                                            <div class="cambios-contenedor">
+
+
+                                                <span class="evento-label">
+
+                                                    Cambios realizados
+
+                                                </span>
+
+
+                                                <div class="lista-cambios">
+
+
+                                                    @foreach (
+                                                        string cambio
+                                                        in cambios)
+                                                    {
+                                                        <div class="cambio-item">
+
+
+                                                            <span class="cambio-icono">
+
+                                                                ↔
+
+                                                            </span>
+
+
+                                                            <span>
+
+                                                                @cambio.Trim()
+
+                                                            </span>
+
+
+                                                        </div>
+                                                    }
+
+
+                                                </div>
+
+
+                                            </div>
+                                        }
+
+
+                                    </div>
+                                }
+
+
+
+                                <!-- DESACTIVAR -->
+
+                                @if (tipoRegistro ==
+                                     "DesactivarUsuario")
+                                {
+                                    <div class="evento-card evento-usuario">
+
+
+                                        <div class="evento-cabecera">
+
+
+                                            <span class="evento-tipo tipo-desactivar">
+
+                                                ↓ Usuario desactivado
+
+                                            </span>
+
+
+                                            <strong class="evento-nombre">
+
+                                                @nombreUsuario
+
+                                            </strong>
+
+
+                                        </div>
+
+
+
+                                        <div class="evento-explicacion">
+
+
+                                            <span class="evento-label">
+
+                                                Acción realizada
+
+                                            </span>
+
+
+                                            <p>
+
+                                                Se desactivó la cuenta
+                                                del usuario
+
+                                                <strong>
+                                                    @nombreUsuario
+                                                </strong>
+
+                                                identificada como
+
+                                                <strong>
+                                                    @cuenta
+                                                </strong>.
+
+                                            </p>
+
+
+                                        </div>
+
+
+
+                                        <div class="evento-datos evento-datos-dos">
+
+
+                                            <div class="evento-dato">
+
+                                                <span class="evento-label">
+
+                                                    Cuenta
+
+                                                </span>
+
+                                                <strong>
+
+                                                    @cuenta
+
+                                                </strong>
+
+                                            </div>
+
+
+
+                                            <div class="evento-dato">
+
+                                                <span class="evento-label">
+
+                                                    Cambio de estado
+
+                                                </span>
+
+
+                                                <strong class="cambio-estado">
+
+
+                                                    <span class="estado-activo">
+
+                                                        Activo
+
+                                                    </span>
+
+
+                                                    <span class="flecha-cambio">
+
+                                                        →
+
+                                                    </span>
+
+
+                                                    <span class="estado-inactivo">
+
+                                                        Inactivo
+
+                                                    </span>
+
+
+                                                </strong>
+
+
+                                            </div>
+
+
+                                        </div>
+
+
+                                    </div>
+                                }
+
+
+
+                                <!-- REACTIVAR -->
+
+                                @if (tipoRegistro ==
+                                     "ReactivarUsuario")
+                                {
+                                    <div class="evento-card evento-usuario">
+
+
+                                        <div class="evento-cabecera">
+
+
+                                            <span class="evento-tipo tipo-reactivar">
+
+                                                ↑ Usuario reactivado
+
+                                            </span>
+
+
+                                            <strong class="evento-nombre">
+
+                                                @nombreUsuario
+
+                                            </strong>
+
+
+                                        </div>
+
+
+
+                                        <div class="evento-explicacion">
+
+
+                                            <span class="evento-label">
+
+                                                Acción realizada
+
+                                            </span>
+
+
+                                            <p>
+
+                                                Se reactivó la cuenta
+                                                del usuario
+
+                                                <strong>
+                                                    @nombreUsuario
+                                                </strong>
+
+                                                identificada como
+
+                                                <strong>
+                                                    @cuenta
+                                                </strong>.
+
+                                            </p>
+
+
+                                        </div>
+
+
+
+                                        <div class="evento-datos evento-datos-dos">
+
+
+                                            <div class="evento-dato">
+
+                                                <span class="evento-label">
+
+                                                    Cuenta
+
+                                                </span>
+
+                                                <strong>
+
+                                                    @cuenta
+
+                                                </strong>
+
+                                            </div>
+
+
+
+                                            <div class="evento-dato">
+
+                                                <span class="evento-label">
+
+                                                    Cambio de estado
+
+                                                </span>
+
+
+                                                <strong class="cambio-estado">
+
+
+                                                    <span class="estado-inactivo">
+
+                                                        Inactivo
+
+                                                    </span>
+
+
+                                                    <span class="flecha-cambio">
+
+                                                        →
+
+                                                    </span>
+
+
+                                                    <span class="estado-activo">
+
+                                                        Activo
+
+                                                    </span>
+
+
+                                                </strong>
+
+
+                                            </div>
+
+
+                                        </div>
+
+
+                                    </div>
+                                }
+
+
+
+                                <!-- ELIMINAR -->
+
+                                @if (tipoRegistro ==
+                                     "EliminarUsuario")
+                                {
+                                    <div class="evento-card evento-usuario">
+
+
+                                        <div class="evento-cabecera">
+
+
+                                            <span class="evento-tipo tipo-eliminar">
+
+                                                ✕ Usuario eliminado
+
+                                            </span>
+
+
+                                            <strong class="evento-nombre">
+
+                                                @nombreUsuario
+
+                                            </strong>
+
+
+                                        </div>
+
+
+
+                                        <div class="evento-explicacion">
+
+
+                                            <span class="evento-label">
+
+                                                Acción realizada
+
+                                            </span>
+
+
+                                            <p>
+
+                                                Se eliminó del sistema
+                                                el registro del usuario
+
+                                                <strong>
+                                                    @nombreUsuario
+                                                </strong>
+
+                                                asociado a la cuenta
+
+                                                <strong>
+                                                    @cuenta
+                                                </strong>.
+
+                                            </p>
+
+
+                                        </div>
+
+
+                                    </div>
+                                }
+
+
+
+                                <!-- SIMPLE -->
+
+                                @if (tipoRegistro ==
+                                     "Simple")
+                                {
+                                    <div class="descripcion-simple">
+
+
+                                        <span class="descripcion-simple-icono">
+
+                                            👤
+
+                                        </span>
+
+
+                                        <div class="descripcion-simple-contenido">
+
+
+                                            <span class="descripcion-simple-categoria">
+
+                                                Usuarios
+
+                                            </span>
+
+
+                                            <span class="descripcion-simple-texto">
+
+                                                @descripcion
+
+                                            </span>
+
+
+                                        </div>
+
+
+                                    </div>
+                                }
+
+
                             </td>
 
+
+
+                            <!-- FECHA -->
 
                             <td>
-                                @registro.fecha_hora.ToString(
-                                    "dd-MM-yyyy HH:mm:ss"
-                                )
+
+                                <div class="fecha-historial">
+
+
+                                    <span class="fecha-dia">
+
+                                        @registro.fecha_hora.ToString(
+                                            "dd-MM-yyyy"
+                                        )
+
+                                    </span>
+
+
+                                    <span class="fecha-hora">
+
+                                        @registro.fecha_hora.ToString(
+                                            "HH:mm:ss"
+                                        )
+
+                                    </span>
+
+
+                                </div>
+
                             </td>
+
 
                         </tr>
                     }
@@ -90,7 +1263,10 @@
         </div>
 
 
-        <!-- PAGINACION -->
+
+        <!-- =====================================================
+             PAGINACION
+             ===================================================== -->
 
         @if (ViewBag.TotalPaginas > 1)
         {
@@ -102,6 +1278,9 @@
                     <a asp-controller="Home"
                        asp-action="HistorialUsuarios"
                        asp-route-pagina="@(ViewBag.PaginaActual - 1)"
+                       asp-route-buscar="@buscarActual"
+                       asp-route-filtro="@filtroActual"
+                       asp-route-periodo="@periodoActual"
                        class="pagina-boton">
 
                         ← Anterior
@@ -110,13 +1289,18 @@
                 }
 
 
-                @for (int i = 1;
-                      i <= ViewBag.TotalPaginas;
-                      i++)
+
+                @for (
+                    int i = 1;
+                    i <= ViewBag.TotalPaginas;
+                    i++)
                 {
                     <a asp-controller="Home"
                        asp-action="HistorialUsuarios"
                        asp-route-pagina="@i"
+                       asp-route-buscar="@buscarActual"
+                       asp-route-filtro="@filtroActual"
+                       asp-route-periodo="@periodoActual"
                        class="pagina-boton @(i == ViewBag.PaginaActual ? "pagina-activa" : "")">
 
                         @i
@@ -125,11 +1309,16 @@
                 }
 
 
-                @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+
+                @if (ViewBag.PaginaActual <
+                     ViewBag.TotalPaginas)
                 {
                     <a asp-controller="Home"
                        asp-action="HistorialUsuarios"
                        asp-route-pagina="@(ViewBag.PaginaActual + 1)"
+                       asp-route-buscar="@buscarActual"
+                       asp-route-filtro="@filtroActual"
+                       asp-route-periodo="@periodoActual"
                        class="pagina-boton">
 
                         Siguiente →
@@ -145,10 +1334,45 @@
     {
         <div class="sin-registros">
 
-            No existen registros relacionados con usuarios.
+
+            @if (
+                !string.IsNullOrWhiteSpace(
+                    buscarActual
+                )
+                ||
+                filtroActual != "todos"
+                ||
+                periodoActual != "todos")
+            {
+                <strong>
+
+                    No se encontraron usuarios
+                    con esos criterios.
+
+                </strong>
+
+
+                <span>
+
+                    Prueba cambiando la búsqueda
+                    o modificando los filtros.
+
+                </span>
+            }
+            else
+            {
+                <strong>
+
+                    No existen registros
+                    relacionados con usuarios.
+
+                </strong>
+            }
+
 
         </div>
     }
+
 
 
     <div class="contenedor-volver">
@@ -163,23 +1387,22 @@
 
     </div>
 
+
 </div>
 
 
 
 <style>
 
-    /* CONTENEDOR */
-
     .historial-card {
         width: 95%;
-        max-width: 1100px;
+        max-width: 1200px;
         margin: 5px auto;
     }
 
 
     .historial-titulo {
-        margin-bottom: 25px;
+        margin-bottom: 20px;
         text-align: center;
     }
 
@@ -192,8 +1415,305 @@
 
 
     .historial-titulo p {
+        margin: 0;
         color: #687b89;
         font-size: 16px;
+    }
+
+
+
+    /* HERRAMIENTAS */
+
+    .historial-herramientas {
+        margin-bottom: 10px;
+
+        padding: 15px;
+
+        display: grid;
+
+        grid-template-columns:
+            minmax(350px, 1.4fr)
+            minmax(480px, 1fr);
+
+        gap: 14px;
+
+        align-items: end;
+
+        border: 1px solid #d7e5eb;
+
+        border-radius: 12px;
+
+        background-color:
+            rgba(
+                255,
+                255,
+                255,
+                0.96
+            );
+
+        box-shadow:
+            0 5px 16px
+            rgba(
+                28,
+                65,
+                95,
+                0.08
+            );
+    }
+
+
+
+    /* BUSQUEDA */
+
+    .form-busqueda {
+        display: grid;
+
+        grid-template-columns:
+            minmax(0, 1fr)
+            auto;
+
+        gap: 8px;
+
+        align-items: end;
+    }
+
+
+    .filtro-busqueda {
+        min-height: 43px;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        padding: 0 12px;
+
+        border: 1px solid #cbdce4;
+
+        border-radius: 8px;
+
+        background-color: #fbfdfe;
+    }
+
+
+    .filtro-icono-busqueda {
+        font-size: 15px;
+
+        opacity: 0.7;
+    }
+
+
+    .filtro-busqueda input {
+        width: 100%;
+
+        border: none;
+
+        outline: none;
+
+        background: transparent;
+
+        color: #24485d;
+
+        font-size: 13px;
+    }
+
+
+    .filtro-busqueda:focus-within {
+        border-color: #087bc2;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(
+                8,
+                123,
+                194,
+                0.11
+            );
+    }
+
+
+    .btn-buscar {
+        min-height: 43px;
+
+        padding: 0 18px;
+
+        border: 1px solid #087bc2;
+
+        border-radius: 8px;
+
+        background-color: #087bc2;
+
+        color: white;
+
+        font-size: 12px;
+
+        font-weight: 700;
+
+        cursor: pointer;
+    }
+
+
+    .btn-buscar:hover {
+        background-color: #066aa7;
+    }
+
+
+
+    /* FILTROS */
+
+    .form-filtros {
+        display: grid;
+
+        grid-template-columns:
+            minmax(150px, 1fr)
+            minmax(150px, 1fr)
+            auto
+            auto;
+
+        gap: 8px;
+
+        align-items: end;
+    }
+
+
+    .filtro-campo {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 5px;
+    }
+
+
+    .filtro-campo label {
+        color: #627985;
+
+        font-size: 10px;
+
+        font-weight: 800;
+
+        text-transform: uppercase;
+    }
+
+
+    .filtro-campo select {
+        min-height: 43px;
+
+        padding: 0 10px;
+
+        border: 1px solid #cbdce4;
+
+        border-radius: 8px;
+
+        background-color: #fbfdfe;
+
+        color: #24485d;
+
+        outline: none;
+
+        font-size: 13px;
+    }
+
+
+    .filtro-campo select:focus {
+        border-color: #1198a5;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(
+                17,
+                152,
+                165,
+                0.11
+            );
+    }
+
+
+    .btn-aplicar-filtros,
+    .btn-limpiar-filtros {
+        min-height: 43px;
+
+        padding: 0 15px;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 8px;
+
+        font-size: 12px;
+
+        font-weight: 700;
+
+        text-decoration: none;
+
+        cursor: pointer;
+    }
+
+
+    .btn-aplicar-filtros {
+        border: 1px solid #1198a5;
+
+        background-color: #1198a5;
+
+        color: white;
+    }
+
+
+    .btn-aplicar-filtros:hover {
+        background-color: #0d8490;
+    }
+
+
+    .btn-limpiar-filtros {
+        border: 1px solid #b9cbd4;
+
+        background-color: white;
+
+        color: #527080;
+    }
+
+
+    .btn-limpiar-filtros:hover {
+        background-color: #f1f6f8;
+
+        color: #35586a;
+    }
+
+
+
+    /* RESUMEN */
+
+    .historial-resumen-filtros {
+        margin: 0 2px 12px;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        flex-wrap: wrap;
+
+        color: #647985;
+
+        font-size: 12px;
+    }
+
+
+    .filtro-activo {
+        padding: 4px 8px;
+
+        border-radius: 999px;
+
+        background-color: #e9f6f8;
+
+        color: #137683;
+
+        font-weight: 700;
     }
 
 
@@ -202,33 +1722,55 @@
 
     .tabla-contenedor {
         width: 100%;
+
         overflow-x: auto;
+
         background-color: white;
+
         border-radius: 12px;
-        box-shadow: 0 7px 20px rgba(28, 65, 95, 0.12);
+
+        box-shadow:
+            0 7px 20px
+            rgba(
+                28,
+                65,
+                95,
+                0.12
+            );
     }
 
 
     .tabla-historial {
         width: 100%;
+
+        table-layout: fixed;
+
         border-collapse: collapse;
     }
 
 
     .tabla-historial th {
         padding: 14px;
+
         background-color: #0f5278;
+
         color: white;
+
         text-align: left;
+
         font-weight: 600;
     }
 
 
     .tabla-historial td {
-        padding: 13px 14px;
-        border-bottom: 1px solid #dce6ec;
+        padding: 12px 14px;
+
+        border-bottom:
+            1px solid #dce6ec;
+
         color: #17324d;
-        vertical-align: middle;
+
+        vertical-align: top;
     }
 
 
@@ -237,8 +1779,406 @@
     }
 
 
-    .descripcion-historial {
-        min-width: 300px;
+    .columna-id {
+        width: 7%;
+    }
+
+
+    .columna-responsable {
+        width: 16%;
+    }
+
+
+    .columna-descripcion {
+        width: 59%;
+    }
+
+
+    .columna-fecha {
+        width: 18%;
+    }
+
+
+    .historial-id {
+        display: inline-flex;
+
+        min-width: 34px;
+
+        padding: 5px 7px;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 6px;
+
+        background-color: #edf5f9;
+
+        color: #31566d;
+
+        font-size: 12px;
+
+        font-weight: 700;
+    }
+
+
+    .responsable-historial {
+        display: flex;
+
+        align-items: center;
+
+        gap: 7px;
+    }
+
+
+    .responsable-icono {
+        width: 26px;
+
+        min-width: 26px;
+
+        height: 26px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 50%;
+
+        background-color: #eef6fa;
+
+        font-size: 12px;
+    }
+
+
+
+    /* TARJETA DE USUARIO */
+
+    .evento-card {
+        width: 100%;
+
+        padding: 12px 14px;
+
+        border: 1px solid #dedfea;
+
+        border-left: 4px solid #7651a8;
+
+        border-radius: 10px;
+
+        background-color: #fcfcfe;
+
+        box-sizing: border-box;
+    }
+
+
+    .evento-cabecera {
+        margin-bottom: 10px;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 9px;
+
+        flex-wrap: wrap;
+    }
+
+
+    .evento-tipo {
+        display: inline-flex;
+
+        align-items: center;
+
+        padding: 4px 9px;
+
+        border-radius: 999px;
+
+        font-size: 10px;
+
+        font-weight: 800;
+
+        text-transform: uppercase;
+    }
+
+
+    .evento-nombre {
+        color: #143f5a;
+
+        font-size: 14px;
+
+        font-weight: 800;
+    }
+
+
+    .tipo-crear,
+    .tipo-reactivar {
+        background-color: #e9f8ef;
+
+        color: #19764c;
+    }
+
+
+    .tipo-editar {
+        background-color: #eef3ff;
+
+        color: #3f56a1;
+    }
+
+
+    .tipo-desactivar {
+        background-color: #fff5df;
+
+        color: #946100;
+    }
+
+
+    .tipo-eliminar {
+        background-color: #fff0f0;
+
+        color: #b42318;
+    }
+
+
+    .evento-explicacion {
+        margin-bottom: 10px;
+
+        padding: 9px 11px;
+
+        border-radius: 7px;
+
+        background-color: #f3f6f9;
+    }
+
+
+    .evento-explicacion p {
+        margin: 4px 0 0;
+
+        color: #3a5565;
+
+        font-size: 13px;
+
+        line-height: 1.5;
+    }
+
+
+    .evento-label {
+        color: #77858e;
+
+        font-size: 10px;
+
+        font-weight: 800;
+
+        text-transform: uppercase;
+    }
+
+
+    .evento-datos {
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(0, 1fr)
+            );
+
+        gap: 8px;
+    }
+
+
+    .evento-datos-dos {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+
+    .evento-dato {
+        padding: 8px 10px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 3px;
+
+        border-radius: 7px;
+
+        background-color: #f3f6f8;
+    }
+
+
+    .estado-activo {
+        color: #17764b !important;
+    }
+
+
+    .estado-inactivo {
+        color: #b34040 !important;
+    }
+
+
+    .cambio-estado {
+        display: flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        flex-wrap: wrap;
+    }
+
+
+    .flecha-cambio {
+        color: #1198a5;
+
+        font-weight: 900;
+    }
+
+
+
+    /* CAMBIOS */
+
+    .lista-cambios {
+        margin-top: 6px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 6px;
+    }
+
+
+    .cambio-item {
+        padding: 7px 9px;
+
+        display: flex;
+
+        align-items: flex-start;
+
+        gap: 8px;
+
+        border-radius: 6px;
+
+        background-color: #f3f6f8;
+
+        color: #425b68;
+
+        font-size: 12px;
+
+        line-height: 1.4;
+    }
+
+
+    .cambio-icono {
+        width: 21px;
+
+        min-width: 21px;
+
+        height: 21px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 50%;
+
+        background-color: white;
+
+        font-weight: 800;
+    }
+
+
+
+    /* SIMPLE */
+
+    .descripcion-simple {
+        min-height: 40px;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 10px;
+    }
+
+
+    .descripcion-simple-icono {
+        width: 32px;
+
+        min-width: 32px;
+
+        height: 32px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 8px;
+
+        background-color: #f2ecfa;
+    }
+
+
+    .descripcion-simple-contenido {
+        min-width: 0;
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 2px;
+    }
+
+
+    .descripcion-simple-categoria {
+        color: #84929a;
+
+        font-size: 10px;
+
+        font-weight: 800;
+
+        text-transform: uppercase;
+    }
+
+
+    .descripcion-simple-texto {
+        color: #29465a;
+
+        font-size: 13px;
+    }
+
+
+
+    /* FECHA */
+
+    .fecha-historial {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 2px;
+    }
+
+
+    .fecha-dia {
+        color: #244a62;
+
+        font-weight: 700;
+    }
+
+
+    .fecha-hora {
+        color: #6f818c;
+
+        font-size: 12px;
     }
 
 
@@ -251,7 +2191,6 @@
         display: flex;
 
         justify-content: center;
-        align-items: center;
 
         gap: 7px;
 
@@ -264,15 +2203,17 @@
 
         padding: 8px 12px;
 
+        border: 1px solid #087bc2;
+
+        border-radius: 6px;
+
         background-color: white;
 
         color: #087bc2;
 
-        border: 1px solid #087bc2;
-        border-radius: 6px;
+        text-decoration: none;
 
         text-align: center;
-        text-decoration: none;
 
         font-weight: 600;
     }
@@ -280,18 +2221,14 @@
 
     .pagina-boton:hover {
         background-color: #eaf6fc;
+
         color: #087bc2;
     }
 
 
     .pagina-activa {
         background-color: #087bc2;
-        color: white;
-    }
 
-
-    .pagina-activa:hover {
-        background-color: #087bc2;
         color: white;
     }
 
@@ -300,12 +2237,19 @@
     /* SIN REGISTROS */
 
     .sin-registros {
-        padding: 25px;
+        padding: 28px;
 
-        background-color: #f5f8fa;
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 5px;
 
         border: 1px solid #d8e2e8;
-        border-radius: 8px;
+
+        border-radius: 10px;
+
+        background-color: #f5f8fa;
 
         text-align: center;
 
@@ -317,8 +2261,7 @@
     /* VOLVER */
 
     .contenedor-volver {
-        margin-top: 30px;
-        margin-bottom: 30px;
+        margin: 30px 0;
 
         text-align: center;
     }
@@ -329,25 +2272,46 @@
 
         padding: 12px 22px;
 
+        border-radius: 7px;
+
         background-color: #1198a5;
 
         color: white;
 
-        border-radius: 7px;
-
         text-decoration: none;
+
         font-weight: 600;
     }
 
 
     .btn-volver:hover {
         background-color: #0d8490;
+
         color: white;
     }
 
 
 
-    /* CELULAR */
+    /* RESPONSIVE */
+
+    @@media (max-width: 1100px) {
+
+        .historial-herramientas {
+            grid-template-columns:
+                1fr;
+        }
+
+    }
+
+
+    @@media (max-width: 950px) {
+
+        .tabla-historial {
+            min-width: 900px;
+        }
+
+    }
+
 
     @@media (max-width: 700px) {
 
@@ -356,8 +2320,22 @@
         }
 
 
-        .tabla-historial {
-            min-width: 800px;
+        .form-busqueda {
+            grid-template-columns:
+                1fr;
+        }
+
+
+        .form-filtros {
+            grid-template-columns:
+                1fr;
+        }
+
+
+        .evento-datos,
+        .evento-datos-dos {
+            grid-template-columns:
+                1fr;
         }
 
     }

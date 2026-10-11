@@ -229,7 +229,7 @@ body {
 
 
 main {
-    min-height: calc(100vh - 144px);
+    min-height: calc( 100vh - 144px );
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -243,7 +243,7 @@ main {
     /* CABECERA FORMULARIO                                */
     /* ================================================== */
 
-    main h2 {
+    main > h2 {
         width: 100%;
         max-width: 520px;
         margin: 0;
@@ -260,9 +260,9 @@ main {
 
 
 
-        /* Logo clínico formulario */
+        /* LOGO CLINICO FORMULARIO */
 
-        main h2::before {
+        main > h2::before {
             content: "+";
             display: flex;
             align-items: center;
@@ -281,9 +281,9 @@ main {
 
 
 
-        /* SAR de Chiguay */
+        /* SAR DE CHIGUAY */
 
-        main h2::after {
+        main > h2::after {
             content: "SAR de Chiguay";
             display: block;
             margin-top: 10px;
@@ -324,7 +324,10 @@ main {
 
 
         main form.formulario-principal input[type="text"],
+        main form.formulario-principal input[type="email"],
         main form.formulario-principal input[type="password"],
+        main form.formulario-principal input[type="number"],
+        main form.formulario-principal input[type="date"],
         main form.formulario-principal select {
             width: 100%;
             height: 55px;
@@ -340,9 +343,25 @@ main {
         }
 
 
-            main form.formulario-principal input[type="text"]:focus,
-            main form.formulario-principal input[type="password"]:focus,
-            main form.formulario-principal select:focus {
+        main form.formulario-principal textarea {
+            width: 100%;
+            min-height: 110px;
+            box-sizing: border-box;
+            padding: 14px 18px;
+            border: 1px solid #bacdd9;
+            border-radius: 10px;
+            background: #fafdff;
+            font-size: 16px;
+            color: #17324d;
+            font-family: inherit;
+            resize: vertical;
+            outline: none;
+        }
+
+
+            main form.formulario-principal input:focus,
+            main form.formulario-principal select:focus,
+            main form.formulario-principal textarea:focus {
                 background: white;
                 border-color: #1187a5;
                 box-shadow: 0 0 0 4px rgba(17, 135, 165, 0.12);
@@ -350,46 +369,149 @@ main {
 
 
 
-        /* ================================================== */
-        /* BOTON FORMULARIO PRINCIPAL                         */
-        /* ================================================== */
+/* ================================================== */
+/* VALIDACION GLOBAL SARMedix                         */
+/* ================================================== */
 
-        main form.formulario-principal button[type="submit"] {
-            width: 100%;
-            height: 56px;
-            margin-top: 4px;
-            border: none;
-            border-radius: 10px;
-            background: linear-gradient( 90deg, #075985, #087ca0 );
-            color: white;
-            font-size: 17px;
-            font-weight: 650;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
+/*
+    ESTA ES LA REGLA OFICIAL PARA CAMPOS CON ERROR.
+
+    La repetición ".campo-error.campo-error"
+    es intencional.
+
+    Algunas vistas antiguas poseen estilos
+    con !important.
+
+    Al aumentar la especificidad conseguimos
+    que este borde rojo gane sin tener que
+    modificar cada vista.
+*/
+
+html body input.campo-error.campo-error,
+html body select.campo-error.campo-error,
+html body textarea.campo-error.campo-error {
+    border: 1px solid #dc3545 !important;
+    border-color: #dc3545 !important;
+    background-color: #fff8f8 !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.10) !important;
+    outline: none !important;
+}
 
 
-            main form.formulario-principal button[type="submit"]:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 9px 20px rgba(7, 89, 133, 0.25);
-            }
+    /*
+    Mientras el campo incorrecto tenga el foco,
+    continúa rojo.
+
+    Solamente desaparece cuando el usuario
+    empieza a corregirlo.
+*/
+
+    html body input.campo-error.campo-error:focus,
+    html body select.campo-error.campo-error:focus,
+    html body textarea.campo-error.campo-error:focus {
+        border-color: #dc3545 !important;
+        background-color: #fff8f8 !important;
+        box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.13) !important;
+    }
 
 
 
-        /* ================================================== */
-        /* TEXTO INFERIOR FORMULARIO                          */
-        /* ================================================== */
+/* ================================================== */
+/* MENSAJE GLOBAL DE VALIDACION                       */
+/* ================================================== */
 
-        main form.formulario-principal::after {
-            content: "Plataforma de control y trazabilidad farmacéutica";
-            display: block;
-            margin-top: 26px;
-            padding-top: 20px;
-            border-top: 1px solid #dae5eb;
-            text-align: center;
-            font-size: 14px;
-            color: #718696;
-        }
+/*
+    Este mensaje se utiliza en las pantallas
+    que todavía no tienen una caja de mensajes
+    propia.
+
+    Ejemplo:
+    Editar Usuario,
+    Recuperar Contraseña,
+    Verificar Código, etc.
+*/
+
+.mensaje-validacion-campo {
+    width: 100%;
+    min-height: 48px;
+    margin-bottom: 20px;
+    padding: 12px 15px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #f5b9bf;
+    border-radius: 8px;
+    background-color: #f8d7da;
+    color: #a71919;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+
+
+/* ================================================== */
+/* COMPATIBILIDAD CON MVC                             */
+/* ================================================== */
+
+/*
+    Si posteriormente utilizamos validaciones
+    automáticas de ASP.NET MVC, también tendrán
+    exactamente el mismo diseño.
+*/
+
+html body input.input-validation-error.input-validation-error,
+html body select.input-validation-error.input-validation-error,
+html body textarea.input-validation-error.input-validation-error {
+    border-color: #dc3545 !important;
+    background-color: #fff8f8 !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.10) !important;
+}
+
+
+
+/* ================================================== */
+/* BOTON FORMULARIO PRINCIPAL                         */
+/* ================================================== */
+
+main form.formulario-principal button[type="submit"] {
+    width: 100%;
+    height: 56px;
+    margin-top: 4px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient( 90deg, #075985, #087ca0 );
+    color: white;
+    font-size: 17px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+
+    main form.formulario-principal button[type="submit"]:hover {
+        transform: translateY( -2px );
+        box-shadow: 0 9px 20px rgba(7, 89, 133, 0.25);
+    }
+
+
+
+/* ================================================== */
+/* TEXTO INFERIOR FORMULARIO                          */
+/* ================================================== */
+
+main form.formulario-principal::after {
+    content: "Plataforma de control y trazabilidad farmacéutica";
+    display: block;
+    margin-top: 26px;
+    padding-top: 20px;
+    border-top: 1px solid #dae5eb;
+    text-align: center;
+    font-size: 14px;
+    color: #718696;
+}
 
 
 
@@ -410,8 +532,8 @@ main {
 
 
 .usuarios-titulo {
-    text-align: center;
     margin-bottom: 25px;
+    text-align: center;
 }
 
 
@@ -452,9 +574,9 @@ main {
 
     .tabla-usuarios td {
         padding: 13px 10px;
-        text-align: center;
-        font-size: 14px;
         border-bottom: 1px solid #dce5ea;
+        font-size: 14px;
+        text-align: center;
     }
 
 
@@ -630,7 +752,7 @@ main {
     padding: 0;
     display: flex;
     align-items: center;
-    background: rgba(255,255,255,0.96);
+    background: rgba(255, 255, 255, 0.96);
     border: none !important;
     line-height: normal !important;
 }
@@ -852,13 +974,13 @@ main {
     }
 
 
-    main h2,
+    main > h2,
     main form.formulario-principal {
         max-width: 94%;
     }
 
 
-    main h2 {
+    main > h2 {
         padding: 30px 25px 15px;
         font-size: 26px;
     }

@@ -6,8 +6,17 @@
     ViewData["Title"] = "Listado de Lotes";
     ViewData["TituloBarra"] = "Listado de Lotes";
 
+
+    // =========================================================
+    // PERMISOS
+    // =========================================================
+
     string permisosTexto =
-        Context.Session.GetString("Permisos") ?? "";
+        Context.Session.GetString(
+            "Permisos"
+        )
+        ?? "";
+
 
     var permisos =
         permisosTexto
@@ -16,13 +25,92 @@
                 StringSplitOptions.RemoveEmptyEntries
             );
 
+
     bool puedeRegistrar =
         permisos.Any(
-            p => p.Equals(
-                "Registrar productos",
-                StringComparison.OrdinalIgnoreCase
-            )
+            p =>
+                p.Equals(
+                    "Registrar productos",
+                    StringComparison.OrdinalIgnoreCase
+                )
         );
+
+
+
+    // =========================================================
+    // DATOS RECIBIDOS DESDE UNA ALERTA
+    // =========================================================
+
+    int idLoteAlerta =
+        0;
+
+
+    int idProductoAlerta =
+        0;
+
+
+    int.TryParse(
+        Context.Request.Query["idLote"].ToString(),
+        out idLoteAlerta
+    );
+
+
+    int.TryParse(
+        Context.Request.Query["idProducto"].ToString(),
+        out idProductoAlerta
+    );
+
+
+    string tipoAlerta =
+        Context.Request.Query["tipoAlerta"]
+            .ToString()
+            .Trim()
+            .ToLowerInvariant();
+
+
+    bool vieneDesdeAlerta =
+        idLoteAlerta > 0
+        ||
+        idProductoAlerta > 0;
+
+
+
+    // =========================================================
+    // TEXTO DE LA ALERTA
+    // =========================================================
+
+    string tituloAlerta =
+        tipoAlerta switch
+        {
+            "vencido" =>
+                "Lote vencido",
+
+            "proximo" =>
+                "Lote próximo a vencer",
+
+            "stock" =>
+                "Producto con stock bajo",
+
+            _ =>
+                "Alerta de inventario"
+        };
+
+
+    string descripcionAlerta =
+        tipoAlerta switch
+        {
+            "vencido" =>
+                "La fila resaltada corresponde al lote vencido que originó la alerta.",
+
+            "proximo" =>
+                "La fila resaltada corresponde al lote próximo a vencer que originó la alerta.",
+
+            "stock" =>
+                "Las filas resaltadas corresponden a los lotes del producto cuyo stock total está en nivel mínimo o bajo.",
+
+            _ =>
+                "La información relacionada con la alerta se encuentra resaltada en la tabla."
+        };
 }
 
 
@@ -45,12 +133,60 @@
 
 
 
+    <!-- AVISO DE NAVEGACION DESDE ALERTA -->
+
+    @if (vieneDesdeAlerta)
+    {
+        <div class="aviso-alerta-seleccionada
+                    aviso-alerta-@tipoAlerta">
+
+            <div class="aviso-alerta-icono">
+
+                @if (tipoAlerta == "vencido")
+                {
+                    <span>!</span>
+                }
+                else if (tipoAlerta == "proximo")
+                {
+                    <span>◷</span>
+                }
+                else if (tipoAlerta == "stock")
+                {
+                    <span>↓</span>
+                }
+                else
+                {
+                    <span>!</span>
+                }
+
+            </div>
+
+
+            <div class="aviso-alerta-contenido">
+
+                <strong>
+                    @tituloAlerta
+                </strong>
+
+                <span>
+                    @descripcionAlerta
+                </span>
+
+            </div>
+
+        </div>
+    }
+
+
+
     <!-- MENSAJE -->
 
     @if (TempData["Mensaje"] != null)
     {
         string tipoMensaje =
-            TempData["TipoMensaje"]?.ToString() ?? "";
+            TempData["TipoMensaje"]?.ToString()
+            ?? "";
+
 
         <div id="mensajeListado"
              class="mensaje @(tipoMensaje == "exito" ? "mensaje-exito" : "mensaje-error")">
@@ -84,7 +220,8 @@
     <!-- TABLA DE LOTES -->
 
     @if (
-        Model != null &&
+        Model != null
+        &&
         Model.Count > 0
     )
     {
@@ -135,16 +272,124 @@
 
                     @foreach (var lote in Model)
                     {
-                        <tr>
+                        bool resaltarLoteExacto =
+                            idLoteAlerta > 0
+                            &&
+                            lote.id_lote
+                            ==
+                            idLoteAlerta;
+
+
+                        bool resaltarProducto =
+                            idLoteAlerta <= 0
+                            &&
+                            idProductoAlerta > 0
+                            &&
+                            lote.id_producto
+                            ==
+                            idProductoAlerta;
+
+
+                        bool filaResaltada =
+                            resaltarLoteExacto
+                            ||
+                            resaltarProducto;
+
+
+                        string claseTipoAlerta =
+                            tipoAlerta switch
+                            {
+                                "vencido" =>
+                                    "fila-alerta-vencido",
+
+                                "proximo" =>
+                                    "fila-alerta-proximo",
+
+                                "stock" =>
+                                    "fila-alerta-stock",
+
+                                _ =>
+                                    "fila-alerta-generica"
+                            };
+
+
+                        string clasesFila =
+                            filaResaltada
+                                ? $"fila-lote fila-alerta {claseTipoAlerta}"
+                                : "fila-lote";
+
+
+                        <tr id="lote-@lote.id_lote"
+                            class="@clasesFila"
+                            data-id-lote="@lote.id_lote"
+                            data-id-producto="@lote.id_producto"
+                            data-alerta-resaltada="@(filaResaltada ? "true" : "false")">
+
 
                             <td>
-                                @lote.nombre_producto
+
+                                <div class="producto-lote-contenido">
+
+                                    <span>
+                                        @lote.nombre_producto
+                                    </span>
+
+
+                                    @if (filaResaltada)
+                                    {
+                                        @if (tipoAlerta == "stock")
+                                        {
+                                            <span class="etiqueta-alerta-fila
+                                                         etiqueta-alerta-stock">
+
+                                                Stock bajo
+
+                                            </span>
+                                        }
+                                        else if (tipoAlerta == "vencido")
+                                        {
+                                            <span class="etiqueta-alerta-fila
+                                                         etiqueta-alerta-vencido">
+
+                                                Lote vencido
+
+                                            </span>
+                                        }
+                                        else if (tipoAlerta == "proximo")
+                                        {
+                                            <span class="etiqueta-alerta-fila
+                                                         etiqueta-alerta-proximo">
+
+                                                Próximo a vencer
+
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="etiqueta-alerta-fila">
+
+                                                Alerta seleccionada
+
+                                            </span>
+                                        }
+                                    }
+
+                                </div>
+
                             </td>
 
 
+
                             <td>
-                                @lote.numero_lote
+
+                                <strong class="numero-lote">
+
+                                    @lote.numero_lote
+
+                                </strong>
+
                             </td>
+
 
 
                             <td>
@@ -154,6 +399,7 @@
                                 )
 
                             </td>
+
 
 
                             <td>
@@ -167,9 +413,13 @@
                             </td>
 
 
+
                             <td>
+
                                 @lote.nombre_ubicacion
+
                             </td>
+
 
 
                             @if (puedeRegistrar)
@@ -245,7 +495,138 @@
 
     .usuarios-card {
         box-sizing: border-box;
+
         overflow: hidden;
+    }
+
+
+
+    /* AVISO ALERTA */
+
+    .aviso-alerta-seleccionada {
+        margin:
+            20px
+            0;
+
+        padding:
+            14px
+            16px;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 12px;
+
+        border-radius: 10px;
+
+        border:
+            1px solid
+            #d8e4e9;
+
+        background: #f7fafb;
+    }
+
+
+    .aviso-alerta-icono {
+        width: 38px;
+
+        height: 38px;
+
+        min-width: 38px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 10px;
+
+        font-size: 18px;
+
+        font-weight: 900;
+    }
+
+
+    .aviso-alerta-contenido {
+        min-width: 0;
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 3px;
+    }
+
+
+    .aviso-alerta-contenido strong {
+        color: #173d55;
+
+        font-size: 14px;
+    }
+
+
+    .aviso-alerta-contenido span {
+        color: #667b87;
+
+        font-size: 12px;
+
+        line-height: 1.45;
+    }
+
+
+
+    /* VENCIDO = ROJO */
+
+    .aviso-alerta-vencido {
+        border-color: #f1bbbb;
+
+        background: #fff3f3;
+    }
+
+
+    .aviso-alerta-vencido
+    .aviso-alerta-icono {
+        background: #fde2e2;
+
+        color: #b42318;
+    }
+
+
+
+    /* PROXIMO = NARANJA */
+
+    .aviso-alerta-proximo {
+        border-color: #f3dca0;
+
+        background: #fffaf0;
+    }
+
+
+    .aviso-alerta-proximo
+    .aviso-alerta-icono {
+        background: #fff0c7;
+
+        color: #9a6700;
+    }
+
+
+
+    /* STOCK BAJO = AZUL */
+
+    .aviso-alerta-stock {
+        border-color: #b7dfe9;
+
+        background: #f0f9fc;
+    }
+
+
+    .aviso-alerta-stock
+    .aviso-alerta-icono {
+        background: #dff3f7;
+
+        color: #0d7898;
     }
 
 
@@ -254,6 +635,7 @@
 
     .tabla-contenedor {
         width: 100%;
+
         max-width: 100%;
 
         overflow-x: auto;
@@ -264,6 +646,8 @@
 
     .tabla-usuarios {
         width: 100%;
+
+        border-collapse: collapse;
 
         box-sizing: border-box;
     }
@@ -276,6 +660,207 @@
 
 
 
+    /* FILAS */
+
+    .fila-lote > td {
+        transition:
+            background-color 0.35s ease,
+            border-color 0.35s ease,
+            box-shadow 0.35s ease;
+    }
+
+
+
+    .fila-alerta > td {
+        position: relative;
+
+        font-weight: 500;
+    }
+
+
+
+    /* VENCIDO = ROJO */
+
+    .fila-alerta-vencido > td {
+        background-color: #fff1f1 !important;
+
+        border-top:
+            2px solid
+            #df6565;
+
+        border-bottom:
+            2px solid
+            #df6565;
+    }
+
+
+    .fila-alerta-vencido > td:first-child {
+        border-left:
+            5px solid
+            #d43f3f;
+    }
+
+
+    .fila-alerta-vencido > td:last-child {
+        border-right:
+            2px solid
+            #df6565;
+    }
+
+
+
+    /* PROXIMO = NARANJA */
+
+    .fila-alerta-proximo > td {
+        background-color: #fff8df !important;
+
+        border-top:
+            2px solid
+            #e5b94c;
+
+        border-bottom:
+            2px solid
+            #e5b94c;
+    }
+
+
+    .fila-alerta-proximo > td:first-child {
+        border-left:
+            5px solid
+            #d69e18;
+    }
+
+
+    .fila-alerta-proximo > td:last-child {
+        border-right:
+            2px solid
+            #e5b94c;
+    }
+
+
+
+    /* STOCK BAJO = AZUL */
+
+    .fila-alerta-stock > td {
+        background-color: #eef8fc !important;
+
+        border-top:
+            1px solid
+            #b7dfe9;
+
+        border-bottom:
+            1px solid
+            #b7dfe9;
+    }
+
+
+    .fila-alerta-stock > td:first-child {
+        border-left:
+            5px solid
+            #1198a5;
+    }
+
+
+    .fila-alerta-stock > td:last-child {
+        border-right:
+            1px solid
+            #b7dfe9;
+    }
+
+
+
+    /* GENERICA */
+
+    .fila-alerta-generica > td {
+        background-color: #eaf7fb !important;
+
+        border-top:
+            2px solid
+            #4fa5c4;
+
+        border-bottom:
+            2px solid
+            #4fa5c4;
+    }
+
+
+    .fila-alerta-generica > td:first-child {
+        border-left:
+            5px solid
+            #0d7898;
+    }
+
+
+
+    /* PRODUCTO */
+
+    .producto-lote-contenido {
+        display: flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        flex-wrap: wrap;
+    }
+
+
+
+    /* ETIQUETAS */
+
+    .etiqueta-alerta-fila {
+        display: inline-flex;
+
+        align-items: center;
+
+        padding:
+            4px
+            7px;
+
+        border-radius: 999px;
+
+        background: #e8f4f7;
+
+        color: #0d7898;
+
+        font-size: 9px;
+
+        font-weight: 800;
+
+        white-space: nowrap;
+    }
+
+
+    .etiqueta-alerta-vencido {
+        background: #fbdede;
+
+        color: #b42318;
+    }
+
+
+    .etiqueta-alerta-proximo {
+        background: #fff0c7;
+
+        color: #8a5b00;
+    }
+
+
+    .etiqueta-alerta-stock {
+        background: #dff3f7;
+
+        color: #087f8b;
+    }
+
+
+
+    /* NUMERO LOTE */
+
+    .numero-lote {
+        color: #24485d;
+    }
+
+
+
     /* BOTON REGISTRAR */
 
     .acciones-superiores {
@@ -284,6 +869,7 @@
         justify-content: flex-end;
 
         margin-top: 20px;
+
         margin-bottom: 22px;
     }
 
@@ -291,7 +877,9 @@
     .btn-nuevo-lote {
         display: inline-block;
 
-        padding: 10px 18px;
+        padding:
+            10px
+            18px;
 
         background-color: #0d7898;
 
@@ -323,7 +911,9 @@
 
         min-width: 45px;
 
-        padding: 5px 10px;
+        padding:
+            5px
+            10px;
 
         background-color: #e7f3f7;
 
@@ -346,9 +936,12 @@
         box-sizing: border-box;
 
         margin-top: 20px;
+
         margin-bottom: 20px;
 
-        padding: 12px 15px;
+        padding:
+            12px
+            15px;
 
         border-radius: 7px;
 
@@ -369,7 +962,8 @@
         color: #0f5132;
 
         border:
-            1px solid #badbcc;
+            1px solid
+            #badbcc;
     }
 
 
@@ -379,7 +973,8 @@
         color: #842029;
 
         border:
-            1px solid #f5c2c7;
+            1px solid
+            #f5c2c7;
     }
 
 
@@ -394,7 +989,8 @@
         background-color: #f5f8fa;
 
         border:
-            1px solid #d8e2e8;
+            1px solid
+            #d8e2e8;
 
         border-radius: 8px;
 
@@ -413,11 +1009,13 @@
         display: flex;
 
         justify-content: center;
+
         align-items: center;
 
         gap: 12px;
 
         margin-top: 30px;
+
         margin-bottom: 10px;
 
         flex-wrap: wrap;
@@ -427,7 +1025,9 @@
     .btn-listado-productos {
         display: inline-block;
 
-        padding: 12px 22px;
+        padding:
+            12px
+            22px;
 
         background-color: #59636b;
 
@@ -451,7 +1051,9 @@
     .btn-volver-productos {
         display: inline-block;
 
-        padding: 12px 22px;
+        padding:
+            12px
+            22px;
 
         background-color: #1198a5;
 
@@ -496,6 +1098,11 @@
             text-align: center;
         }
 
+
+        .aviso-alerta-seleccionada {
+            align-items: flex-start;
+        }
+
     }
 
 </style>
@@ -530,10 +1137,55 @@
                     },
                     500
                 );
+
             }
 
         },
         3000
+    );
+
+
+
+    // DESPLAZARSE HASTA LA ALERTA SELECCIONADA
+
+    window.addEventListener(
+        "load",
+        function () {
+
+            const primeraFilaAlerta =
+                document.querySelector(
+                    '.fila-alerta[data-alerta-resaltada="true"]'
+                );
+
+
+            if (!primeraFilaAlerta) {
+
+                return;
+
+            }
+
+
+            setTimeout(
+                function () {
+
+                    primeraFilaAlerta.scrollIntoView(
+                        {
+                            behavior:
+                                "smooth",
+
+                            block:
+                                "center",
+
+                            inline:
+                                "nearest"
+                        }
+                    );
+
+                },
+                300
+            );
+
+        }
     );
 
 </script>

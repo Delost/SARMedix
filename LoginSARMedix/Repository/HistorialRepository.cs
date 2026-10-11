@@ -1,5 +1,4 @@
 ﻿using LoginSARMedix.Models;
-using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 
 namespace LoginSARMedix.Repository
@@ -8,14 +7,22 @@ namespace LoginSARMedix.Repository
     {
         private readonly string _conexion;
 
-        public HistorialRepository(IConfiguration configuration)
+
+        public HistorialRepository(
+            IConfiguration configuration)
         {
             _conexion =
-                configuration.GetConnectionString("ConexionMySQL")!;
+                configuration
+                    .GetConnectionString(
+                        "ConexionMySQL"
+                    )!;
         }
 
 
+
+        // =========================================================
         // REGISTRAR HISTORIAL
+        // =========================================================
 
         public async Task<bool> RegistrarHistorial(
             int idUsuarioResponsable,
@@ -23,7 +30,10 @@ namespace LoginSARMedix.Repository
             string descripcion)
         {
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
+                new MySqlConnection(
+                    _conexion
+                );
+
 
             await conexion.OpenAsync();
 
@@ -69,7 +79,8 @@ namespace LoginSARMedix.Repository
 
 
             int resultado =
-                await comando.ExecuteNonQueryAsync();
+                await comando
+                    .ExecuteNonQueryAsync();
 
 
             return resultado > 0;
@@ -77,7 +88,16 @@ namespace LoginSARMedix.Repository
 
 
 
-        // LISTAR HISTORIAL
+        // =========================================================
+        // HISTORIAL GENERAL
+        //
+        // TARJETA:
+        // "Consultar todas las acciones registradas en SARMedix."
+        //
+        // POR ESO:
+        // NO TIENE FILTRO.
+        // MUESTRA TODO.
+        // =========================================================
 
         public async Task<List<Historial>> ListadoHistorial()
         {
@@ -86,7 +106,9 @@ namespace LoginSARMedix.Repository
 
 
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
+                new MySqlConnection(
+                    _conexion
+                );
 
 
             await conexion.OpenAsync();
@@ -99,8 +121,12 @@ namespace LoginSARMedix.Repository
                       usuario_responsable,
                       descripcion,
                       fecha_hora
+
                   FROM historial
-                  ORDER BY fecha_hora DESC";
+
+                  ORDER BY
+                      fecha_hora DESC,
+                      id_historial DESC";
 
 
             using MySqlCommand comando =
@@ -111,45 +137,16 @@ namespace LoginSARMedix.Repository
 
 
             using MySqlDataReader lector =
-                await comando.ExecuteReaderAsync();
+                await comando
+                    .ExecuteReaderAsync();
 
 
             while (await lector.ReadAsync())
             {
                 historial.Add(
-                    new Historial()
-                    {
-                        id_historial =
-                            lector.GetInt32(
-                                "id_historial"
-                            ),
-
-                        id_usuario_responsable =
-                            lector.IsDBNull(
-                                lector.GetOrdinal(
-                                    "id_usuario_responsable"
-                                )
-                            )
-                            ? null
-                            : lector.GetInt32(
-                                "id_usuario_responsable"
-                            ),
-
-                        usuario_responsable =
-                            lector.GetString(
-                                "usuario_responsable"
-                            ),
-
-                        descripcion =
-                            lector.GetString(
-                                "descripcion"
-                            ),
-
-                        fecha_hora =
-                            lector.GetDateTime(
-                                "fecha_hora"
-                            )
-                    }
+                    CrearHistorialDesdeLector(
+                        lector
+                    )
                 );
             }
 
@@ -159,19 +156,39 @@ namespace LoginSARMedix.Repository
 
 
 
+        // =========================================================
+        // HISTORIAL DE USUARIOS
+        //
+        // TARJETA:
+        // "Consultar cambios, creación, edición
+        //  y gestión de usuarios."
+        //
+        // SOLO MOSTRAMOS ACCIONES QUE REALMENTE
+        // MODIFICARON O GESTIONARON UN USUARIO.
+        //
+        // NO MOSTRAMOS:
+        //
+        // - Ingresó a Crear Usuario
+        // - Ingresó al listado de usuarios
+        // - Ingresó a editar al usuario...
+        // - Ingresó a Usuarios y Permisos
+        // - Roles y permisos
+        //
+        // ESAS ACCIONES SIGUEN EXISTIENDO,
+        // PERO SE VEN EN HISTORIAL GENERAL.
+        // =========================================================
 
-
-
-
-        //HISTORIAL DE USUARIOS
-        public async Task<List<Historial>> ListadoHistorialUsuarios()
+        public async Task<List<Historial>>
+            ListadoHistorialUsuarios()
         {
             List<Historial> historial =
                 new List<Historial>();
 
 
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
+                new MySqlConnection(
+                    _conexion
+                );
 
 
             await conexion.OpenAsync();
@@ -179,16 +196,33 @@ namespace LoginSARMedix.Repository
 
             string consulta =
                 @"SELECT
-              id_historial,
-              id_usuario_responsable,
-              usuario_responsable,
-              descripcion,
-              fecha_hora
-          FROM historial
-          WHERE descripcion LIKE '%usuario%'
-             OR descripcion LIKE '%rol%'
-             OR descripcion LIKE '%permiso%'
-          ORDER BY fecha_hora DESC";
+                      id_historial,
+                      id_usuario_responsable,
+                      usuario_responsable,
+                      descripcion,
+                      fecha_hora
+
+                  FROM historial
+
+                  WHERE
+
+                      descripcion LIKE 'Creó al usuario %'
+
+                      OR descripcion LIKE
+                         'Actualizó al usuario %'
+
+                      OR descripcion LIKE
+                         'Desactivó al usuario %'
+
+                      OR descripcion LIKE
+                         'Reactivó al usuario %'
+
+                      OR descripcion LIKE
+                         'Eliminó al usuario %'
+
+                  ORDER BY
+                      fecha_hora DESC,
+                      id_historial DESC";
 
 
             using MySqlCommand comando =
@@ -199,43 +233,16 @@ namespace LoginSARMedix.Repository
 
 
             using MySqlDataReader lector =
-                await comando.ExecuteReaderAsync();
+                await comando
+                    .ExecuteReaderAsync();
 
 
             while (await lector.ReadAsync())
             {
                 historial.Add(
-                    new Historial()
-                    {
-                        id_historial =
-                            lector.GetInt32("id_historial"),
-
-                        id_usuario_responsable =
-                            lector.IsDBNull(
-                                lector.GetOrdinal(
-                                    "id_usuario_responsable"
-                                )
-                            )
-                            ? null
-                            : lector.GetInt32(
-                                "id_usuario_responsable"
-                            ),
-
-                        usuario_responsable =
-                            lector.GetString(
-                                "usuario_responsable"
-                            ),
-
-                        descripcion =
-                            lector.GetString(
-                                "descripcion"
-                            ),
-
-                        fecha_hora =
-                            lector.GetDateTime(
-                                "fecha_hora"
-                            )
-                    }
+                    CrearHistorialDesdeLector(
+                        lector
+                    )
                 );
             }
 
@@ -245,18 +252,52 @@ namespace LoginSARMedix.Repository
 
 
 
-
-
+        // =========================================================
         // HISTORIAL DE PRODUCTOS
+        //
+        // TARJETA:
+        // "Consultar cambios realizados
+        //  en productos y lotes."
+        //
+        // MOSTRAMOS:
+        //
+        // - Producto creado
+        // - Producto actualizado
+        // - Producto eliminado
+        // - Producto desactivado/reactivado
+        //
+        // - Lote creado
+        // - Lote actualizado
+        // - Lote eliminado
+        //
+        // - Entradas de stock
+        // - Salidas de stock
+        //
+        // NO MOSTRAMOS:
+        //
+        // - Ingresó al módulo Productos
+        // - Ingresó a Crear Producto
+        // - Ingresó al listado de productos
+        // - Ingresó a editar producto
+        // - Ingresó a Crear Lote
+        // - Ingresó al listado de lotes
+        // - Ingresó a editar lote
+        //
+        // TODO ESO QUEDA SOLAMENTE
+        // EN HISTORIAL GENERAL.
+        // =========================================================
 
-        public async Task<List<Historial>> ListadoHistorialProductos()
+        public async Task<List<Historial>>
+            ListadoHistorialProductos()
         {
             List<Historial> historial =
                 new List<Historial>();
 
 
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
+                new MySqlConnection(
+                    _conexion
+                );
 
 
             await conexion.OpenAsync();
@@ -264,15 +305,57 @@ namespace LoginSARMedix.Repository
 
             string consulta =
                 @"SELECT
-              id_historial,
-              id_usuario_responsable,
-              usuario_responsable,
-              descripcion,
-              fecha_hora
-          FROM historial
-          WHERE descripcion LIKE '%producto%'
-             OR descripcion LIKE '%lote%'
-          ORDER BY fecha_hora DESC";
+                      id_historial,
+                      id_usuario_responsable,
+                      usuario_responsable,
+                      descripcion,
+                      fecha_hora
+
+                  FROM historial
+
+                  WHERE
+
+                      -- PRODUCTOS
+
+                      descripcion LIKE
+                          'Creó el producto %'
+
+                      OR descripcion LIKE
+                          'Actualizó el producto %'
+
+                      OR descripcion LIKE
+                          'Eliminó el producto %'
+
+                      OR descripcion LIKE
+                          'Desactivó el producto %'
+
+                      OR descripcion LIKE
+                          'Reactivó el producto %'
+
+
+                      -- LOTES
+
+                      OR descripcion LIKE
+                          'Creó el lote %'
+
+                      OR descripcion LIKE
+                          'Actualizó el lote %'
+
+                      OR descripcion LIKE
+                          'Eliminó el lote %'
+
+
+                      -- MOVIMIENTOS QUE CAMBIAN STOCK
+
+                      OR descripcion LIKE
+                          'Registró entrada %'
+
+                      OR descripcion LIKE
+                          'Registró salida %'
+
+                  ORDER BY
+                      fecha_hora DESC,
+                      id_historial DESC";
 
 
             using MySqlCommand comando =
@@ -283,45 +366,16 @@ namespace LoginSARMedix.Repository
 
 
             using MySqlDataReader lector =
-                await comando.ExecuteReaderAsync();
+                await comando
+                    .ExecuteReaderAsync();
 
 
             while (await lector.ReadAsync())
             {
                 historial.Add(
-                    new Historial()
-                    {
-                        id_historial =
-                            lector.GetInt32(
-                                "id_historial"
-                            ),
-
-                        id_usuario_responsable =
-                            lector.IsDBNull(
-                                lector.GetOrdinal(
-                                    "id_usuario_responsable"
-                                )
-                            )
-                            ? null
-                            : lector.GetInt32(
-                                "id_usuario_responsable"
-                            ),
-
-                        usuario_responsable =
-                            lector.GetString(
-                                "usuario_responsable"
-                            ),
-
-                        descripcion =
-                            lector.GetString(
-                                "descripcion"
-                            ),
-
-                        fecha_hora =
-                            lector.GetDateTime(
-                                "fecha_hora"
-                            )
-                    }
+                    CrearHistorialDesdeLector(
+                        lector
+                    )
                 );
             }
 
@@ -331,5 +385,55 @@ namespace LoginSARMedix.Repository
 
 
 
+        // =========================================================
+        // CONVERTIR UNA FILA DE MYSQL EN HISTORIAL
+        //
+        // ANTES TENIAMOS ESTE MISMO CODIGO
+        // REPETIDO EN LOS TRES METODOS.
+        //
+        // AHORA ESTA CENTRALIZADO AQUI.
+        // =========================================================
+
+        private Historial CrearHistorialDesdeLector(
+            MySqlDataReader lector)
+        {
+            return new Historial()
+            {
+                id_historial =
+                    lector.GetInt32(
+                        "id_historial"
+                    ),
+
+
+                id_usuario_responsable =
+                    lector.IsDBNull(
+                        lector.GetOrdinal(
+                            "id_usuario_responsable"
+                        )
+                    )
+                    ? null
+                    : lector.GetInt32(
+                        "id_usuario_responsable"
+                    ),
+
+
+                usuario_responsable =
+                    lector.GetString(
+                        "usuario_responsable"
+                    ),
+
+
+                descripcion =
+                    lector.GetString(
+                        "descripcion"
+                    ),
+
+
+                fecha_hora =
+                    lector.GetDateTime(
+                        "fecha_hora"
+                    )
+            };
+        }
     }
 }

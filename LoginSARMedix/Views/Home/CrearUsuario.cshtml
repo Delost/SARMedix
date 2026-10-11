@@ -11,81 +11,72 @@
       method="post"
       class="formulario-principal"
       id="formCrearUsuario"
-      onsubmit="return validarYConfirmar()"
       novalidate>
 
-
     <div class="espacio-mensaje">
-
         @if (TempData["Mensaje"] != null)
         {
-            <div class="mensaje mensaje-exito"
-                 id="mensajeFormulario">
-
+            <div class="mensaje mensaje-exito" id="mensajeFormulario">
                 @TempData["Mensaje"]
-
+            </div>
+        }
+        else if (ViewBag.Mensaje != null)
+        {
+            <div class="mensaje mensaje-error" id="mensajeFormulario">
+                @ViewBag.Mensaje
             </div>
         }
         else
         {
             <div class="mensaje mensaje-error mensaje-oculto"
-                 id="mensajeFormulario">
-            </div>
+                 id="mensajeFormulario"></div>
         }
-
     </div>
 
-
     <div class="grupo-campo">
-
-        <label>Nombre</label>
-
+        <label for="nombre">Nombre</label>
         <input asp-for="nombre"
                id="nombre"
                autocomplete="off" />
-
     </div>
 
-
     <div class="grupo-campo">
-
-        <label>Apellido</label>
-
+        <label for="apellido">Apellido</label>
         <input asp-for="apellido"
                id="apellido"
                autocomplete="off" />
-
     </div>
 
-
     <div class="grupo-campo">
-
-        <label>Correo electrónico</label>
+        <label for="email">Correo electrónico</label>
 
         <input asp-for="email"
                id="email"
                type="email"
                autocomplete="off" />
 
+        <div id="estadoEmail"
+             class="validacion-caliente"
+             aria-live="polite">
+        </div>
     </div>
 
-
     <div class="grupo-campo">
-
-        <label>RUT</label>
+        <label for="rut">RUT</label>
 
         <input asp-for="rut"
                id="rut"
                maxlength="10"
-               autocomplete="off"
-               oninput="formatearRut(this)" />
+               autocomplete="off" />
 
+        <div id="estadoRut"
+             class="validacion-caliente"
+             aria-live="polite">
+        </div>
     </div>
 
-
     <div class="grupo-campo">
-
-        <label>Rol</label>
+        <label for="id_rol">Rol</label>
 
         <select asp-for="id_rol"
                 id="id_rol">
@@ -111,35 +102,35 @@
             </option>
 
         </select>
-
     </div>
 
-
     <div class="grupo-campo">
-
-        <label>Nombre de usuario</label>
+        <label for="nombre_usuario">
+            Nombre de usuario
+        </label>
 
         <input asp-for="nombre_usuario"
                id="nombre_usuario"
                autocomplete="off" />
 
+        <div id="estadoNombreUsuario"
+             class="validacion-caliente"
+             aria-live="polite">
+        </div>
     </div>
 
-
     <div class="grupo-campo">
-
-        <label>Contraseña</label>
+        <label for="contrasena">
+            Contraseña
+        </label>
 
         <input asp-for="contrasena"
                id="contrasena"
                type="password"
                autocomplete="new-password" />
-
     </div>
 
-
     <br />
-
 
     <button type="submit">
         Crear usuario
@@ -161,16 +152,9 @@
 </div>
 
 
-@if (ViewBag.Mensaje != null)
-{
-    <script>
-        alert('@ViewBag.Mensaje');
-    </script>
-}
-
-
-
-<!-- VENTANA DE CONFIRMACIÓN -->
+<!-- =============================================================
+     MODAL DE CONFIRMACION
+     ============================================================= -->
 
 <div id="modalConfirmacion"
      class="modal-fondo">
@@ -199,7 +183,6 @@
 
             </button>
 
-
             <button type="button"
                     class="btn-modal-no"
                     onclick="cerrarConfirmacion()">
@@ -207,7 +190,6 @@
                 No
 
             </button>
-
 
             <button type="button"
                     class="btn-modal-cancelar"
@@ -224,8 +206,11 @@
 </div>
 
 
-
 <style>
+
+    /* =========================================================
+           MENSAJES
+           ========================================================= */
 
     .espacio-mensaje {
         min-height: 48px;
@@ -264,7 +249,10 @@
     }
 
 
-    /* CAMPOS DEL FORMULARIO */
+
+    /* =========================================================
+           CAMPOS
+           ========================================================= */
 
     .grupo-campo {
         width: 100%;
@@ -296,11 +284,135 @@
         .formulario-principal input:focus,
         .formulario-principal select:focus {
             border-color: #1198a5;
-            box-shadow: 0 0 0 3px rgba(17, 152, 165, 0.15);
+            box-shadow: 0 0 0 3px rgba( 17, 152, 165, 0.15 );
         }
 
 
-    .formulario-principal button[type="submit"] {
+
+    /* =========================================================
+           VALIDACION EN CALIENTE
+           ========================================================= */
+
+    .validacion-caliente {
+        min-height: 22px;
+        margin-top: 7px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: #73838c;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.35;
+    }
+
+
+        .validacion-caliente:empty {
+            min-height: 0;
+            margin-top: 0;
+        }
+
+
+    .validacion-verificando {
+        color: #627985;
+    }
+
+
+    .validacion-correcta {
+        color: #198754;
+    }
+
+
+    .validacion-error {
+        color: #b42318;
+    }
+
+
+    .validacion-incompleta {
+        color: #7a8991;
+    }
+
+
+
+    /* =========================================================
+           SPINNER
+           =========================================================
+           La animacion se hace directamente mediante SVG.
+           Así evitamos usar reglas CSS especiales que Razor
+           podría intentar interpretar.
+           ========================================================= */
+
+    .validacion-spinner {
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+        display: inline-block;
+    }
+
+
+
+    /* =========================================================
+           ICONOS OK / ERROR
+           ========================================================= */
+
+    .validacion-icono-ok,
+    .validacion-icono-error {
+        width: 17px;
+        height: 17px;
+        min-width: 17px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: white;
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+
+    .validacion-icono-ok {
+        background-color: #198754;
+    }
+
+
+    .validacion-icono-error {
+        background-color: #dc3545;
+    }
+
+
+
+    /* =========================================================
+           CAMPO DISPONIBLE
+           ========================================================= */
+
+    .formulario-principal
+    input.campo-disponible {
+        border-color: #55b984;
+        background-color: #fbfffc;
+        box-shadow: 0 0 0 3px rgba( 25, 135, 84, 0.08 );
+    }
+
+
+
+    /* =========================================================
+           CAMPO NO DISPONIBLE
+           ========================================================= */
+
+    .formulario-principal
+    input.campo-no-disponible {
+        border-color: #dc3545;
+        background-color: #fff8f8;
+        box-shadow: 0 0 0 3px rgba( 220, 53, 69, 0.10 );
+    }
+
+
+
+    /* =========================================================
+           BOTON CREAR
+           ========================================================= */
+
+    .formulario-principal
+    button[type="submit"] {
         width: 100%;
         min-height: 48px;
         border: none;
@@ -313,10 +425,16 @@
     }
 
 
-        .formulario-principal button[type="submit"]:hover {
+        .formulario-principal
+        button[type="submit"]:hover {
             background-color: #0d8490;
         }
 
+
+
+    /* =========================================================
+           VOLVER
+           ========================================================= */
 
     .contenedor-volver {
         display: flex;
@@ -343,16 +461,16 @@
         }
 
 
-    /* VENTANA DE CONFIRMACIÓN */
+
+    /* =========================================================
+           MODAL
+           ========================================================= */
 
     .modal-fondo {
         display: none;
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.45);
+        inset: 0;
+        background-color: rgba( 0, 0, 0, 0.45 );
         align-items: center;
         justify-content: center;
         z-index: 9999;
@@ -362,11 +480,11 @@
     .modal-contenido {
         width: 90%;
         max-width: 430px;
+        padding: 30px;
         background-color: white;
         border-radius: 15px;
-        padding: 30px;
         text-align: center;
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 12px 35px rgba( 0, 0, 0, 0.25 );
     }
 
 
@@ -450,37 +568,110 @@
 </style>
 
 
-
 <script>
 
-    let usuarioConfirmado = false;
+    // =========================================================
+    // ESTADO GENERAL
+    // =========================================================
+
+    let usuarioConfirmado =
+        false;
 
 
-    function formatearRut(input) {
+    const estadosDisponibilidad =
+    {
+        rut:
+            "vacio",
 
-        let rut = input.value
-            .replace(/[^0-9kK]/g, '')
-            .toUpperCase();
+        email:
+            "vacio",
 
-
-        rut = rut.substring(0, 9);
-
-
-        if (rut.length > 1) {
-
-            rut =
-                rut.slice(0, -1)
-                + "-"
-                + rut.slice(-1);
-        }
+        nombreUsuario:
+            "vacio"
+    };
 
 
-        input.value = rut;
+    const temporizadores =
+    {
+        rut:
+            null,
+
+        email:
+            null,
+
+        nombreUsuario:
+            null
+    };
+
+
+    const solicitudes =
+    {
+        rut:
+            0,
+
+        email:
+            0,
+
+        nombreUsuario:
+            0
+    };
+
+
+
+    // =========================================================
+    // CAMPOS
+    // =========================================================
+
+    function obtenerCamposUsuario() {
+
+        return {
+
+            nombre:
+                document.getElementById(
+                    "nombre"
+                ),
+
+            apellido:
+                document.getElementById(
+                    "apellido"
+                ),
+
+            email:
+                document.getElementById(
+                    "email"
+                ),
+
+            rut:
+                document.getElementById(
+                    "rut"
+                ),
+
+            rol:
+                document.getElementById(
+                    "id_rol"
+                ),
+
+            nombreUsuario:
+                document.getElementById(
+                    "nombre_usuario"
+                ),
+
+            contrasena:
+                document.getElementById(
+                    "contrasena"
+                )
+
+        };
+
     }
 
 
 
-    function mostrarError(texto, campo) {
+    // =========================================================
+    // MENSAJE GENERAL
+    // =========================================================
+
+    function ocultarMensajeGeneral() {
 
         const mensaje =
             document.getElementById(
@@ -488,265 +679,15 @@
             );
 
 
-        mensaje.innerText = texto;
+        if (!mensaje) {
 
+            return;
 
-        mensaje.className =
-            "mensaje mensaje-error";
-
-
-        mensaje.style.visibility =
-            "visible";
-
-
-        mensaje.style.opacity =
-            "1";
-
-
-        campo.focus();
-    }
-
-
-
-    function validarYConfirmar() {
-
-        if (usuarioConfirmado) {
-
-            return true;
         }
 
 
-        const nombre =
-            document.getElementById(
-                "nombre"
-            );
-
-
-        const apellido =
-            document.getElementById(
-                "apellido"
-            );
-
-
-        const email =
-            document.getElementById(
-                "email"
-            );
-
-
-        const rut =
-            document.getElementById(
-                "rut"
-            );
-
-
-        const rol =
-            document.getElementById(
-                "id_rol"
-            );
-
-
-        const nombreUsuario =
-            document.getElementById(
-                "nombre_usuario"
-            );
-
-
-        const contrasena =
-            document.getElementById(
-                "contrasena"
-            );
-
-
-
-        if (nombre.value.trim() === "") {
-
-            mostrarError(
-                "Debe ingresar el nombre.",
-                nombre
-            );
-
-            return false;
-        }
-
-
-
-        if (apellido.value.trim() === "") {
-
-            mostrarError(
-                "Debe ingresar el apellido.",
-                apellido
-            );
-
-            return false;
-        }
-
-
-
-        if (email.value.trim() === "") {
-
-            mostrarError(
-                "Debe ingresar el correo electrónico.",
-                email
-            );
-
-            return false;
-        }
-
-
-
-        if (!email.value.includes("@@") ||
-            !email.value.includes(".")) {
-
-            mostrarError(
-                "Debe ingresar un correo electrónico válido.",
-                email
-            );
-
-            return false;
-        }
-
-
-
-        if (rut.value.trim() === "") {
-
-            mostrarError(
-                "Debe ingresar el RUT.",
-                rut
-            );
-
-            return false;
-        }
-
-
-
-        if (rol.value === "") {
-
-            mostrarError(
-                "Debe seleccionar un rol.",
-                rol
-            );
-
-            return false;
-        }
-
-
-
-        if (nombreUsuario.value.trim() === "") {
-
-            mostrarError(
-                "Debe ingresar el nombre de usuario.",
-                nombreUsuario
-            );
-
-            return false;
-        }
-
-
-
-        if (contrasena.value.trim() === "") {
-
-            mostrarError(
-                "Debe ingresar una contraseña.",
-                contrasena
-            );
-
-            return false;
-        }
-
-
-
-        document.getElementById(
-            "modalConfirmacion"
-        ).style.display = "flex";
-
-
-        return false;
-    }
-
-
-
-    function crearUsuario() {
-
-        usuarioConfirmado = true;
-
-
-        document.getElementById(
-            "modalConfirmacion"
-        ).style.display = "none";
-
-
-        document.getElementById(
-            "formCrearUsuario"
-        ).requestSubmit();
-    }
-
-
-
-    function cerrarConfirmacion() {
-
-        usuarioConfirmado = false;
-
-
-        document.getElementById(
-            "modalConfirmacion"
-        ).style.display = "none";
-    }
-
-
-
-    function cancelarCreacion() {
-
-        usuarioConfirmado = false;
-
-
-        document.getElementById(
-            "modalConfirmacion"
-        ).style.display = "none";
-
-
-        document.getElementById(
-            "nombre"
-        ).value = "";
-
-
-        document.getElementById(
-            "apellido"
-        ).value = "";
-
-
-        document.getElementById(
-            "email"
-        ).value = "";
-
-
-        document.getElementById(
-            "rut"
-        ).value = "";
-
-
-        document.getElementById(
-            "id_rol"
-        ).value = "";
-
-
-        document.getElementById(
-            "nombre_usuario"
-        ).value = "";
-
-
-        document.getElementById(
-            "contrasena"
-        ).value = "";
-
-
-        const mensaje =
-            document.getElementById(
-                "mensajeFormulario"
-            );
-
-
-        mensaje.innerText = "";
+        mensaje.innerText =
+            "";
 
 
         mensaje.className =
@@ -760,15 +701,14 @@
         mensaje.style.opacity =
             "1";
 
-
-        document.getElementById(
-            "nombre"
-        ).focus();
     }
 
 
 
-    setTimeout(function () {
+    function mostrarErrorGeneral(
+        texto,
+        campo
+    ) {
 
         const mensaje =
             document.getElementById(
@@ -776,24 +716,2040 @@
             );
 
 
+        if (mensaje) {
+
+            mensaje.innerText =
+                texto;
+
+
+            mensaje.className =
+                "mensaje mensaje-error";
+
+
+            mensaje.style.visibility =
+                "visible";
+
+
+            mensaje.style.opacity =
+                "1";
+
+        }
+
+
+        if (campo) {
+
+            campo.classList.add(
+                "campo-error"
+            );
+
+
+            campo.focus();
+
+        }
+
+    }
+
+
+
+    function limpiarErrorCampo(
+        campo
+    ) {
+
+        if (!campo) {
+
+            return;
+
+        }
+
+
+        campo.classList.remove(
+            "campo-error"
+        );
+
+    }
+
+
+
+    // =========================================================
+    // FORMATEAR RUT
+    // =========================================================
+
+    function formatearRut(
+        input
+    ) {
+
+        let rut =
+            input.value
+                .replace(
+                    /[^0-9kK]/g,
+                    ""
+                )
+                .toUpperCase()
+                .substring(
+                    0,
+                    9
+                );
+
+
         if (
-            mensaje &&
-            mensaje.classList.contains(
-                "mensaje-exito"
+            rut.length
+            >
+            1
+        ) {
+
+            rut =
+                rut.slice(
+                    0,
+                    -1
+                )
+                +
+                "-"
+                +
+                rut.slice(
+                    -1
+                );
+
+        }
+
+
+        input.value =
+            rut;
+
+    }
+
+
+
+    // =========================================================
+    // VALIDAR DIGITO VERIFICADOR
+    // =========================================================
+
+    function validarDigitoRut(
+        rutFormateado
+    ) {
+
+        const rutLimpio =
+            String(
+                rutFormateado
+                ??
+                ""
+            )
+                .replace(
+                    /\./g,
+                    ""
+                )
+                .replace(
+                    /-/g,
+                    ""
+                )
+                .toUpperCase();
+
+
+        if (
+            !/^\d{7,8}[0-9K]$/.test(
+                rutLimpio
             )
         ) {
 
-            mensaje.style.opacity = "0";
+            return false;
 
-
-            setTimeout(function () {
-
-                mensaje.style.visibility =
-                    "hidden";
-
-            }, 500);
         }
 
-    }, 3000);
+
+        const cuerpo =
+            rutLimpio.slice(
+                0,
+                -1
+            );
+
+
+        const digitoIngresado =
+            rutLimpio.slice(
+                -1
+            );
+
+
+        let suma =
+            0;
+
+
+        let multiplicador =
+            2;
+
+
+        for (
+            let i =
+                cuerpo.length - 1;
+
+            i >= 0;
+
+            i--
+        ) {
+
+            suma +=
+                Number(
+                    cuerpo[i]
+                )
+                *
+                multiplicador;
+
+
+            multiplicador++;
+
+
+            if (
+                multiplicador
+                >
+                7
+            ) {
+
+                multiplicador =
+                    2;
+
+            }
+
+        }
+
+
+        const resultado =
+            11
+            -
+            (
+                suma
+                %
+                11
+            );
+
+
+        let digitoCalculado;
+
+
+        if (
+            resultado
+            ===
+            11
+        ) {
+
+            digitoCalculado =
+                "0";
+
+        }
+        else if (
+            resultado
+            ===
+            10
+        ) {
+
+            digitoCalculado =
+                "K";
+
+        }
+        else {
+
+            digitoCalculado =
+                String(
+                    resultado
+                );
+
+        }
+
+
+        return (
+            digitoIngresado
+            ===
+            digitoCalculado
+        );
+
+    }
+
+
+
+    // =========================================================
+    // VALIDAR CORREO
+    // =========================================================
+    //
+    // \x40 representa el símbolo arroba.
+    //
+    // Así no escribimos ese carácter directamente dentro
+    // del JavaScript de una vista Razor.
+    // =========================================================
+
+    function correoTieneFormatoValido(
+        correo
+    ) {
+
+        return /^[^\s\x40]+\x40[^\s\x40]+\.[^\s\x40]+$/.test(
+            String(
+                correo
+                ??
+                ""
+            )
+                .trim()
+        );
+
+    }
+
+
+
+    // =========================================================
+    // CLASES DE DISPONIBILIDAD
+    // =========================================================
+
+    function limpiarClasesDisponibilidad(
+        campo
+    ) {
+
+        if (!campo) {
+
+            return;
+
+        }
+
+
+        campo.classList.remove(
+            "campo-disponible"
+        );
+
+
+        campo.classList.remove(
+            "campo-no-disponible"
+        );
+
+    }
+
+
+
+    // =========================================================
+    // ESTADO VACIO
+    // =========================================================
+
+    function mostrarEstadoVacio(
+        elemento,
+        campo
+    ) {
+
+        elemento.className =
+            "validacion-caliente";
+
+
+        elemento.innerHTML =
+            "";
+
+
+        limpiarClasesDisponibilidad(
+            campo
+        );
+
+
+        campo.dataset.duplicado =
+            "false";
+
+    }
+
+
+
+    // =========================================================
+    // ESTADO INCOMPLETO
+    // =========================================================
+
+    function mostrarEstadoIncompleto(
+        elemento,
+        texto,
+        campo
+    ) {
+
+        elemento.className =
+            "validacion-caliente validacion-incompleta";
+
+
+        elemento.textContent =
+            texto;
+
+
+        limpiarClasesDisponibilidad(
+            campo
+        );
+
+
+        campo.dataset.duplicado =
+            "false";
+
+    }
+
+
+
+    // =========================================================
+    // ESTADO VERIFICANDO
+    // =========================================================
+
+    function mostrarEstadoVerificando(
+        elemento,
+        texto,
+        campo
+    ) {
+
+        elemento.className =
+            "validacion-caliente validacion-verificando";
+
+
+        /*
+            SVG animado.
+
+            No necesita keyframes de CSS.
+        */
+
+        elemento.innerHTML =
+            '<svg class="validacion-spinner" viewBox="0 0 24 24" aria-hidden="true">'
+            +
+            '<circle cx="12" cy="12" r="9" fill="none" stroke="#cad8df" stroke-width="3"></circle>'
+            +
+            '<path d="M12 3a9 9 0 0 1 9 9" fill="none" stroke="#1198a5" stroke-width="3" stroke-linecap="round">'
+            +
+            '<animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.75s" repeatCount="indefinite"></animateTransform>'
+            +
+            '</path>'
+            +
+            '</svg>'
+            +
+            '<span>'
+            +
+            texto
+            +
+            '</span>';
+
+
+        limpiarClasesDisponibilidad(
+            campo
+        );
+
+
+        campo.dataset.duplicado =
+            "false";
+
+    }
+
+
+
+    // =========================================================
+    // ESTADO CORRECTO
+    // =========================================================
+
+    function mostrarEstadoCorrecto(
+        elemento,
+        texto,
+        campo
+    ) {
+
+        elemento.className =
+            "validacion-caliente validacion-correcta";
+
+
+        elemento.innerHTML =
+            '<span class="validacion-icono-ok" aria-hidden="true">✓</span>'
+            +
+            '<span>'
+            +
+            texto
+            +
+            '</span>';
+
+
+        limpiarClasesDisponibilidad(
+            campo
+        );
+
+
+        campo.classList.add(
+            "campo-disponible"
+        );
+
+
+        campo.dataset.duplicado =
+            "false";
+
+    }
+
+
+
+    // =========================================================
+    // ESTADO ERROR
+    // =========================================================
+
+    function mostrarEstadoError(
+        elemento,
+        texto,
+        campo,
+        duplicado
+    ) {
+
+        elemento.className =
+            "validacion-caliente validacion-error";
+
+
+        elemento.innerHTML =
+            '<span class="validacion-icono-error" aria-hidden="true">×</span>'
+            +
+            '<span>'
+            +
+            texto
+            +
+            '</span>';
+
+
+        limpiarClasesDisponibilidad(
+            campo
+        );
+
+
+        campo.classList.add(
+            "campo-no-disponible"
+        );
+
+
+        campo.dataset.duplicado =
+            duplicado
+                ? "true"
+                : "false";
+
+    }
+
+
+
+    // =========================================================
+    // CONSULTA HTTP
+    // =========================================================
+
+    async function consultarDisponibilidad(
+        url
+    ) {
+
+        const respuesta =
+            await fetch(
+                url,
+                {
+                    method:
+                        "GET",
+
+                    headers:
+                    {
+                        "X-Requested-With":
+                            "XMLHttpRequest"
+                    },
+
+                    cache:
+                        "no-store"
+                }
+            );
+
+
+        if (!respuesta.ok) {
+
+            throw new Error(
+                "No se pudo completar la verificación."
+            );
+
+        }
+
+
+        return await respuesta.json();
+
+    }
+
+
+
+    // =========================================================
+    // VALIDACION EN CALIENTE - RUT
+    // =========================================================
+
+    function prepararValidacionRut() {
+
+        const campo =
+            document.getElementById(
+                "rut"
+            );
+
+
+        const estado =
+            document.getElementById(
+                "estadoRut"
+            );
+
+
+        campo.addEventListener(
+            "input",
+            function (
+                evento
+            ) {
+
+                /*
+                    Evita que otra validación en bubble
+                    vuelva a procesar este mismo evento.
+                */
+
+                evento.stopPropagation();
+
+
+                formatearRut(
+                    campo
+                );
+
+
+                clearTimeout(
+                    temporizadores.rut
+                );
+
+
+                solicitudes.rut++;
+
+
+                const solicitudActual =
+                    solicitudes.rut;
+
+
+                const valor =
+                    campo.value
+                        .trim();
+
+
+                limpiarErrorCampo(
+                    campo
+                );
+
+
+                ocultarMensajeGeneral();
+
+
+                limpiarClasesDisponibilidad(
+                    campo
+                );
+
+
+                campo.dataset.duplicado =
+                    "false";
+
+
+                if (
+                    valor
+                    ===
+                    ""
+                ) {
+
+                    estadosDisponibilidad.rut =
+                        "vacio";
+
+
+                    mostrarEstadoVacio(
+                        estado,
+                        campo
+                    );
+
+
+                    return;
+
+                }
+
+
+                const rutLimpio =
+                    valor.replace(
+                        /[-.]/g,
+                        ""
+                    );
+
+
+                if (
+                    rutLimpio.length
+                    <
+                    8
+                ) {
+
+                    estadosDisponibilidad.rut =
+                        "incompleto";
+
+
+                    mostrarEstadoIncompleto(
+                        estado,
+                        "Continúe ingresando el RUT.",
+                        campo
+                    );
+
+
+                    return;
+
+                }
+
+
+                if (
+                    !validarDigitoRut(
+                        valor
+                    )
+                ) {
+
+                    estadosDisponibilidad.rut =
+                        "invalido";
+
+
+                    mostrarEstadoError(
+                        estado,
+                        "El RUT ingresado no es válido.",
+                        campo,
+                        false
+                    );
+
+
+                    return;
+
+                }
+
+
+                estadosDisponibilidad.rut =
+                    "verificando";
+
+
+                mostrarEstadoVerificando(
+                    estado,
+                    "Verificando disponibilidad...",
+                    campo
+                );
+
+
+                temporizadores.rut =
+                    setTimeout(
+                        async function () {
+
+                            try {
+
+                                const datos =
+                                    await consultarDisponibilidad(
+                                        "/Home/VerificarRut?rut="
+                                        +
+                                        encodeURIComponent(
+                                            valor
+                                        )
+                                    );
+
+
+                                if (
+                                    solicitudes.rut
+                                    !==
+                                    solicitudActual
+                                    ||
+                                    campo.value.trim()
+                                    !==
+                                    valor
+                                ) {
+
+                                    return;
+
+                                }
+
+
+                                if (
+                                    datos.existe
+                                    ===
+                                    true
+                                ) {
+
+                                    estadosDisponibilidad.rut =
+                                        "ocupado";
+
+
+                                    mostrarEstadoError(
+                                        estado,
+                                        "Este RUT ya está registrado.",
+                                        campo,
+                                        true
+                                    );
+
+                                }
+                                else {
+
+                                    estadosDisponibilidad.rut =
+                                        "disponible";
+
+
+                                    mostrarEstadoCorrecto(
+                                        estado,
+                                        "RUT válido y disponible.",
+                                        campo
+                                    );
+
+                                }
+
+                            }
+                            catch {
+
+                                if (
+                                    solicitudes.rut
+                                    !==
+                                    solicitudActual
+                                ) {
+
+                                    return;
+
+                                }
+
+
+                                estadosDisponibilidad.rut =
+                                    "error";
+
+
+                                mostrarEstadoError(
+                                    estado,
+                                    "No se pudo verificar el RUT. Intente nuevamente.",
+                                    campo,
+                                    false
+                                );
+
+                            }
+
+                        },
+                        450
+                    );
+
+            }
+        );
+
+    }
+
+
+
+    // =========================================================
+    // VALIDACION EN CALIENTE - CORREO
+    // =========================================================
+
+    function prepararValidacionEmail() {
+
+        const campo =
+            document.getElementById(
+                "email"
+            );
+
+
+        const estado =
+            document.getElementById(
+                "estadoEmail"
+            );
+
+
+        campo.addEventListener(
+            "input",
+            function (
+                evento
+            ) {
+
+                evento.stopPropagation();
+
+
+                clearTimeout(
+                    temporizadores.email
+                );
+
+
+                solicitudes.email++;
+
+
+                const solicitudActual =
+                    solicitudes.email;
+
+
+                const valor =
+                    campo.value
+                        .trim();
+
+
+                limpiarErrorCampo(
+                    campo
+                );
+
+
+                ocultarMensajeGeneral();
+
+
+                limpiarClasesDisponibilidad(
+                    campo
+                );
+
+
+                campo.dataset.duplicado =
+                    "false";
+
+
+                if (
+                    valor
+                    ===
+                    ""
+                ) {
+
+                    estadosDisponibilidad.email =
+                        "vacio";
+
+
+                    mostrarEstadoVacio(
+                        estado,
+                        campo
+                    );
+
+
+                    return;
+
+                }
+
+
+                if (
+                    !correoTieneFormatoValido(
+                        valor
+                    )
+                ) {
+
+                    estadosDisponibilidad.email =
+                        "incompleto";
+
+
+                    mostrarEstadoIncompleto(
+                        estado,
+                        "Ingrese un correo electrónico válido.",
+                        campo
+                    );
+
+
+                    return;
+
+                }
+
+
+                estadosDisponibilidad.email =
+                    "verificando";
+
+
+                mostrarEstadoVerificando(
+                    estado,
+                    "Verificando correo...",
+                    campo
+                );
+
+
+                temporizadores.email =
+                    setTimeout(
+                        async function () {
+
+                            try {
+
+                                const datos =
+                                    await consultarDisponibilidad(
+                                        "/Home/VerificarCorreo?correo="
+                                        +
+                                        encodeURIComponent(
+                                            valor
+                                        )
+                                    );
+
+
+                                if (
+                                    solicitudes.email
+                                    !==
+                                    solicitudActual
+                                    ||
+                                    campo.value.trim()
+                                    !==
+                                    valor
+                                ) {
+
+                                    return;
+
+                                }
+
+
+                                if (
+                                    datos.existe
+                                    ===
+                                    true
+                                ) {
+
+                                    estadosDisponibilidad.email =
+                                        "ocupado";
+
+
+                                    mostrarEstadoError(
+                                        estado,
+                                        "Este correo ya está registrado.",
+                                        campo,
+                                        true
+                                    );
+
+                                }
+                                else {
+
+                                    estadosDisponibilidad.email =
+                                        "disponible";
+
+
+                                    mostrarEstadoCorrecto(
+                                        estado,
+                                        "Correo disponible.",
+                                        campo
+                                    );
+
+                                }
+
+                            }
+                            catch {
+
+                                if (
+                                    solicitudes.email
+                                    !==
+                                    solicitudActual
+                                ) {
+
+                                    return;
+
+                                }
+
+
+                                estadosDisponibilidad.email =
+                                    "error";
+
+
+                                mostrarEstadoError(
+                                    estado,
+                                    "No se pudo verificar el correo. Intente nuevamente.",
+                                    campo,
+                                    false
+                                );
+
+                            }
+
+                        },
+                        500
+                    );
+
+            }
+        );
+
+    }
+
+
+
+    // =========================================================
+    // VALIDACION EN CALIENTE - NOMBRE USUARIO
+    // =========================================================
+
+    function prepararValidacionNombreUsuario() {
+
+        const campo =
+            document.getElementById(
+                "nombre_usuario"
+            );
+
+
+        const estado =
+            document.getElementById(
+                "estadoNombreUsuario"
+            );
+
+
+        campo.addEventListener(
+            "input",
+            function (
+                evento
+            ) {
+
+                evento.stopPropagation();
+
+
+                clearTimeout(
+                    temporizadores.nombreUsuario
+                );
+
+
+                solicitudes.nombreUsuario++;
+
+
+                const solicitudActual =
+                    solicitudes.nombreUsuario;
+
+
+                const valor =
+                    campo.value
+                        .trim();
+
+
+                limpiarErrorCampo(
+                    campo
+                );
+
+
+                ocultarMensajeGeneral();
+
+
+                limpiarClasesDisponibilidad(
+                    campo
+                );
+
+
+                campo.dataset.duplicado =
+                    "false";
+
+
+                if (
+                    valor
+                    ===
+                    ""
+                ) {
+
+                    estadosDisponibilidad.nombreUsuario =
+                        "vacio";
+
+
+                    mostrarEstadoVacio(
+                        estado,
+                        campo
+                    );
+
+
+                    return;
+
+                }
+
+
+                if (
+                    valor.length
+                    <
+                    3
+                ) {
+
+                    estadosDisponibilidad.nombreUsuario =
+                        "incompleto";
+
+
+                    mostrarEstadoIncompleto(
+                        estado,
+                        "Ingrese al menos 3 caracteres.",
+                        campo
+                    );
+
+
+                    return;
+
+                }
+
+
+                estadosDisponibilidad.nombreUsuario =
+                    "verificando";
+
+
+                mostrarEstadoVerificando(
+                    estado,
+                    "Verificando nombre de usuario...",
+                    campo
+                );
+
+
+                temporizadores.nombreUsuario =
+                    setTimeout(
+                        async function () {
+
+                            try {
+
+                                const datos =
+                                    await consultarDisponibilidad(
+                                        "/Home/VerificarNombreUsuario?nombreUsuario="
+                                        +
+                                        encodeURIComponent(
+                                            valor
+                                        )
+                                    );
+
+
+                                if (
+                                    solicitudes.nombreUsuario
+                                    !==
+                                    solicitudActual
+                                    ||
+                                    campo.value.trim()
+                                    !==
+                                    valor
+                                ) {
+
+                                    return;
+
+                                }
+
+
+                                if (
+                                    datos.existe
+                                    ===
+                                    true
+                                ) {
+
+                                    estadosDisponibilidad.nombreUsuario =
+                                        "ocupado";
+
+
+                                    mostrarEstadoError(
+                                        estado,
+                                        "Este nombre de usuario ya existe.",
+                                        campo,
+                                        true
+                                    );
+
+                                }
+                                else {
+
+                                    estadosDisponibilidad.nombreUsuario =
+                                        "disponible";
+
+
+                                    mostrarEstadoCorrecto(
+                                        estado,
+                                        "Nombre de usuario disponible.",
+                                        campo
+                                    );
+
+                                }
+
+                            }
+                            catch {
+
+                                if (
+                                    solicitudes.nombreUsuario
+                                    !==
+                                    solicitudActual
+                                ) {
+
+                                    return;
+
+                                }
+
+
+                                estadosDisponibilidad.nombreUsuario =
+                                    "error";
+
+
+                                mostrarEstadoError(
+                                    estado,
+                                    "No se pudo verificar el nombre de usuario. Intente nuevamente.",
+                                    campo,
+                                    false
+                                );
+
+                            }
+
+                        },
+                        500
+                    );
+
+            }
+        );
+
+    }
+
+
+
+    // =========================================================
+    // VALIDACION FINAL
+    // =========================================================
+
+    function validarYConfirmar() {
+
+        const campos =
+            obtenerCamposUsuario();
+
+
+        /*
+            Solo queremos un campo rojo a la vez.
+        */
+
+        document
+            .querySelectorAll(
+                "#formCrearUsuario .campo-error"
+            )
+            .forEach(
+                function (
+                    campo
+                ) {
+
+                    campo.classList.remove(
+                        "campo-error"
+                    );
+
+                }
+            );
+
+
+        ocultarMensajeGeneral();
+
+
+
+        // =====================================================
+        // NOMBRE
+        // =====================================================
+
+        if (
+            campos.nombre.value
+                .trim()
+            ===
+            ""
+        ) {
+
+            mostrarErrorGeneral(
+                "Debe ingresar el nombre.",
+                campos.nombre
+            );
+
+
+            return false;
+
+        }
+
+
+
+        // =====================================================
+        // APELLIDO
+        // =====================================================
+
+        if (
+            campos.apellido.value
+                .trim()
+            ===
+            ""
+        ) {
+
+            mostrarErrorGeneral(
+                "Debe ingresar el apellido.",
+                campos.apellido
+            );
+
+
+            return false;
+
+        }
+
+
+
+        // =====================================================
+        // CORREO
+        // =====================================================
+
+        if (
+            campos.email.value
+                .trim()
+            ===
+            ""
+        ) {
+
+            mostrarErrorGeneral(
+                "Debe ingresar el correo electrónico.",
+                campos.email
+            );
+
+
+            return false;
+
+        }
+
+
+        if (
+            !correoTieneFormatoValido(
+                campos.email.value
+            )
+        ) {
+
+            mostrarErrorGeneral(
+                "Debe ingresar un correo electrónico válido.",
+                campos.email
+            );
+
+
+            return false;
+
+        }
+
+
+        if (
+            estadosDisponibilidad.email
+            ===
+            "verificando"
+        ) {
+
+            mostrarErrorGeneral(
+                "Espere mientras se verifica el correo electrónico.",
+                campos.email
+            );
+
+
+            return false;
+
+        }
+
+
+        if (
+            estadosDisponibilidad.email
+            ===
+            "ocupado"
+        ) {
+
+            mostrarErrorGeneral(
+                "El correo electrónico ingresado ya está registrado.",
+                campos.email
+            );
+
+
+            return false;
+
+        }
+
+
+        if (
+            estadosDisponibilidad.email
+            !==
+            "disponible"
+        ) {
+
+            mostrarErrorGeneral(
+                "Debe verificarse el correo antes de crear el usuario.",
+                campos.email
+            );
+
+
+            return false;
+
+        }
+
+
+
+        // =====================================================
+        // RUT
+        // =====================================================
+
+        if (
+            campos.rut.value
+                .trim()
+            ===
+            ""
+        ) {
+
+            mostrarErrorGeneral(
+                "Debe ingresar el RUT.",
+                campos.rut
+            );
+
+
+            return false;
+
+        }
+
+
+        if (
+            !validarDigitoRut(
+                campos.rut.value
+            )
+        ) {
+
+            mostrarErrorGeneral(
+                "El RUT ingresado no es válido.",
+                campos.rut
+            );
+
+
+            return false;
+
+        }
+
+
+        if (
+            estadosDisponibilidad.rut
+            ===
+            "verificando"
+        ) {
+
+            mostrarErrorGeneral(
+                "Espere mientras se verifica el RUT.",
+                campos.rut
+            );
+
+
+            return false;
+
+        }
+
+
+        if (
+            estadosDisponibilidad.rut
+            ===
+            "ocupado"
+        ) {
+
+            mostrarErrorGeneral(
+                "El RUT ingresado ya está registrado.",
+                campos.rut
+            );
+
+
+            return false;
+
+        }
+
+
+        if (
+            estadosDisponibilidad.rut
+            !==
+            "disponible"
+        ) {
+
+            mostrarErrorGeneral(
+                "Debe verificarse el RUT antes de crear el usuario.",
+                campos.rut
+            );
+
+
+            return false;
+
+        }
+
+
+
+        // =====================================================
+        // ROL
+        // =====================================================
+
+        if (
+            campos.rol.value
+            ===
+            ""
+        ) {
+
+            mostrarErrorGeneral(
+                "Debe seleccionar un rol.",
+                campos.rol
+            );
+
+
+            return false;
+
+        }
+
+
+
+        // =====================================================
+        // NOMBRE DE USUARIO
+        // =====================================================
+
+        if (
+            campos.nombreUsuario.value
+                .trim()
+            ===
+            ""
+        ) {
+
+            mostrarErrorGeneral(
+                "Debe ingresar el nombre de usuario.",
+                campos.nombreUsuario
+            );
+
+
+            return false;
+
+        }
+
+
+        if (
+            campos.nombreUsuario.value
+                .trim()
+                .length
+            <
+            3
+        ) {
+
+            mostrarErrorGeneral(
+                "El nombre de usuario debe tener al menos 3 caracteres.",
+                campos.nombreUsuario
+            );
+
+
+            return false;
+
+        }
+
+
+        if (
+            estadosDisponibilidad.nombreUsuario
+            ===
+            "verificando"
+        ) {
+
+            mostrarErrorGeneral(
+                "Espere mientras se verifica el nombre de usuario.",
+                campos.nombreUsuario
+            );
+
+
+            return false;
+
+        }
+
+
+        if (
+            estadosDisponibilidad.nombreUsuario
+            ===
+            "ocupado"
+        ) {
+
+            mostrarErrorGeneral(
+                "El nombre de usuario ingresado ya existe.",
+                campos.nombreUsuario
+            );
+
+
+            return false;
+
+        }
+
+
+        if (
+            estadosDisponibilidad.nombreUsuario
+            !==
+            "disponible"
+        ) {
+
+            mostrarErrorGeneral(
+                "Debe verificarse el nombre de usuario antes de crear el usuario.",
+                campos.nombreUsuario
+            );
+
+
+            return false;
+
+        }
+
+
+
+        // =====================================================
+        // CONTRASEÑA
+        // =====================================================
+
+        if (
+            campos.contrasena.value
+                .trim()
+            ===
+            ""
+        ) {
+
+            mostrarErrorGeneral(
+                "Debe ingresar una contraseña.",
+                campos.contrasena
+            );
+
+
+            return false;
+
+        }
+
+
+
+        // =====================================================
+        // TODO CORRECTO
+        // =====================================================
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display =
+            "flex";
+
+
+        return true;
+
+    }
+
+
+
+    // =========================================================
+    // CONFIRMAR CREACION
+    // =========================================================
+
+    function crearUsuario() {
+
+        usuarioConfirmado =
+            true;
+
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display =
+            "none";
+
+
+        document.getElementById(
+            "formCrearUsuario"
+        ).requestSubmit();
+
+    }
+
+
+
+    // =========================================================
+    // CERRAR CONFIRMACION
+    // =========================================================
+
+    function cerrarConfirmacion() {
+
+        usuarioConfirmado =
+            false;
+
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display =
+            "none";
+
+    }
+
+
+
+    // =========================================================
+    // CANCELAR CREACION
+    // =========================================================
+
+    function cancelarCreacion() {
+
+        usuarioConfirmado =
+            false;
+
+
+        document.getElementById(
+            "modalConfirmacion"
+        ).style.display =
+            "none";
+
+
+        const formulario =
+            document.getElementById(
+                "formCrearUsuario"
+            );
+
+
+        formulario.reset();
+
+
+        clearTimeout(
+            temporizadores.rut
+        );
+
+
+        clearTimeout(
+            temporizadores.email
+        );
+
+
+        clearTimeout(
+            temporizadores.nombreUsuario
+        );
+
+
+        /*
+            Invalidamos respuestas pendientes.
+        */
+
+        solicitudes.rut++;
+
+
+        solicitudes.email++;
+
+
+        solicitudes.nombreUsuario++;
+
+
+        estadosDisponibilidad.rut =
+            "vacio";
+
+
+        estadosDisponibilidad.email =
+            "vacio";
+
+
+        estadosDisponibilidad.nombreUsuario =
+            "vacio";
+
+
+        const campos =
+            obtenerCamposUsuario();
+
+
+        mostrarEstadoVacio(
+            document.getElementById(
+                "estadoRut"
+            ),
+            campos.rut
+        );
+
+
+        mostrarEstadoVacio(
+            document.getElementById(
+                "estadoEmail"
+            ),
+            campos.email
+        );
+
+
+        mostrarEstadoVacio(
+            document.getElementById(
+                "estadoNombreUsuario"
+            ),
+            campos.nombreUsuario
+        );
+
+
+        document
+            .querySelectorAll(
+                "#formCrearUsuario .campo-error"
+            )
+            .forEach(
+                function (
+                    campo
+                ) {
+
+                    campo.classList.remove(
+                        "campo-error"
+                    );
+
+                }
+            );
+
+
+        ocultarMensajeGeneral();
+
+
+        campos.nombre.focus();
+
+    }
+
+
+
+    // =========================================================
+    // SUBMIT LOCAL
+    // =========================================================
+    //
+    // IMPORTANTE:
+    //
+    // Este formulario se valida aquí ANTES que site.js.
+    //
+    // Evitamos así que la validación general y la validación
+    // especial en caliente de Crear Usuario compitan.
+    //
+    // =========================================================
+
+    document.addEventListener(
+        "submit",
+        function (
+            evento
+        ) {
+
+            const formulario =
+                evento.target;
+
+
+            if (
+                !(
+                    formulario
+                    instanceof
+                    HTMLFormElement
+                )
+                ||
+                formulario.id
+                !==
+                "formCrearUsuario"
+            ) {
+
+                return;
+
+            }
+
+
+            /*
+                Evitamos que site.js vuelva a validar
+                este formulario.
+            */
+
+            evento.stopImmediatePropagation();
+
+
+            /*
+                Si ya se confirmó mediante el modal,
+                dejamos que el POST continúe.
+            */
+
+            if (usuarioConfirmado) {
+
+                return;
+
+            }
+
+
+            evento.preventDefault();
+
+
+            validarYConfirmar();
+
+        },
+        true
+    );
+
+
+
+    // =========================================================
+    // QUITAR ERROR CUANDO SE CORRIGE UN CAMPO NORMAL
+    // =========================================================
+
+    document
+        .querySelectorAll(
+            "#formCrearUsuario input:not(#email):not(#rut):not(#nombre_usuario)"
+        )
+        .forEach(
+            function (
+                campo
+            ) {
+
+                campo.addEventListener(
+                    "input",
+                    function () {
+
+                        limpiarErrorCampo(
+                            this
+                        );
+
+
+                        ocultarMensajeGeneral();
+
+                    }
+                );
+
+            }
+        );
+
+
+
+    document
+        .getElementById(
+            "id_rol"
+        )
+        .addEventListener(
+            "change",
+            function () {
+
+                limpiarErrorCampo(
+                    this
+                );
+
+
+                ocultarMensajeGeneral();
+
+            }
+        );
+
+
+
+    // =========================================================
+    // ACTIVAR VALIDACIONES EN CALIENTE
+    // =========================================================
+
+    prepararValidacionRut();
+
+
+    prepararValidacionEmail();
+
+
+    prepararValidacionNombreUsuario();
+
+
+
+    // =========================================================
+    // REVALIDAR SI EL SERVIDOR DEVUELVE DATOS
+    // =========================================================
+
+    window.addEventListener(
+        "load",
+        function () {
+
+            const campos =
+                obtenerCamposUsuario();
+
+
+            [
+                campos.email,
+                campos.rut,
+                campos.nombreUsuario
+            ]
+            .forEach(
+                function (
+                    campo
+                ) {
+
+                    if (
+                        campo
+                        &&
+                        campo.value
+                            .trim()
+                        !==
+                        ""
+                    ) {
+
+                        campo.dispatchEvent(
+                            new Event(
+                                "input",
+                                {
+                                    bubbles:
+                                        false
+                                }
+                            )
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+
+
+    // =========================================================
+    // OCULTAR MENSAJE DE EXITO
+    // =========================================================
+
+    setTimeout(
+        function () {
+
+            const mensaje =
+                document.getElementById(
+                    "mensajeFormulario"
+                );
+
+
+            if (
+                mensaje
+                &&
+                mensaje.classList.contains(
+                    "mensaje-exito"
+                )
+            ) {
+
+                mensaje.style.opacity =
+                    "0";
+
+
+                setTimeout(
+                    function () {
+
+                        mensaje.style.visibility =
+                            "hidden";
+
+                    },
+                    500
+                );
+
+            }
+
+        },
+        3000
+    );
 
 </script>

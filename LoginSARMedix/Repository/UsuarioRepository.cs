@@ -7,14 +7,15 @@ namespace LoginSARMedix.Repository
     {
         private readonly string _conexion;
 
-
-        public UsuarioRepository(IConfiguration configuration)
+        public UsuarioRepository(
+            IConfiguration configuration)
         {
             _conexion =
-                configuration.GetConnectionString("ConexionMySQL")!;
+                configuration
+                    .GetConnectionString(
+                        "ConexionMySQL"
+                    )!;
         }
-
-
 
         // INICIAR SESION
 
@@ -24,13 +25,12 @@ namespace LoginSARMedix.Repository
         {
             Usuario? usuario = null;
 
-
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
-
 
             string consulta =
                 @"SELECT u.id_usuario,
@@ -50,29 +50,25 @@ namespace LoginSARMedix.Repository
                   AND u.contrasena = @contrasena
                   AND u.activo = 1";
 
-
             using MySqlCommand comando =
                 new MySqlCommand(
                     consulta,
                     conexion
                 );
 
-
             comando.Parameters.AddWithValue(
                 "@nombreUsuario",
                 nombreUsuario
             );
-
 
             comando.Parameters.AddWithValue(
                 "@contrasena",
                 contrasena
             );
 
-
             using MySqlDataReader lector =
-                await comando.ExecuteReaderAsync();
-
+                await comando
+                    .ExecuteReaderAsync();
 
             if (await lector.ReadAsync())
             {
@@ -96,10 +92,14 @@ namespace LoginSARMedix.Repository
 
                         email =
                             lector.IsDBNull(
-                                lector.GetOrdinal("email")
+                                lector.GetOrdinal(
+                                    "email"
+                                )
                             )
                             ? null
-                            : lector.GetString("email"),
+                            : lector.GetString(
+                                "email"
+                            ),
 
                         rut =
                             lector.GetString(
@@ -133,11 +133,8 @@ namespace LoginSARMedix.Repository
                     };
             }
 
-
             return usuario;
         }
-
-
 
         // OBTENER PERMISOS
 
@@ -147,13 +144,12 @@ namespace LoginSARMedix.Repository
             List<string> permisos =
                 new List<string>();
 
-
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
-
 
             string consulta =
                 @"SELECT p.nombre
@@ -162,23 +158,20 @@ namespace LoginSARMedix.Repository
                   ON rp.id_permiso = p.id_permiso
                   WHERE rp.id_rol = @idRol";
 
-
             using MySqlCommand comando =
                 new MySqlCommand(
                     consulta,
                     conexion
                 );
 
-
             comando.Parameters.AddWithValue(
                 "@idRol",
                 idRol
             );
 
-
             using MySqlDataReader lector =
-                await comando.ExecuteReaderAsync();
-
+                await comando
+                    .ExecuteReaderAsync();
 
             while (await lector.ReadAsync())
             {
@@ -189,11 +182,119 @@ namespace LoginSARMedix.Repository
                 );
             }
 
-
             return permisos;
         }
 
+        // VERIFICAR SI EL RUT YA EXISTE
 
+        public async Task<bool> ExisteRut(
+            string rut)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(
+                    _conexion
+                );
+
+            await conexion.OpenAsync();
+
+            string consulta =
+                @"SELECT COUNT(*)
+                  FROM usuario
+                  WHERE rut = @rut";
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+            comando.Parameters.AddWithValue(
+                "@rut",
+                rut.Trim()
+            );
+
+            int cantidad =
+                Convert.ToInt32(
+                    await comando
+                        .ExecuteScalarAsync()
+                );
+
+            return cantidad > 0;
+        }
+
+        // VERIFICAR SI EL CORREO YA EXISTE
+
+        public async Task<bool> ExisteCorreo(
+            string correo)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(
+                    _conexion
+                );
+
+            await conexion.OpenAsync();
+
+            string consulta =
+                @"SELECT COUNT(*)
+                  FROM usuario
+                  WHERE email = @correo";
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+            comando.Parameters.AddWithValue(
+                "@correo",
+                correo.Trim()
+            );
+
+            int cantidad =
+                Convert.ToInt32(
+                    await comando
+                        .ExecuteScalarAsync()
+                );
+
+            return cantidad > 0;
+        }
+
+        // VERIFICAR SI EL NOMBRE DE USUARIO YA EXISTE
+
+        public async Task<bool> ExisteNombreUsuario(
+            string nombreUsuario)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(
+                    _conexion
+                );
+
+            await conexion.OpenAsync();
+
+            string consulta =
+                @"SELECT COUNT(*)
+                  FROM usuario
+                  WHERE nombre_usuario = @nombreUsuario";
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+            comando.Parameters.AddWithValue(
+                "@nombreUsuario",
+                nombreUsuario.Trim()
+            );
+
+            int cantidad =
+                Convert.ToInt32(
+                    await comando
+                        .ExecuteScalarAsync()
+                );
+
+            return cantidad > 0;
+        }
 
         // CREAR USUARIO
 
@@ -201,12 +302,11 @@ namespace LoginSARMedix.Repository
             Usuario reg)
         {
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
-
-
 
             // COMPROBAR SI YA EXISTE RUT, USUARIO O EMAIL
 
@@ -217,31 +317,26 @@ namespace LoginSARMedix.Repository
                   OR nombre_usuario = @nombreUsuario
                   OR email = @email";
 
-
             using MySqlCommand comandoExiste =
                 new MySqlCommand(
                     consultaExiste,
                     conexion
                 );
 
-
             comandoExiste.Parameters.AddWithValue(
                 "@rut",
                 reg.rut
             );
-
 
             comandoExiste.Parameters.AddWithValue(
                 "@nombreUsuario",
                 reg.nombre_usuario
             );
 
-
             comandoExiste.Parameters.AddWithValue(
                 "@email",
                 reg.email
             );
-
 
             int cantidad =
                 Convert.ToInt32(
@@ -249,13 +344,10 @@ namespace LoginSARMedix.Repository
                         .ExecuteScalarAsync()
                 );
 
-
             if (cantidad > 0)
             {
                 return false;
             }
-
-
 
             // INSERTAR NUEVO USUARIO
 
@@ -283,64 +375,53 @@ namespace LoginSARMedix.Repository
                       1
                   )";
 
-
             using MySqlCommand comando =
                 new MySqlCommand(
                     consulta,
                     conexion
                 );
 
-
             comando.Parameters.AddWithValue(
                 "@nombre",
                 reg.nombre
             );
-
 
             comando.Parameters.AddWithValue(
                 "@apellido",
                 reg.apellido
             );
 
-
             comando.Parameters.AddWithValue(
                 "@email",
                 reg.email
             );
-
 
             comando.Parameters.AddWithValue(
                 "@rut",
                 reg.rut
             );
 
-
             comando.Parameters.AddWithValue(
                 "@idRol",
                 reg.id_rol
             );
-
 
             comando.Parameters.AddWithValue(
                 "@nombreUsuario",
                 reg.nombre_usuario
             );
 
-
             comando.Parameters.AddWithValue(
                 "@contrasena",
                 reg.contrasena
             );
 
-
             int resultado =
-                await comando.ExecuteNonQueryAsync();
-
+                await comando
+                    .ExecuteNonQueryAsync();
 
             return resultado > 0;
         }
-
-
 
         // LISTADO DE USUARIOS
 
@@ -350,13 +431,12 @@ namespace LoginSARMedix.Repository
             List<Usuario> usuarios =
                 new List<Usuario>();
 
-
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
-
 
             string consulta =
                 @"SELECT u.id_usuario,
@@ -372,17 +452,15 @@ namespace LoginSARMedix.Repository
                   INNER JOIN rol r
                   ON u.id_rol = r.id_rol";
 
-
             using MySqlCommand comando =
                 new MySqlCommand(
                     consulta,
                     conexion
                 );
 
-
             using MySqlDataReader lector =
-                await comando.ExecuteReaderAsync();
-
+                await comando
+                    .ExecuteReaderAsync();
 
             while (await lector.ReadAsync())
             {
@@ -406,10 +484,14 @@ namespace LoginSARMedix.Repository
 
                         email =
                             lector.IsDBNull(
-                                lector.GetOrdinal("email")
+                                lector.GetOrdinal(
+                                    "email"
+                                )
                             )
                             ? null
-                            : lector.GetString("email"),
+                            : lector.GetString(
+                                "email"
+                            ),
 
                         rut =
                             lector.GetString(
@@ -439,11 +521,8 @@ namespace LoginSARMedix.Repository
                 );
             }
 
-
             return usuarios;
         }
-
-
 
         // DESACTIVAR USUARIO
 
@@ -451,17 +530,16 @@ namespace LoginSARMedix.Repository
             int idUsuario)
         {
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
-
 
             string consulta =
                 @"UPDATE usuario
                   SET activo = 0
                   WHERE id_usuario = @idUsuario";
-
 
             using MySqlCommand comando =
                 new MySqlCommand(
@@ -469,21 +547,17 @@ namespace LoginSARMedix.Repository
                     conexion
                 );
 
-
             comando.Parameters.AddWithValue(
                 "@idUsuario",
                 idUsuario
             );
 
-
             int resultado =
-                await comando.ExecuteNonQueryAsync();
-
+                await comando
+                    .ExecuteNonQueryAsync();
 
             return resultado > 0;
         }
-
-
 
         // OBTENER USUARIO POR ID
 
@@ -492,13 +566,12 @@ namespace LoginSARMedix.Repository
         {
             Usuario? usuario = null;
 
-
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
-
 
             string consulta =
                 @"SELECT id_usuario,
@@ -512,23 +585,20 @@ namespace LoginSARMedix.Repository
                   FROM usuario
                   WHERE id_usuario = @idUsuario";
 
-
             using MySqlCommand comando =
                 new MySqlCommand(
                     consulta,
                     conexion
                 );
 
-
             comando.Parameters.AddWithValue(
                 "@idUsuario",
                 idUsuario
             );
 
-
             using MySqlDataReader lector =
-                await comando.ExecuteReaderAsync();
-
+                await comando
+                    .ExecuteReaderAsync();
 
             if (await lector.ReadAsync())
             {
@@ -552,10 +622,14 @@ namespace LoginSARMedix.Repository
 
                         email =
                             lector.IsDBNull(
-                                lector.GetOrdinal("email")
+                                lector.GetOrdinal(
+                                    "email"
+                                )
                             )
                             ? null
-                            : lector.GetString("email"),
+                            : lector.GetString(
+                                "email"
+                            ),
 
                         rut =
                             lector.GetString(
@@ -579,11 +653,8 @@ namespace LoginSARMedix.Repository
                     };
             }
 
-
             return usuario;
         }
-
-
 
         // ACTUALIZAR USUARIO
 
@@ -591,11 +662,11 @@ namespace LoginSARMedix.Repository
             Usuario reg)
         {
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
-
 
             string consulta =
                 @"UPDATE usuario
@@ -607,64 +678,53 @@ namespace LoginSARMedix.Repository
                       nombre_usuario = @nombreUsuario
                   WHERE id_usuario = @idUsuario";
 
-
             using MySqlCommand comando =
                 new MySqlCommand(
                     consulta,
                     conexion
                 );
 
-
             comando.Parameters.AddWithValue(
                 "@nombre",
                 reg.nombre
             );
-
 
             comando.Parameters.AddWithValue(
                 "@apellido",
                 reg.apellido
             );
 
-
             comando.Parameters.AddWithValue(
                 "@email",
                 reg.email
             );
-
 
             comando.Parameters.AddWithValue(
                 "@rut",
                 reg.rut
             );
 
-
             comando.Parameters.AddWithValue(
                 "@idRol",
                 reg.id_rol
             );
-
 
             comando.Parameters.AddWithValue(
                 "@nombreUsuario",
                 reg.nombre_usuario
             );
 
-
             comando.Parameters.AddWithValue(
                 "@idUsuario",
                 reg.id_usuario
             );
 
-
             int resultado =
-                await comando.ExecuteNonQueryAsync();
-
+                await comando
+                    .ExecuteNonQueryAsync();
 
             return resultado > 0;
         }
-
-
 
         // LISTADO DE USUARIOS INACTIVOS
 
@@ -674,13 +734,12 @@ namespace LoginSARMedix.Repository
             List<Usuario> usuarios =
                 new List<Usuario>();
 
-
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
-
 
             string consulta =
                 @"SELECT u.id_usuario,
@@ -697,17 +756,15 @@ namespace LoginSARMedix.Repository
                   ON u.id_rol = r.id_rol
                   WHERE u.activo = 0";
 
-
             using MySqlCommand comando =
                 new MySqlCommand(
                     consulta,
                     conexion
                 );
 
-
             using MySqlDataReader lector =
-                await comando.ExecuteReaderAsync();
-
+                await comando
+                    .ExecuteReaderAsync();
 
             while (await lector.ReadAsync())
             {
@@ -731,10 +788,14 @@ namespace LoginSARMedix.Repository
 
                         email =
                             lector.IsDBNull(
-                                lector.GetOrdinal("email")
+                                lector.GetOrdinal(
+                                    "email"
+                                )
                             )
                             ? null
-                            : lector.GetString("email"),
+                            : lector.GetString(
+                                "email"
+                            ),
 
                         rut =
                             lector.GetString(
@@ -764,11 +825,8 @@ namespace LoginSARMedix.Repository
                 );
             }
 
-
             return usuarios;
         }
-
-
 
         // REACTIVAR USUARIO
 
@@ -776,11 +834,11 @@ namespace LoginSARMedix.Repository
             int idUsuario)
         {
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
-
 
             string consulta =
                 @"UPDATE usuario
@@ -788,28 +846,23 @@ namespace LoginSARMedix.Repository
                   WHERE id_usuario = @idUsuario
                   AND activo = 0";
 
-
             using MySqlCommand comando =
                 new MySqlCommand(
                     consulta,
                     conexion
                 );
 
-
             comando.Parameters.AddWithValue(
                 "@idUsuario",
                 idUsuario
             );
 
-
             int resultado =
-                await comando.ExecuteNonQueryAsync();
-
+                await comando
+                    .ExecuteNonQueryAsync();
 
             return resultado > 0;
         }
-
-
 
         // ELIMINAR USUARIO
 
@@ -817,17 +870,16 @@ namespace LoginSARMedix.Repository
             int idUsuario)
         {
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
-
 
             string consulta =
                 @"DELETE FROM usuario
                   WHERE id_usuario = @idUsuario
                   AND activo = 0";
-
 
             using MySqlCommand comando =
                 new MySqlCommand(
@@ -835,21 +887,17 @@ namespace LoginSARMedix.Repository
                     conexion
                 );
 
-
             comando.Parameters.AddWithValue(
                 "@idUsuario",
                 idUsuario
             );
 
-
             int resultado =
-                await comando.ExecuteNonQueryAsync();
-
+                await comando
+                    .ExecuteNonQueryAsync();
 
             return resultado > 0;
         }
-
-
 
         // BUSCAR USUARIO POR CORREO
 
@@ -858,13 +906,12 @@ namespace LoginSARMedix.Repository
         {
             Usuario? usuario = null;
 
-
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
-
 
             string consulta =
                 @"SELECT id_usuario,
@@ -876,23 +923,20 @@ namespace LoginSARMedix.Repository
                   AND activo = 1
                   LIMIT 1";
 
-
             using MySqlCommand comando =
                 new MySqlCommand(
                     consulta,
                     conexion
                 );
 
-
             comando.Parameters.AddWithValue(
                 "@correo",
                 correo
             );
 
-
             using MySqlDataReader lector =
-                await comando.ExecuteReaderAsync();
-
+                await comando
+                    .ExecuteReaderAsync();
 
             if (await lector.ReadAsync())
             {
@@ -916,13 +960,16 @@ namespace LoginSARMedix.Repository
 
                         email =
                             lector.IsDBNull(
-                                lector.GetOrdinal("email")
+                                lector.GetOrdinal(
+                                    "email"
+                                )
                             )
                             ? null
-                            : lector.GetString("email")
+                            : lector.GetString(
+                                "email"
+                            )
                     };
             }
-
 
             return usuario;
         }
@@ -935,28 +982,27 @@ namespace LoginSARMedix.Repository
             DateTime fechaExpiracion)
         {
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
 
-
             string consulta =
                 @"INSERT INTO recuperacion_contrasena
-          (
-              id_usuario,
-              codigo,
-              fecha_expiracion,
-              utilizado
-          )
-          VALUES
-          (
-              @idUsuario,
-              @codigo,
-              @fechaExpiracion,
-              0
-          )";
-
+                  (
+                      id_usuario,
+                      codigo,
+                      fecha_expiracion,
+                      utilizado
+                  )
+                  VALUES
+                  (
+                      @idUsuario,
+                      @codigo,
+                      @fechaExpiracion,
+                      0
+                  )";
 
             using MySqlCommand comando =
                 new MySqlCommand(
@@ -964,28 +1010,24 @@ namespace LoginSARMedix.Repository
                     conexion
                 );
 
-
             comando.Parameters.AddWithValue(
                 "@idUsuario",
                 idUsuario
             );
-
 
             comando.Parameters.AddWithValue(
                 "@codigo",
                 codigo
             );
 
-
             comando.Parameters.AddWithValue(
                 "@fechaExpiracion",
                 fechaExpiracion
             );
 
-
             int resultado =
-                await comando.ExecuteNonQueryAsync();
-
+                await comando
+                    .ExecuteNonQueryAsync();
 
             return resultado > 0;
         }
@@ -996,21 +1038,20 @@ namespace LoginSARMedix.Repository
             string codigo)
         {
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
 
-
             string consulta =
                 @"SELECT id_usuario
-          FROM recuperacion_contrasena
-          WHERE codigo = @codigo
-          AND utilizado = 0
-          AND fecha_expiracion >= NOW()
-          ORDER BY id_recuperacion DESC
-          LIMIT 1";
-
+                  FROM recuperacion_contrasena
+                  WHERE codigo = @codigo
+                  AND utilizado = 0
+                  AND fecha_expiracion >= NOW()
+                  ORDER BY id_recuperacion DESC
+                  LIMIT 1";
 
             using MySqlCommand comando =
                 new MySqlCommand(
@@ -1018,22 +1059,19 @@ namespace LoginSARMedix.Repository
                     conexion
                 );
 
-
             comando.Parameters.AddWithValue(
                 "@codigo",
                 codigo
             );
 
-
             object? resultado =
-                await comando.ExecuteScalarAsync();
-
+                await comando
+                    .ExecuteScalarAsync();
 
             if (resultado == null)
             {
                 return null;
             }
-
 
             return Convert.ToInt32(
                 resultado
@@ -1047,17 +1085,16 @@ namespace LoginSARMedix.Repository
             string nuevaContrasena)
         {
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
 
-
             string consulta =
                 @"UPDATE usuario
-          SET contrasena = @contrasena
-          WHERE id_usuario = @idUsuario";
-
+                  SET contrasena = @contrasena
+                  WHERE id_usuario = @idUsuario";
 
             using MySqlCommand comando =
                 new MySqlCommand(
@@ -1065,22 +1102,19 @@ namespace LoginSARMedix.Repository
                     conexion
                 );
 
-
             comando.Parameters.AddWithValue(
                 "@contrasena",
                 nuevaContrasena
             );
-
 
             comando.Parameters.AddWithValue(
                 "@idUsuario",
                 idUsuario
             );
 
-
             int resultado =
-                await comando.ExecuteNonQueryAsync();
-
+                await comando
+                    .ExecuteNonQueryAsync();
 
             return resultado > 0;
         }
@@ -1092,19 +1126,18 @@ namespace LoginSARMedix.Repository
             string codigo)
         {
             using MySqlConnection conexion =
-                new MySqlConnection(_conexion);
-
+                new MySqlConnection(
+                    _conexion
+                );
 
             await conexion.OpenAsync();
 
-
             string consulta =
                 @"UPDATE recuperacion_contrasena
-          SET utilizado = 1
-          WHERE id_usuario = @idUsuario
-          AND codigo = @codigo
-          AND utilizado = 0";
-
+                  SET utilizado = 1
+                  WHERE id_usuario = @idUsuario
+                  AND codigo = @codigo
+                  AND utilizado = 0";
 
             using MySqlCommand comando =
                 new MySqlCommand(
@@ -1112,25 +1145,21 @@ namespace LoginSARMedix.Repository
                     conexion
                 );
 
-
             comando.Parameters.AddWithValue(
                 "@idUsuario",
                 idUsuario
             );
-
 
             comando.Parameters.AddWithValue(
                 "@codigo",
                 codigo
             );
 
-
             int resultado =
-                await comando.ExecuteNonQueryAsync();
-
+                await comando
+                    .ExecuteNonQueryAsync();
 
             return resultado > 0;
         }
-
     }
 }

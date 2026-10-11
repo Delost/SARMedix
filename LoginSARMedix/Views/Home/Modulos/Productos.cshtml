@@ -2,10 +2,21 @@
 
 @{
     ViewData["Title"] = "Productos";
-    ViewData["TituloBarra"] = "Seleccione Submódulo";
+
+    ViewData["TituloBarra"] =
+        "Seleccione Submódulo";
+
+
+    // =========================================================
+    // PERMISOS
+    // =========================================================
 
     string permisosTexto =
-        Context.Session.GetString("Permisos") ?? "";
+        Context.Session.GetString(
+            "Permisos"
+        )
+        ?? "";
+
 
     var permisos =
         permisosTexto.Split(
@@ -13,107 +24,148 @@
             StringSplitOptions.RemoveEmptyEntries
         );
 
+
     bool permisoRegistrar =
         permisos.Any(
-            p => p.Equals(
-                "Registrar productos",
-                StringComparison.OrdinalIgnoreCase
-            )
+            p =>
+                p.Equals(
+                    "Registrar productos",
+                    StringComparison.OrdinalIgnoreCase
+                )
         );
+
 
     bool permisoConsultar =
         permisos.Any(
-            p => p.Equals(
-                "Consultar productos",
-                StringComparison.OrdinalIgnoreCase
-            )
+            p =>
+                p.Equals(
+                    "Consultar productos",
+                    StringComparison.OrdinalIgnoreCase
+                )
         );
 }
 
 
+
 <style>
 
+    /* =========================================================
+       CONTENEDOR
 
-    /* AJUSTE DE ESTA VISTA*/
-
-
-    main[role="main"] {
-        padding: 0 !important;
-        justify-content: flex-start;
-        align-items: stretch;
-    }
-
-
-    /* CONTENIDO */
+       MISMAS MEDIDAS QUE MOVIMIENTOS E HISTORIAL
+       ========================================================= */
 
     .submenu-contenedor {
-        width: 100%;
-        min-height: calc(100vh - 144px);
+        width: 90%;
 
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        max-width: 1100px;
 
-        padding: 48px 25px 45px 25px;
+        margin:
+            5px
+            auto;
 
-        background-color: #eef4fb;
+        text-align: center;
     }
 
+
+
+    /* =========================================================
+       TITULO
+       ========================================================= */
 
     .submenu-titulo {
-        color: #07527c;
-        font-size: 29px;
+        margin: 0;
+
+        color: #087bc2;
+
+        font-size: 32px;
+
         font-weight: 700;
-        text-align: center;
     }
 
+
+
+    /* =========================================================
+       DESCRIPCION
+       ========================================================= */
 
     .submenu-descripcion {
-        margin: 10px 0 38px 0;
+        margin:
+            8px
+            0
+            35px;
 
-        color: #60798b;
-        font-size: 15px;
-        text-align: center;
+        color: #5f7180;
+
+        font-size: 16px;
     }
 
 
-    /* TARJETAS */
+
+    /* =========================================================
+       TARJETAS
+
+       EXACTAMENTE LA MISMA DISTRIBUCION
+       QUE MOVIMIENTOS E HISTORIAL
+       ========================================================= */
 
     .submenu-grid {
-        width: 100%;
-        max-width: 950px;
+        display: grid;
 
-        display: flex;
-        justify-content: center;
+        grid-template-columns:
+            repeat(
+                3,
+                1fr
+            );
+
         gap: 25px;
-        flex-wrap: wrap;
     }
 
 
-    .submenu-card {
-        width: 300px;
-        min-height: 216px;
 
-        padding: 34px 28px;
+    /* =========================================================
+       TARJETA
+       ========================================================= */
+
+    .submenu-card {
+        min-height: 190px;
+
+        padding: 30px;
 
         display: flex;
+
         flex-direction: column;
-        align-items: center;
+
         justify-content: center;
 
-        background-color: white;
+        align-items: center;
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                0.95
+            );
 
         border-radius: 14px;
 
-        box-shadow:
-            0 8px 22px
-            rgba(16, 65, 95, 0.11);
+        color: #17324d;
+
+        text-align: center;
 
         text-decoration: none;
 
-        color: inherit;
-
-        text-align: center;
+        box-shadow:
+            0
+            7px
+            20px
+            rgba(
+                28,
+                65,
+                95,
+                0.15
+            );
 
         transition:
             transform 0.2s ease,
@@ -121,60 +173,81 @@
     }
 
 
+
+    /* =========================================================
+       HOVER
+       ========================================================= */
+
     .submenu-card:hover {
-        transform: translateY(-4px);
+        transform:
+            translateY(
+                -5px
+            );
 
         box-shadow:
-            0 13px 30px
-            rgba(16, 65, 95, 0.17);
+            0
+            14px
+            30px
+            rgba(
+                15,
+                91,
+                150,
+                0.25
+            );
 
-        color: inherit;
+        color: #17324d;
     }
 
+
+
+    /* =========================================================
+       ICONO
+       ========================================================= */
 
     .submenu-icono {
-        width: 64px;
-        height: 64px;
+        margin-bottom: 12px;
 
-        margin-bottom: 20px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 50%;
-
-        background-color: #e8f5fa;
-
-        font-size: 30px;
+        font-size: 42px;
     }
 
 
+
+    /* =========================================================
+       TITULO TARJETA
+       ========================================================= */
+
     .submenu-card-titulo {
-        margin-bottom: 9px;
+        margin-bottom: 8px;
 
-        color: #07527c;
+        color: #087bc2;
 
-        font-size: 18px;
+        font-size: 21px;
+
         font-weight: 700;
     }
 
 
+
+    /* =========================================================
+       TEXTO TARJETA
+       ========================================================= */
+
     .submenu-card p {
         margin: 0;
 
-        color: #60798b;
+        color: #687b89;
 
         font-size: 14px;
-
-        line-height: 1.5;
     }
 
 
-    /* VOLVER */
+
+    /* =========================================================
+       BOTON VOLVER
+       ========================================================= */
 
     .volver-contenedor {
-        margin-top: 38px;
+        margin-top: 35px;
 
         text-align: center;
     }
@@ -183,52 +256,66 @@
     .btn-volver-submenu {
         display: inline-block;
 
-        padding: 11px 22px;
+        padding:
+            11px
+            20px;
 
-        border-radius: 7px;
-
-        background-color: #1198a5;
+        background: #0b8f9c;
 
         color: white;
 
+        border-radius: 7px;
+
         text-decoration: none;
 
-        font-size: 14px;
         font-weight: 600;
-
-        transition:
-            background-color 0.2s ease;
     }
 
 
     .btn-volver-submenu:hover {
-        background-color: #0d8490;
+        background: #087580;
 
         color: white;
     }
 
 
-    /* RESPONSIVE */
 
-    @@media (max-width: 750px) {
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
 
-        .submenu-card {
-            width: 100%;
-            max-width: 440px;
+    @@media (max-width: 900px) {
+
+        .submenu-grid {
+            grid-template-columns:
+                1fr;
+        }
+
+
+        .submenu-contenedor {
+            width: 94%;
         }
 
     }
 
 
-    @@media (max-width: 500px) {
 
-        .submenu-contenedor {
-            padding: 35px 18px;
+    @@media (max-width: 600px) {
+
+        .submenu-titulo {
+            font-size: 27px;
         }
 
 
-        .submenu-titulo {
-            font-size: 25px;
+        .submenu-card {
+            min-height: 170px;
+
+            padding: 25px;
+        }
+
+
+        .submenu-icono {
+            font-size: 38px;
         }
 
     }
@@ -240,12 +327,21 @@
 <section class="submenu-contenedor">
 
 
+    <!-- =====================================================
+         TITULO
+         ===================================================== -->
+
     <div class="submenu-titulo">
 
         Productos
 
     </div>
 
+
+
+    <!-- =====================================================
+         DESCRIPCION
+         ===================================================== -->
 
     <p class="submenu-descripcion">
 
@@ -256,10 +352,17 @@
 
 
 
+    <!-- =====================================================
+         TARJETAS
+         ===================================================== -->
+
     <div class="submenu-grid">
 
 
-        <!-- REGISTRAR PRODUCTO -->
+
+        <!-- =================================================
+             REGISTRAR PRODUCTO
+             ================================================= -->
 
         @if (permisoRegistrar)
         {
@@ -295,7 +398,9 @@
 
 
 
-        <!-- LISTADO DE PRODUCTOS -->
+        <!-- =================================================
+             LISTADO DE PRODUCTOS
+             ================================================= -->
 
         @if (permisoConsultar)
         {
@@ -331,7 +436,9 @@
 
 
 
-        <!-- LOTES -->
+        <!-- =================================================
+             GESTION DE LOTES
+             ================================================= -->
 
         @if (permisoConsultar)
         {
@@ -368,9 +475,11 @@
 
     </div>
 
-    
 
-    <!-- VOLVER -->
+
+    <!-- =====================================================
+         VOLVER
+         ===================================================== -->
 
     <div class="volver-contenedor">
 

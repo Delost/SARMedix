@@ -1,8 +1,25 @@
-﻿@model List<LoginSARMedix.Models.Historial>
+﻿@using System.Text.RegularExpressions
+@model List<LoginSARMedix.Models.Historial>
 
 @{
     ViewData["Title"] = "Historial";
     ViewData["TituloBarra"] = "Historial";
+
+    string buscarActual =
+        ViewBag.Buscar?.ToString() ?? "";
+
+    string filtroActual =
+        ViewBag.Filtro?.ToString() ?? "todos";
+
+    string periodoActual =
+        ViewBag.Periodo?.ToString() ?? "todos";
+
+    int totalRegistros =
+        ViewBag.TotalRegistros != null
+            ? Convert.ToInt32(
+                ViewBag.TotalRegistros
+            )
+            : 0;
 }
 
 
@@ -15,13 +32,335 @@
         </h1>
 
         <p>
-            Registro de acciones realizadas en SARMedix
+            Registro general de todas las acciones realizadas en SARMedix
         </p>
 
     </div>
 
 
-    @if (Model != null && Model.Count > 0)
+
+    <!-- =========================================================
+         HERRAMIENTAS
+         ========================================================= -->
+
+    <div class="historial-herramientas">
+
+
+        <!-- =====================================================
+             BUSQUEDA
+             ===================================================== -->
+
+        <form asp-controller="Home"
+              asp-action="Historial"
+              method="get"
+              class="form-busqueda">
+
+
+            <!--
+                MANTENEMOS LOS FILTROS ACTUALES
+                MIENTRAS SE REALIZA LA BUSQUEDA.
+            -->
+
+            <input type="hidden"
+                   name="filtro"
+                   value="@filtroActual" />
+
+
+            <input type="hidden"
+                   name="periodo"
+                   value="@periodoActual" />
+
+
+
+            <div class="filtro-busqueda">
+
+                <span class="filtro-icono-busqueda">
+
+                    🔎
+
+                </span>
+
+
+                <input type="text"
+                       name="buscar"
+                       value="@buscarActual"
+                       placeholder="Buscar por responsable o descripción..."
+                       autocomplete="off" />
+
+            </div>
+
+
+
+            <button type="submit"
+                    class="btn-buscar">
+
+                Buscar
+
+            </button>
+
+
+        </form>
+
+
+
+        <!-- =====================================================
+             FILTROS
+             ===================================================== -->
+
+        <form asp-controller="Home"
+              asp-action="Historial"
+              method="get"
+              class="form-filtros">
+
+
+            <!--
+                CONSERVAMOS LA BUSQUEDA ACTUAL
+                CUANDO SE APLICAN LOS FILTROS.
+            -->
+
+            <input type="hidden"
+                   name="buscar"
+                   value="@buscarActual" />
+
+
+
+            <!-- CATEGORIA -->
+
+            <div class="filtro-campo">
+
+                <label for="filtroGeneral">
+
+                    Categoría
+
+                </label>
+
+
+                <select id="filtroGeneral"
+                        name="filtro">
+
+
+                    <option value="todos"
+                            selected="@(filtroActual == "todos" ? "selected" : null)">
+
+                        Todas
+
+                    </option>
+
+
+                    <option value="sistema"
+                            selected="@(filtroActual == "sistema" ? "selected" : null)">
+
+                        Sistema
+
+                    </option>
+
+
+                    <option value="usuarios"
+                            selected="@(filtroActual == "usuarios" ? "selected" : null)">
+
+                        Usuarios
+
+                    </option>
+
+
+                    <option value="productos"
+                            selected="@(filtroActual == "productos" ? "selected" : null)">
+
+                        Productos
+
+                    </option>
+
+
+                    <option value="lotes"
+                            selected="@(filtroActual == "lotes" ? "selected" : null)">
+
+                        Lotes
+
+                    </option>
+
+
+                    <option value="medicamentos"
+                            selected="@(filtroActual == "medicamentos" ? "selected" : null)">
+
+                        Medicamentos
+
+                    </option>
+
+
+                    <option value="roles"
+                            selected="@(filtroActual == "roles" ? "selected" : null)">
+
+                        Roles y permisos
+
+                    </option>
+
+
+                </select>
+
+            </div>
+
+
+
+            <!-- PERIODO -->
+
+            <div class="filtro-campo">
+
+                <label for="periodoGeneral">
+
+                    Período
+
+                </label>
+
+
+                <select id="periodoGeneral"
+                        name="periodo">
+
+
+                    <option value="todos"
+                            selected="@(periodoActual == "todos" ? "selected" : null)">
+
+                        Todo el historial
+
+                    </option>
+
+
+                    <option value="hoy"
+                            selected="@(periodoActual == "hoy" ? "selected" : null)">
+
+                        Hoy
+
+                    </option>
+
+
+                    <option value="7"
+                            selected="@(periodoActual == "7" ? "selected" : null)">
+
+                        Últimos 7 días
+
+                    </option>
+
+
+                    <option value="30"
+                            selected="@(periodoActual == "30" ? "selected" : null)">
+
+                        Últimos 30 días
+
+                    </option>
+
+
+                </select>
+
+            </div>
+
+
+
+            <!-- APLICAR -->
+
+            <button type="submit"
+                    class="btn-aplicar-filtros">
+
+                Aplicar
+
+            </button>
+
+
+
+            <!--
+                LIMPIAR SOLO FILTROS.
+
+                LA BUSQUEDA SE CONSERVA.
+            -->
+
+            <a asp-controller="Home"
+               asp-action="Historial"
+               asp-route-buscar="@buscarActual"
+               class="btn-limpiar-filtros">
+
+                Limpiar
+
+            </a>
+
+
+        </form>
+
+
+    </div>
+
+
+
+    <!-- =========================================================
+         RESUMEN
+         ========================================================= -->
+
+    <div class="historial-resumen-filtros">
+
+        <span>
+
+            Registros encontrados:
+
+            <strong>
+                @totalRegistros
+            </strong>
+
+        </span>
+
+
+        @if (!string.IsNullOrWhiteSpace(
+                buscarActual))
+        {
+            <span class="filtro-activo">
+
+                🔎 “@buscarActual”
+
+            </span>
+        }
+
+
+        @if (filtroActual != "todos")
+        {
+            <span class="filtro-activo">
+
+                Categoría:
+                @(filtroActual == "sistema"
+                    ? "Sistema"
+                    : filtroActual == "usuarios"
+                        ? "Usuarios"
+                        : filtroActual == "productos"
+                            ? "Productos"
+                            : filtroActual == "lotes"
+                                ? "Lotes"
+                                : filtroActual == "medicamentos"
+                                    ? "Medicamentos"
+                                    : "Roles y permisos")
+
+            </span>
+        }
+
+
+        @if (periodoActual != "todos")
+        {
+            <span class="filtro-activo">
+
+                Período:
+                @(periodoActual == "hoy"
+                    ? "Hoy"
+                    : periodoActual == "7"
+                        ? "Últimos 7 días"
+                        : "Últimos 30 días")
+
+            </span>
+        }
+
+    </div>
+
+
+
+    <!-- =========================================================
+         TABLA
+         ========================================================= -->
+
+    @if (Model != null &&
+         Model.Count > 0)
     {
         <div class="tabla-contenedor">
 
@@ -31,20 +370,31 @@
 
                     <tr>
 
-                        <th>
+                        <th class="columna-id">
+
                             ID
+
                         </th>
 
-                        <th>
+
+                        <th class="columna-responsable">
+
                             Responsable
+
                         </th>
 
-                        <th>
+
+                        <th class="columna-descripcion">
+
                             Descripción
+
                         </th>
 
-                        <th>
+
+                        <th class="columna-fecha">
+
                             Fecha y hora
+
                         </th>
 
                     </tr>
@@ -52,32 +402,570 @@
                 </thead>
 
 
+
                 <tbody>
 
                     @foreach (var registro in Model)
                     {
+                        string descripcion =
+                            registro.descripcion ?? "";
+
+
+                        /*
+                            MOVIMIENTO DE STOCK
+                        */
+
+                        Match movimiento =
+                            Regex.Match(
+                                descripcion,
+                                @"^Registró\s+(entrada|salida)\s+de\s+(\d+)\s+unidad\(es\)\s+del medicamento\s+(.+?),\s+lote\s+(.+?)\.\s+Stock:\s+(\d+)\s+→\s+(\d+)\.\s+Motivo:\s+(.+)$",
+                                RegexOptions.IgnoreCase
+                            );
+
+
+                        bool esMovimiento =
+                            movimiento.Success;
+
+
+
+                        /*
+                            CATEGORIA
+                        */
+
+                        string categoria =
+                            "Sistema";
+
+
+                        string claseCategoria =
+                            "categoria-sistema";
+
+
+                        string iconoCategoria =
+                            "●";
+
+
+                        if (
+                            descripcion.Contains(
+                                "usuario",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                        {
+                            categoria =
+                                "Usuarios";
+
+                            claseCategoria =
+                                "categoria-usuarios";
+
+                            iconoCategoria =
+                                "👤";
+                        }
+
+
+                        if (
+                            descripcion.Contains(
+                                "producto",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                        {
+                            categoria =
+                                "Productos";
+
+                            claseCategoria =
+                                "categoria-productos";
+
+                            iconoCategoria =
+                                "📦";
+                        }
+
+
+                        if (
+                            descripcion.Contains(
+                                "lote",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                        {
+                            categoria =
+                                "Lotes";
+
+                            claseCategoria =
+                                "categoria-lotes";
+
+                            iconoCategoria =
+                                "📋";
+                        }
+
+
+                        if (
+                            descripcion.Contains(
+                                "rol",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                            ||
+                            descripcion.Contains(
+                                "permis",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                        {
+                            categoria =
+                                "Roles y permisos";
+
+                            claseCategoria =
+                                "categoria-permisos";
+
+                            iconoCategoria =
+                                "⚙";
+                        }
+
+
+                        if (
+                            descripcion.Contains(
+                                "medicamento",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                            ||
+                            descripcion.Contains(
+                                "controlado",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                        {
+                            categoria =
+                                "Medicamentos";
+
+                            claseCategoria =
+                                "categoria-medicamentos";
+
+                            iconoCategoria =
+                                "💊";
+                        }
+
+
+
+                        /*
+                            ACCION QUE MODIFICO INFORMACION
+                        */
+
+                        bool esAccionImportante =
+                            descripcion.StartsWith(
+                                "Creó",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                            ||
+                            descripcion.StartsWith(
+                                "Actualizó",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                            ||
+                            descripcion.StartsWith(
+                                "Desactivó",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                            ||
+                            descripcion.StartsWith(
+                                "Reactivó",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                            ||
+                            descripcion.StartsWith(
+                                "Eliminó",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                            ||
+                            descripcion.StartsWith(
+                                "Registró",
+                                StringComparison.OrdinalIgnoreCase
+                            );
+
+
+
                         <tr>
 
+
+                            <!-- ID -->
+
                             <td>
-                                @registro.id_historial
+
+                                <span class="historial-id">
+
+                                    @registro.id_historial
+
+                                </span>
+
                             </td>
 
 
+
+                            <!-- RESPONSABLE -->
+
                             <td>
-                                @registro.usuario_responsable
+
+                                <div class="responsable-historial">
+
+                                    <span class="responsable-icono">
+
+                                        👤
+
+                                    </span>
+
+                                    <span>
+
+                                        @registro.usuario_responsable
+
+                                    </span>
+
+                                </div>
+
                             </td>
 
+
+
+                            <!-- DESCRIPCION -->
 
                             <td class="descripcion-historial">
-                                @registro.descripcion
+
+
+                                <!-- MOVIMIENTO -->
+
+                                @if (esMovimiento)
+                                {
+                                    string tipoMovimiento =
+                                        movimiento.Groups[1]
+                                            .Value;
+
+
+                                    string cantidad =
+                                        movimiento.Groups[2]
+                                            .Value;
+
+
+                                    string medicamento =
+                                        movimiento.Groups[3]
+                                            .Value;
+
+
+                                    string lote =
+                                        movimiento.Groups[4]
+                                            .Value;
+
+
+                                    string stockAnterior =
+                                        movimiento.Groups[5]
+                                            .Value;
+
+
+                                    string stockResultante =
+                                        movimiento.Groups[6]
+                                            .Value;
+
+
+                                    string motivo =
+                                        movimiento.Groups[7]
+                                            .Value;
+
+
+                                    bool esEntrada =
+                                        tipoMovimiento.Equals(
+                                            "entrada",
+                                            StringComparison.OrdinalIgnoreCase
+                                        );
+
+
+                                    <div class="descripcion-movimiento">
+
+
+                                        <div class="movimiento-cabecera">
+
+
+                                            <span class="movimiento-icono">
+
+                                                💊
+
+                                            </span>
+
+
+                                            <span class="movimiento-tipo
+                                                         @(esEntrada
+                                                             ? "movimiento-entrada"
+                                                             : "movimiento-salida")">
+
+                                                @(esEntrada
+                                                    ? "↑ Entrada"
+                                                    : "↓ Salida")
+
+                                            </span>
+
+
+                                            <strong class="movimiento-producto">
+
+                                                @medicamento
+
+                                            </strong>
+
+
+                                        </div>
+
+
+
+                                        <div class="movimiento-accion">
+
+                                            <span class="movimiento-label">
+
+                                                Acción realizada
+
+                                            </span>
+
+
+                                            <p>
+
+                                                Se registró una
+
+                                                <strong>
+                                                    @tipoMovimiento.ToLower()
+                                                </strong>
+
+                                                de
+
+                                                <strong>
+                                                    @cantidad unidad(es)
+                                                </strong>
+
+                                                del medicamento
+
+                                                <strong>
+                                                    @medicamento
+                                                </strong>
+
+                                                correspondiente al lote
+
+                                                <strong>
+                                                    @lote
+                                                </strong>.
+
+                                            </p>
+
+                                        </div>
+
+
+
+                                        <div class="movimiento-datos">
+
+
+                                            <div class="movimiento-dato">
+
+                                                <span class="movimiento-label">
+
+                                                    Lote
+
+                                                </span>
+
+                                                <strong>
+
+                                                    @lote
+
+                                                </strong>
+
+                                            </div>
+
+
+
+                                            <div class="movimiento-dato">
+
+                                                <span class="movimiento-label">
+
+                                                    Cantidad
+
+                                                </span>
+
+                                                <strong class="@(esEntrada ? "cantidad-entrada" : "cantidad-salida")">
+
+                                                    @((esEntrada ? "+" : "-") + cantidad)
+
+                                                </strong>
+
+                                            </div>
+
+
+
+                                            <div class="movimiento-dato">
+
+                                                <span class="movimiento-label">
+
+                                                    Stock
+
+                                                </span>
+
+                                                <strong>
+
+                                                    @stockAnterior
+
+                                                    <span class="movimiento-flecha">
+
+                                                        →
+
+                                                    </span>
+
+                                                    @stockResultante
+
+                                                </strong>
+
+                                            </div>
+
+
+                                        </div>
+
+
+
+                                        <div class="movimiento-motivo">
+
+                                            <span class="movimiento-label">
+
+                                                Motivo
+
+                                            </span>
+
+                                            <span>
+
+                                                @motivo
+
+                                            </span>
+
+                                        </div>
+
+
+                                    </div>
+                                }
+
+
+
+                                <!-- ACCION IMPORTANTE -->
+
+                                @if (!esMovimiento &&
+                                     esAccionImportante)
+                                {
+                                    <div class="descripcion-evento">
+
+
+                                        <div class="evento-cabecera">
+
+
+                                            <span class="evento-categoria @claseCategoria">
+
+                                                <span>
+
+                                                    @iconoCategoria
+
+                                                </span>
+
+                                                @categoria
+
+                                            </span>
+
+
+                                        </div>
+
+
+
+                                        <div class="evento-contenido">
+
+
+                                            <span class="evento-label">
+
+                                                Acción realizada
+
+                                            </span>
+
+
+                                            <p>
+
+                                                @descripcion
+
+                                            </p>
+
+
+                                        </div>
+
+
+                                    </div>
+                                }
+
+
+
+                                <!-- ACCION SIMPLE -->
+
+                                @if (!esMovimiento &&
+                                     !esAccionImportante)
+                                {
+                                    <div class="descripcion-simple">
+
+
+                                        <span class="descripcion-simple-icono @claseCategoria">
+
+                                            @iconoCategoria
+
+                                        </span>
+
+
+                                        <div class="descripcion-simple-contenido">
+
+
+                                            <span class="descripcion-simple-categoria">
+
+                                                @categoria
+
+                                            </span>
+
+
+                                            <span class="descripcion-simple-texto">
+
+                                                @descripcion
+
+                                            </span>
+
+
+                                        </div>
+
+
+                                    </div>
+                                }
+
+
                             </td>
 
+
+
+                            <!-- FECHA -->
 
                             <td>
-                                @registro.fecha_hora.ToString(
-                                    "dd-MM-yyyy HH:mm:ss"
-                                )
+
+                                <div class="fecha-historial">
+
+
+                                    <span class="fecha-dia">
+
+                                        @registro.fecha_hora.ToString(
+                                            "dd-MM-yyyy"
+                                        )
+
+                                    </span>
+
+
+                                    <span class="fecha-hora">
+
+                                        @registro.fecha_hora.ToString(
+                                            "HH:mm:ss"
+                                        )
+
+                                    </span>
+
+
+                                </div>
+
                             </td>
+
 
                         </tr>
                     }
@@ -89,7 +977,10 @@
         </div>
 
 
-        <!-- PAGINACION -->
+
+        <!-- =====================================================
+             PAGINACION
+             ===================================================== -->
 
         @if (ViewBag.TotalPaginas > 1)
         {
@@ -101,6 +992,9 @@
                     <a asp-controller="Home"
                        asp-action="Historial"
                        asp-route-pagina="@(ViewBag.PaginaActual - 1)"
+                       asp-route-buscar="@buscarActual"
+                       asp-route-filtro="@filtroActual"
+                       asp-route-periodo="@periodoActual"
                        class="pagina-boton">
 
                         ← Anterior
@@ -109,13 +1003,18 @@
                 }
 
 
-                @for (int i = 1;
-                      i <= ViewBag.TotalPaginas;
-                      i++)
+
+                @for (
+                    int i = 1;
+                    i <= ViewBag.TotalPaginas;
+                    i++)
                 {
                     <a asp-controller="Home"
                        asp-action="Historial"
                        asp-route-pagina="@i"
+                       asp-route-buscar="@buscarActual"
+                       asp-route-filtro="@filtroActual"
+                       asp-route-periodo="@periodoActual"
                        class="pagina-boton @(i == ViewBag.PaginaActual ? "pagina-activa" : "")">
 
                         @i
@@ -124,11 +1023,16 @@
                 }
 
 
-                @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+
+                @if (ViewBag.PaginaActual <
+                     ViewBag.TotalPaginas)
                 {
                     <a asp-controller="Home"
                        asp-action="Historial"
                        asp-route-pagina="@(ViewBag.PaginaActual + 1)"
+                       asp-route-buscar="@buscarActual"
+                       asp-route-filtro="@filtroActual"
+                       asp-route-periodo="@periodoActual"
                        class="pagina-boton">
 
                         Siguiente →
@@ -144,10 +1048,45 @@
     {
         <div class="sin-registros">
 
-            No existen registros en el historial.
+
+            @if (
+                !string.IsNullOrWhiteSpace(
+                    buscarActual
+                )
+                ||
+                filtroActual != "todos"
+                ||
+                periodoActual != "todos")
+            {
+                <strong>
+
+                    No se encontraron registros
+                    con esos criterios.
+
+                </strong>
+
+
+                <span>
+
+                    Prueba cambiando la búsqueda
+                    o modificando los filtros.
+
+                </span>
+            }
+            else
+            {
+                <strong>
+
+                    No existen registros
+                    en el historial.
+
+                </strong>
+            }
+
 
         </div>
     }
+
 
 
     <div class="contenedor-volver">
@@ -162,23 +1101,22 @@
 
     </div>
 
+
 </div>
 
 
 
 <style>
 
-    /* CONTENEDOR */
-
     .historial-card {
         width: 95%;
-        max-width: 1100px;
+        max-width: 1200px;
         margin: 5px auto;
     }
 
 
     .historial-titulo {
-        margin-bottom: 25px;
+        margin-bottom: 20px;
         text-align: center;
     }
 
@@ -191,8 +1129,311 @@
 
 
     .historial-titulo p {
+        margin: 0;
         color: #687b89;
         font-size: 16px;
+    }
+
+
+
+    /* HERRAMIENTAS */
+
+    .historial-herramientas {
+        margin-bottom: 10px;
+
+        padding: 15px;
+
+        display: grid;
+
+        grid-template-columns:
+            minmax(350px, 1.4fr)
+            minmax(480px, 1fr);
+
+        gap: 14px;
+
+        align-items: end;
+
+        border: 1px solid #d7e5eb;
+
+        border-radius: 12px;
+
+        background-color:
+            rgba(
+                255,
+                255,
+                255,
+                0.96
+            );
+
+        box-shadow:
+            0 5px 16px
+            rgba(
+                28,
+                65,
+                95,
+                0.08
+            );
+    }
+
+
+
+    /* BUSQUEDA */
+
+    .form-busqueda {
+        display: grid;
+
+        grid-template-columns:
+            minmax(0, 1fr)
+            auto;
+
+        gap: 8px;
+
+        align-items: end;
+    }
+
+
+    .filtro-busqueda {
+        min-height: 43px;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        padding: 0 12px;
+
+        border: 1px solid #cbdce4;
+
+        border-radius: 8px;
+
+        background-color: #fbfdfe;
+    }
+
+
+    .filtro-icono-busqueda {
+        font-size: 15px;
+
+        opacity: 0.7;
+    }
+
+
+    .filtro-busqueda input {
+        width: 100%;
+
+        border: none;
+
+        outline: none;
+
+        background: transparent;
+
+        color: #24485d;
+
+        font-size: 13px;
+    }
+
+
+    .filtro-busqueda:focus-within {
+        border-color: #087bc2;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(
+                8,
+                123,
+                194,
+                0.11
+            );
+    }
+
+
+    .btn-buscar {
+        min-height: 43px;
+
+        padding: 0 18px;
+
+        border: 1px solid #087bc2;
+
+        border-radius: 8px;
+
+        background-color: #087bc2;
+
+        color: white;
+
+        font-size: 12px;
+
+        font-weight: 700;
+
+        cursor: pointer;
+
+        transition:
+            background-color 0.2s ease,
+            transform 0.2s ease;
+    }
+
+
+    .btn-buscar:hover {
+        background-color: #066aa7;
+
+        transform: translateY(-1px);
+    }
+
+
+
+    /* FILTROS */
+
+    .form-filtros {
+        display: grid;
+
+        grid-template-columns:
+            minmax(150px, 1fr)
+            minmax(150px, 1fr)
+            auto
+            auto;
+
+        gap: 8px;
+
+        align-items: end;
+    }
+
+
+    .filtro-campo {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 5px;
+    }
+
+
+    .filtro-campo label {
+        color: #627985;
+
+        font-size: 10px;
+
+        font-weight: 800;
+
+        text-transform: uppercase;
+    }
+
+
+    .filtro-campo select {
+        min-height: 43px;
+
+        padding: 0 10px;
+
+        border: 1px solid #cbdce4;
+
+        border-radius: 8px;
+
+        background-color: #fbfdfe;
+
+        color: #24485d;
+
+        outline: none;
+
+        font-size: 13px;
+    }
+
+
+    .filtro-campo select:focus {
+        border-color: #1198a5;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(
+                17,
+                152,
+                165,
+                0.11
+            );
+    }
+
+
+    .btn-aplicar-filtros,
+    .btn-limpiar-filtros {
+        min-height: 43px;
+
+        padding: 0 15px;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 8px;
+
+        font-size: 12px;
+
+        font-weight: 700;
+
+        text-decoration: none;
+
+        cursor: pointer;
+    }
+
+
+    .btn-aplicar-filtros {
+        border: 1px solid #1198a5;
+
+        background-color: #1198a5;
+
+        color: white;
+    }
+
+
+    .btn-aplicar-filtros:hover {
+        background-color: #0d8490;
+    }
+
+
+    .btn-limpiar-filtros {
+        border: 1px solid #b9cbd4;
+
+        background-color: white;
+
+        color: #527080;
+    }
+
+
+    .btn-limpiar-filtros:hover {
+        background-color: #f1f6f8;
+
+        color: #35586a;
+    }
+
+
+
+    /* RESUMEN */
+
+    .historial-resumen-filtros {
+        margin: 0 2px 12px;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        flex-wrap: wrap;
+
+        color: #647985;
+
+        font-size: 12px;
+    }
+
+
+    .filtro-activo {
+        padding: 4px 8px;
+
+        border-radius: 999px;
+
+        background-color: #e9f6f8;
+
+        color: #137683;
+
+        font-weight: 700;
     }
 
 
@@ -201,33 +1442,55 @@
 
     .tabla-contenedor {
         width: 100%;
+
         overflow-x: auto;
+
         background-color: white;
+
         border-radius: 12px;
-        box-shadow: 0 7px 20px rgba(28, 65, 95, 0.12);
+
+        box-shadow:
+            0 7px 20px
+            rgba(
+                28,
+                65,
+                95,
+                0.12
+            );
     }
 
 
     .tabla-historial {
         width: 100%;
+
+        table-layout: fixed;
+
         border-collapse: collapse;
     }
 
 
     .tabla-historial th {
         padding: 14px;
+
         background-color: #0f5278;
+
         color: white;
+
         text-align: left;
+
         font-weight: 600;
     }
 
 
     .tabla-historial td {
-        padding: 13px 14px;
-        border-bottom: 1px solid #dce6ec;
+        padding: 12px 14px;
+
+        border-bottom:
+            1px solid #dce6ec;
+
+        vertical-align: top;
+
         color: #17324d;
-        vertical-align: middle;
     }
 
 
@@ -236,8 +1499,391 @@
     }
 
 
-    .descripcion-historial {
-        min-width: 300px;
+    .columna-id {
+        width: 7%;
+    }
+
+
+    .columna-responsable {
+        width: 16%;
+    }
+
+
+    .columna-descripcion {
+        width: 59%;
+    }
+
+
+    .columna-fecha {
+        width: 18%;
+    }
+
+
+    .historial-id {
+        display: inline-flex;
+
+        min-width: 34px;
+
+        padding: 5px 7px;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 6px;
+
+        background-color: #edf5f9;
+
+        color: #31566d;
+
+        font-size: 12px;
+
+        font-weight: 700;
+    }
+
+
+    .responsable-historial {
+        display: flex;
+
+        align-items: center;
+
+        gap: 7px;
+    }
+
+
+    .responsable-icono {
+        width: 26px;
+
+        min-width: 26px;
+
+        height: 26px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 50%;
+
+        background-color: #eef6fa;
+
+        font-size: 12px;
+    }
+
+
+
+    /* EVENTOS */
+
+    .descripcion-evento,
+    .descripcion-movimiento {
+        width: 100%;
+
+        padding: 11px 13px;
+
+        border: 1px solid #dce7ec;
+
+        border-radius: 9px;
+
+        background-color: #fbfdfe;
+
+        box-sizing: border-box;
+    }
+
+
+    .evento-cabecera,
+    .movimiento-cabecera {
+        margin-bottom: 8px;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        flex-wrap: wrap;
+    }
+
+
+    .evento-categoria,
+    .movimiento-tipo {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        padding: 4px 9px;
+
+        border-radius: 999px;
+
+        font-size: 10px;
+
+        font-weight: 800;
+
+        text-transform: uppercase;
+    }
+
+
+    .categoria-usuarios {
+        background-color: #f1ebfb;
+        color: #6941a5;
+    }
+
+
+    .categoria-productos {
+        background-color: #fff2e7;
+        color: #a15c1b;
+    }
+
+
+    .categoria-lotes {
+        background-color: #eef5fa;
+        color: #315c79;
+    }
+
+
+    .categoria-permisos {
+        background-color: #eef0ff;
+        color: #4653a5;
+    }
+
+
+    .categoria-medicamentos {
+        background-color: #fff0f3;
+        color: #b02a55;
+    }
+
+
+    .categoria-sistema {
+        background-color: #edf5f7;
+        color: #54717c;
+    }
+
+
+    .evento-contenido,
+    .movimiento-accion {
+        padding: 8px 10px;
+
+        border-radius: 7px;
+
+        background-color: #f2f7f9;
+    }
+
+
+    .evento-label,
+    .movimiento-label {
+        color: #71838e;
+
+        font-size: 10px;
+
+        font-weight: 800;
+
+        text-transform: uppercase;
+    }
+
+
+    .evento-contenido p,
+    .movimiento-accion p {
+        margin: 4px 0 0;
+
+        color: #385563;
+
+        font-size: 13px;
+
+        line-height: 1.5;
+    }
+
+
+
+    /* MOVIMIENTOS */
+
+    .movimiento-icono {
+        width: 30px;
+
+        min-width: 30px;
+
+        height: 30px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 8px;
+
+        background-color: #fff0f3;
+    }
+
+
+    .movimiento-entrada {
+        background-color: #e7f7ef;
+
+        color: #18794e;
+    }
+
+
+    .movimiento-salida {
+        background-color: #fff0f0;
+
+        color: #b42318;
+    }
+
+
+    .movimiento-producto {
+        color: #073b64;
+    }
+
+
+    .movimiento-datos {
+        margin: 8px 0;
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                3,
+                1fr
+            );
+
+        gap: 8px;
+    }
+
+
+    .movimiento-dato {
+        padding: 8px 10px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 3px;
+
+        border-radius: 7px;
+
+        background-color: #f1f6f8;
+    }
+
+
+    .cantidad-entrada {
+        color: #18794e;
+    }
+
+
+    .cantidad-salida {
+        color: #b42318;
+    }
+
+
+    .movimiento-flecha {
+        margin: 0 4px;
+
+        color: #1198a5;
+    }
+
+
+    .movimiento-motivo {
+        padding-top: 8px;
+
+        display: grid;
+
+        grid-template-columns:
+            55px
+            1fr;
+
+        gap: 8px;
+
+        border-top:
+            1px solid #e1eaee;
+
+        font-size: 12.5px;
+    }
+
+
+
+    /* ACCION SIMPLE */
+
+    .descripcion-simple {
+        min-height: 38px;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 10px;
+    }
+
+
+    .descripcion-simple-icono {
+        width: 30px;
+
+        min-width: 30px;
+
+        height: 30px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 7px;
+    }
+
+
+    .descripcion-simple-contenido {
+        min-width: 0;
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 2px;
+    }
+
+
+    .descripcion-simple-categoria {
+        color: #81919a;
+
+        font-size: 10px;
+
+        font-weight: 800;
+
+        text-transform: uppercase;
+    }
+
+
+    .descripcion-simple-texto {
+        color: #29465a;
+
+        font-size: 13px;
+    }
+
+
+
+    /* FECHA */
+
+    .fecha-historial {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 2px;
+    }
+
+
+    .fecha-dia {
+        color: #244a62;
+
+        font-weight: 700;
+    }
+
+
+    .fecha-hora {
+        color: #6f818c;
+
+        font-size: 12px;
     }
 
 
@@ -250,7 +1896,6 @@
         display: flex;
 
         justify-content: center;
-        align-items: center;
 
         gap: 7px;
 
@@ -263,15 +1908,17 @@
 
         padding: 8px 12px;
 
+        border: 1px solid #087bc2;
+
+        border-radius: 6px;
+
         background-color: white;
 
         color: #087bc2;
 
-        border: 1px solid #087bc2;
-        border-radius: 6px;
+        text-decoration: none;
 
         text-align: center;
-        text-decoration: none;
 
         font-weight: 600;
     }
@@ -279,18 +1926,14 @@
 
     .pagina-boton:hover {
         background-color: #eaf6fc;
+
         color: #087bc2;
     }
 
 
     .pagina-activa {
         background-color: #087bc2;
-        color: white;
-    }
 
-
-    .pagina-activa:hover {
-        background-color: #087bc2;
         color: white;
     }
 
@@ -299,12 +1942,19 @@
     /* SIN REGISTROS */
 
     .sin-registros {
-        padding: 25px;
+        padding: 28px;
 
-        background-color: #f5f8fa;
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 5px;
 
         border: 1px solid #d8e2e8;
-        border-radius: 8px;
+
+        border-radius: 10px;
+
+        background-color: #f5f8fa;
 
         text-align: center;
 
@@ -316,8 +1966,7 @@
     /* VOLVER */
 
     .contenedor-volver {
-        margin-top: 30px;
-        margin-bottom: 30px;
+        margin: 30px 0;
 
         text-align: center;
     }
@@ -328,25 +1977,46 @@
 
         padding: 12px 22px;
 
+        border-radius: 7px;
+
         background-color: #1198a5;
 
         color: white;
 
-        border-radius: 7px;
-
         text-decoration: none;
+
         font-weight: 600;
     }
 
 
     .btn-volver:hover {
         background-color: #0d8490;
+
         color: white;
     }
 
 
 
-    /* CELULAR */
+    /* RESPONSIVE */
+
+    @@media (max-width: 1100px) {
+
+        .historial-herramientas {
+            grid-template-columns:
+                1fr;
+        }
+
+    }
+
+
+    @@media (max-width: 950px) {
+
+        .tabla-historial {
+            min-width: 900px;
+        }
+
+    }
+
 
     @@media (max-width: 700px) {
 
@@ -355,8 +2025,21 @@
         }
 
 
-        .tabla-historial {
-            min-width: 800px;
+        .form-busqueda {
+            grid-template-columns:
+                1fr;
+        }
+
+
+        .form-filtros {
+            grid-template-columns:
+                1fr;
+        }
+
+
+        .movimiento-datos {
+            grid-template-columns:
+                1fr;
         }
 
     }

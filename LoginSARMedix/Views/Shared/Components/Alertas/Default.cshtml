@@ -1,0 +1,1376 @@
+﻿@model LoginSARMedix.ViewComponents.AlertasViewModel
+
+<div class="alertas-sarmedix"
+     id="alertasSarmedix">
+
+    <!-- CAMPANA -->
+
+    <button type="button"
+            class="alertas-boton"
+            id="botonAlertasSarmedix"
+            onclick="alternarAlertasSarmedix(event)"
+            aria-label="Ver alertas"
+            aria-expanded="false">
+
+        <svg viewBox="0 0 24 24"
+             aria-hidden="true"
+             class="alertas-campana-icono">
+
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9">
+            </path>
+
+            <path d="M10 21h4">
+            </path>
+
+        </svg>
+
+
+        @if (Model.Total > 0)
+        {
+            <span class="alertas-contador">
+
+                @(Model.Total > 99
+                    ? "99+"
+                    : Model.Total.ToString())
+
+            </span>
+        }
+
+    </button>
+
+
+
+    <!-- PANEL -->
+
+    <div class="alertas-panel"
+         id="panelAlertasSarmedix">
+
+
+        <!-- CABECERA -->
+
+        <div class="alertas-panel-cabecera">
+
+            <div>
+
+                <span class="alertas-panel-etiqueta">
+                    Inventario
+                </span>
+
+                <h3>
+                    Alertas
+                </h3>
+
+            </div>
+
+
+            @if (Model.Total > 0)
+            {
+                <span class="alertas-total">
+
+                    @Model.Total
+
+                </span>
+            }
+
+        </div>
+
+
+
+        <!-- RESUMEN -->
+
+        @if (Model.Total > 0)
+        {
+            <div class="alertas-resumen">
+
+
+                <!-- VENCIDOS -->
+
+                <div class="alertas-resumen-item
+                            alertas-resumen-vencidos">
+
+                    <strong>
+                        @Model.TotalVencidos
+                    </strong>
+
+                    <span>
+                        Vencidos
+                    </span>
+
+                </div>
+
+
+
+                <!-- STOCK -->
+
+                <div class="alertas-resumen-item
+                            alertas-resumen-stock">
+
+                    <strong>
+                        @Model.TotalStockBajo
+                    </strong>
+
+                    <span>
+                        Stock bajo
+                    </span>
+
+                </div>
+
+
+
+                <!-- PROXIMOS -->
+
+                <div class="alertas-resumen-item
+                            alertas-resumen-proximos">
+
+                    <strong>
+                        @Model.TotalProximos
+                    </strong>
+
+                    <span>
+                        Por vencer
+                    </span>
+
+                </div>
+
+
+            </div>
+        }
+
+
+
+        <!-- SIN ALERTAS -->
+
+        @if (Model.Total == 0)
+        {
+            <div class="alertas-vacio">
+
+
+                <div class="alertas-vacio-icono">
+
+                    ✓
+
+                </div>
+
+
+                <strong>
+                    Sin alertas activas
+                </strong>
+
+
+                <span>
+                    El inventario no presenta alertas
+                    de stock o vencimiento.
+                </span>
+
+
+            </div>
+        }
+
+
+
+        <!-- LISTADO -->
+
+        @if (Model.Total > 0)
+        {
+            <div class="alertas-listado">
+
+
+                @foreach (var alerta in Model.Alertas)
+                {
+                    string claseTipo =
+                        alerta.Tipo switch
+                        {
+                            "vencido" =>
+                                "alerta-vencido",
+
+                            "stock" =>
+                                "alerta-stock",
+
+                            "proximo" =>
+                                "alerta-proximo",
+
+                            _ =>
+                                ""
+                        };
+
+
+                    string textoTipo =
+                        alerta.Tipo switch
+                        {
+                            "vencido" =>
+                                "Vencido",
+
+                            "stock" =>
+                                "Stock bajo",
+
+                            "proximo" =>
+                                "Próximo a vencer",
+
+                            _ =>
+                                "Alerta"
+                        };
+
+
+                    string icono =
+                        alerta.Tipo switch
+                        {
+                            "vencido" =>
+                                "!",
+
+                            "stock" =>
+                                "↓",
+
+                            "proximo" =>
+                                "◷",
+
+                            _ =>
+                                "!"
+                        };
+
+
+
+                    <!-- ALERTA CON DESTINO -->
+
+                    @if (!string.IsNullOrWhiteSpace(
+                            alerta.UrlDestino))
+                    {
+                        <a href="@alerta.UrlDestino"
+                           class="alertas-item
+                                  alertas-item-enlace
+                                  @claseTipo"
+                           title="@alerta.TextoDestino">
+
+
+                            <div class="alertas-item-icono">
+
+                                @icono
+
+                            </div>
+
+
+
+                            <div class="alertas-item-contenido">
+
+
+                                <div class="alertas-item-superior">
+
+                                    <strong class="alertas-item-titulo">
+
+                                        @alerta.Titulo
+
+                                    </strong>
+
+
+                                    <span class="alertas-item-tipo">
+
+                                        @textoTipo
+
+                                    </span>
+
+                                </div>
+
+
+                                <span class="alertas-item-detalle">
+
+                                    @alerta.Detalle
+
+                                </span>
+
+
+
+                                <span class="alertas-item-destino">
+
+                                    @alerta.TextoDestino
+
+                                    <span>
+                                        →
+                                    </span>
+
+                                </span>
+
+
+                            </div>
+
+
+
+                            <div class="alertas-item-flecha"
+                                 aria-hidden="true">
+
+                                ›
+
+                            </div>
+
+
+                        </a>
+                    }
+
+
+
+                    <!-- ALERTA SIN DESTINO -->
+
+                    @if (string.IsNullOrWhiteSpace(
+                            alerta.UrlDestino))
+                    {
+                        <div class="alertas-item
+                                    @claseTipo">
+
+
+                            <div class="alertas-item-icono">
+
+                                @icono
+
+                            </div>
+
+
+
+                            <div class="alertas-item-contenido">
+
+
+                                <div class="alertas-item-superior">
+
+                                    <strong class="alertas-item-titulo">
+
+                                        @alerta.Titulo
+
+                                    </strong>
+
+
+                                    <span class="alertas-item-tipo">
+
+                                        @textoTipo
+
+                                    </span>
+
+                                </div>
+
+
+                                <span class="alertas-item-detalle">
+
+                                    @alerta.Detalle
+
+                                </span>
+
+
+                            </div>
+
+
+                        </div>
+                    }
+                }
+
+
+            </div>
+        }
+
+
+
+        <!-- PIE -->
+
+        <div class="alertas-panel-pie">
+
+            Las alertas se actualizan automáticamente
+            con el inventario actual.
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<style>
+
+    /* CONTENEDOR */
+
+    .alertas-sarmedix {
+        position: relative;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+    }
+
+
+
+    /* CAMPANA */
+
+    .alertas-boton {
+        position: relative;
+
+        width: 42px;
+
+        height: 42px;
+
+        min-width: 42px;
+
+        padding: 0;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.30);
+
+        border-radius: 10px;
+
+        background:
+            rgba(255, 255, 255, 0.11);
+
+        color: white;
+
+        cursor: pointer;
+
+        transition:
+            background-color 0.2s ease,
+            border-color 0.2s ease,
+            transform 0.15s ease;
+    }
+
+
+    .alertas-boton:hover {
+        background:
+            rgba(255, 255, 255, 0.20);
+
+        border-color:
+            rgba(255, 255, 255, 0.60);
+
+        transform:
+            translateY(
+                -1px
+            );
+    }
+
+
+    .alertas-boton:focus {
+        outline:
+            2px solid
+            rgba(255, 255, 255, 0.55);
+
+        outline-offset: 2px;
+    }
+
+
+    .alertas-campana-icono {
+        width: 21px;
+
+        height: 21px;
+
+        fill: none;
+
+        stroke: currentColor;
+
+        stroke-width: 1.8;
+
+        stroke-linecap: round;
+
+        stroke-linejoin: round;
+    }
+
+
+
+    /* CONTADOR */
+
+    .alertas-contador {
+        position: absolute;
+
+        top: -7px;
+
+        right: -7px;
+
+        min-width: 20px;
+
+        height: 20px;
+
+        padding:
+            0
+            5px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        box-sizing: border-box;
+
+        border:
+            2px solid
+            #0f5278;
+
+        border-radius: 999px;
+
+        background: #dc3545;
+
+        color: white;
+
+        font-size: 9px;
+
+        font-weight: 800;
+
+        line-height: 1;
+    }
+
+
+
+    /* PANEL */
+
+    .alertas-panel {
+        position: absolute;
+
+        top: calc(100% + 13px);
+
+        right: 0;
+
+        z-index: 10000;
+
+        width: 410px;
+
+        max-width:
+            calc(
+                100vw
+                -
+                30px
+            );
+
+        display: none;
+
+        overflow: hidden;
+
+        border:
+            1px solid
+            #dce7ec;
+
+        border-radius: 14px;
+
+        background: white;
+
+        color: #263b47;
+
+        box-shadow:
+            0 18px 45px
+            rgba(0, 38, 64, 0.25);
+    }
+
+
+    .alertas-panel.abierto {
+        display: block;
+    }
+
+
+
+    /* FLECHA DEL PANEL */
+
+    .alertas-panel::before {
+        content: "";
+
+        position: absolute;
+
+        top: -7px;
+
+        right: 14px;
+
+        width: 14px;
+
+        height: 14px;
+
+        border-top:
+            1px solid
+            #dce7ec;
+
+        border-left:
+            1px solid
+            #dce7ec;
+
+        background: white;
+
+        transform:
+            rotate(
+                45deg
+            );
+    }
+
+
+
+    /* CABECERA */
+
+    .alertas-panel-cabecera {
+        position: relative;
+
+        padding:
+            18px
+            18px
+            14px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 14px;
+
+        border-bottom:
+            1px solid
+            #e9eff2;
+    }
+
+
+    .alertas-panel-cabecera > div {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 2px;
+    }
+
+
+    .alertas-panel-etiqueta {
+        color: #1198a5;
+
+        font-size: 9px;
+
+        font-weight: 900;
+
+        letter-spacing: 0.5px;
+
+        text-transform: uppercase;
+    }
+
+
+    .alertas-panel-cabecera h3 {
+        margin: 0;
+
+        padding: 0;
+
+        color: #073b64;
+
+        font-size: 19px;
+
+        font-weight: 800;
+    }
+
+
+    .alertas-total {
+        min-width: 28px;
+
+        height: 28px;
+
+        padding:
+            0
+            8px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        box-sizing: border-box;
+
+        border-radius: 999px;
+
+        background: #eaf4f7;
+
+        color: #087f8b;
+
+        font-size: 11px;
+
+        font-weight: 800;
+    }
+
+
+
+    /* RESUMEN */
+
+    .alertas-resumen {
+        padding:
+            11px
+            13px;
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(
+                    0,
+                    1fr
+                )
+            );
+
+        gap: 7px;
+
+        background: #f8fbfc;
+
+        border-bottom:
+            1px solid
+            #e9eff2;
+    }
+
+
+    .alertas-resumen-item {
+        padding:
+            8px
+            6px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: center;
+
+        gap: 1px;
+
+        border-radius: 8px;
+
+        text-align: center;
+    }
+
+
+    .alertas-resumen-item strong {
+        font-size: 16px;
+    }
+
+
+    .alertas-resumen-item span {
+        font-size: 9px;
+
+        font-weight: 700;
+    }
+
+
+
+    /* VENCIDOS = ROJO */
+
+    .alertas-resumen-vencidos {
+        background: #fff0f0;
+
+        color: #b42318;
+    }
+
+
+
+    /* STOCK BAJO = AZUL */
+
+    .alertas-resumen-stock {
+        background: #eaf6fb;
+
+        color: #0d7898;
+    }
+
+
+
+    /* PROXIMOS = NARANJA */
+
+    .alertas-resumen-proximos {
+        background: #fff8e8;
+
+        color: #9a6700;
+    }
+
+
+
+    /* LISTADO */
+
+    .alertas-listado {
+        max-height: 430px;
+
+        overflow-y: auto;
+    }
+
+
+    .alertas-item {
+        position: relative;
+
+        padding:
+            14px
+            16px;
+
+        display: flex;
+
+        align-items: flex-start;
+
+        gap: 11px;
+
+        border-bottom:
+            1px solid
+            #edf2f4;
+
+        background: white;
+
+        color: inherit;
+
+        text-decoration: none;
+    }
+
+
+    .alertas-item:last-child {
+        border-bottom: none;
+    }
+
+
+
+    /* ALERTA SELECCIONABLE */
+
+    .alertas-item-enlace {
+        cursor: pointer;
+
+        transition:
+            background-color 0.16s ease,
+            transform 0.16s ease;
+    }
+
+
+    .alertas-item-enlace:hover {
+        background: #f5fafc;
+
+        color: inherit;
+
+        text-decoration: none;
+    }
+
+
+    .alertas-item-enlace:hover
+    .alertas-item-flecha {
+        transform:
+            translateX(
+                3px
+            );
+
+        color: #1198a5;
+    }
+
+
+    .alertas-item-enlace:focus {
+        outline: none;
+
+        background: #f2f9fb;
+
+        box-shadow:
+            inset 3px 0 0
+            #1198a5;
+    }
+
+
+
+    /* ICONO ALERTA */
+
+    .alertas-item-icono {
+        width: 33px;
+
+        height: 33px;
+
+        min-width: 33px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 9px;
+
+        font-size: 15px;
+
+        font-weight: 900;
+    }
+
+
+
+    /* VENCIDO */
+
+    .alerta-vencido
+    .alertas-item-icono {
+        background: #fde8e8;
+
+        color: #b42318;
+    }
+
+
+
+    /* STOCK BAJO */
+
+    .alerta-stock
+    .alertas-item-icono {
+        background: #e7f3f7;
+
+        color: #0d7898;
+    }
+
+
+
+    /* PROXIMO */
+
+    .alerta-proximo
+    .alertas-item-icono {
+        background: #fff4d8;
+
+        color: #9a6700;
+    }
+
+
+
+    /* CONTENIDO ALERTA */
+
+    .alertas-item-contenido {
+        min-width: 0;
+
+        flex: 1;
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 5px;
+    }
+
+
+    .alertas-item-superior {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 8px;
+    }
+
+
+    .alertas-item-titulo {
+        overflow: hidden;
+
+        color: #173d55;
+
+        font-size: 12px;
+
+        text-overflow: ellipsis;
+
+        white-space: nowrap;
+    }
+
+
+    .alertas-item-tipo {
+        flex-shrink: 0;
+
+        padding:
+            3px
+            6px;
+
+        border-radius: 999px;
+
+        font-size: 8px;
+
+        font-weight: 800;
+    }
+
+
+
+    /* VENCIDO */
+
+    .alerta-vencido
+    .alertas-item-tipo {
+        background: #fde8e8;
+
+        color: #b42318;
+    }
+
+
+
+    /* STOCK BAJO */
+
+    .alerta-stock
+    .alertas-item-tipo {
+        background: #e7f3f7;
+
+        color: #0d7898;
+    }
+
+
+
+    /* PROXIMO */
+
+    .alerta-proximo
+    .alertas-item-tipo {
+        background: #fff4d8;
+
+        color: #9a6700;
+    }
+
+
+    .alertas-item-detalle {
+        color: #6c7d86;
+
+        font-size: 10px;
+
+        line-height: 1.45;
+    }
+
+
+
+    /* TEXTO DESTINO */
+
+    .alertas-item-destino {
+        margin-top: 2px;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 4px;
+
+        color: #087f8b;
+
+        font-size: 9px;
+
+        font-weight: 800;
+    }
+
+
+    .alertas-item-destino span {
+        font-size: 11px;
+    }
+
+
+
+    /* FLECHA */
+
+    .alertas-item-flecha {
+        align-self: center;
+
+        padding-left: 2px;
+
+        color: #9babb3;
+
+        font-size: 22px;
+
+        font-weight: 400;
+
+        line-height: 1;
+
+        transition:
+            transform 0.16s ease,
+            color 0.16s ease;
+    }
+
+
+
+    /* SIN ALERTAS */
+
+    .alertas-vacio {
+        padding:
+            35px
+            25px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: center;
+
+        gap: 6px;
+
+        text-align: center;
+    }
+
+
+    .alertas-vacio-icono {
+        width: 42px;
+
+        height: 42px;
+
+        margin-bottom: 4px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 50%;
+
+        background: #eaf4f7;
+
+        color: #087f8b;
+
+        font-size: 20px;
+
+        font-weight: 800;
+    }
+
+
+    .alertas-vacio strong {
+        color: #244759;
+
+        font-size: 13px;
+    }
+
+
+    .alertas-vacio span {
+        max-width: 250px;
+
+        color: #758791;
+
+        font-size: 10px;
+
+        line-height: 1.5;
+    }
+
+
+
+    /* PIE */
+
+    .alertas-panel-pie {
+        padding:
+            10px
+            15px;
+
+        border-top:
+            1px solid
+            #e8eef1;
+
+        background: #f7fafb;
+
+        color: #7b8d96;
+
+        font-size: 9px;
+
+        text-align: center;
+    }
+
+
+
+    /* RESPONSIVE */
+
+    @@media (max-width: 620px) {
+
+        .alertas-panel {
+            position: fixed;
+
+            top: 78px;
+
+            right: 10px;
+
+            left: 10px;
+
+            width: auto;
+
+            max-width: none;
+        }
+
+
+        .alertas-panel::before {
+            display: none;
+        }
+
+
+        .alertas-resumen {
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+        }
+
+    }
+
+</style>
+
+
+
+<script>
+
+    // ABRIR / CERRAR ALERTAS
+
+    function alternarAlertasSarmedix(
+        evento
+    ) {
+
+        if (evento) {
+
+            evento.stopPropagation();
+
+        }
+
+
+        const panel =
+            document.getElementById(
+                "panelAlertasSarmedix"
+            );
+
+
+        const boton =
+            document.getElementById(
+                "botonAlertasSarmedix"
+            );
+
+
+        if (
+            !panel
+            ||
+            !boton
+        ) {
+
+            return;
+
+        }
+
+
+        const abierto =
+            panel.classList.contains(
+                "abierto"
+            );
+
+
+        if (abierto) {
+
+            panel.classList.remove(
+                "abierto"
+            );
+
+
+            boton.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+        }
+        else {
+
+            panel.classList.add(
+                "abierto"
+            );
+
+
+            boton.setAttribute(
+                "aria-expanded",
+                "true"
+            );
+
+        }
+
+    }
+
+
+
+    // EVITAR QUE EL PANEL SE CIERRE AL HACER CLIC DENTRO
+
+    document
+        .getElementById(
+            "panelAlertasSarmedix"
+        )
+        ?.addEventListener(
+            "click",
+            function (
+                evento
+            ) {
+
+                evento.stopPropagation();
+
+            }
+        );
+
+
+
+    // CERRAR AL HACER CLIC FUERA
+
+    document.addEventListener(
+        "click",
+        function () {
+
+            const panel =
+                document.getElementById(
+                    "panelAlertasSarmedix"
+                );
+
+
+            const boton =
+                document.getElementById(
+                    "botonAlertasSarmedix"
+                );
+
+
+            if (
+                panel
+                &&
+                panel.classList.contains(
+                    "abierto"
+                )
+            ) {
+
+                panel.classList.remove(
+                    "abierto"
+                );
+
+
+                boton
+                    ?.setAttribute(
+                        "aria-expanded",
+                        "false"
+                    );
+
+            }
+
+        }
+    );
+
+
+
+    // CERRAR CON ESC
+
+    document.addEventListener(
+        "keydown",
+        function (
+            evento
+        ) {
+
+            if (
+                evento.key
+                !==
+                "Escape"
+            ) {
+
+                return;
+
+            }
+
+
+            const panel =
+                document.getElementById(
+                    "panelAlertasSarmedix"
+                );
+
+
+            const boton =
+                document.getElementById(
+                    "botonAlertasSarmedix"
+                );
+
+
+            panel
+                ?.classList
+                .remove(
+                    "abierto"
+                );
+
+
+            boton
+                ?.setAttribute(
+                    "aria-expanded",
+                    "false"
+                );
+
+        }
+    );
+
+</script>

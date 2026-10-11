@@ -13,76 +13,168 @@
             .ToList();
 
 
-    bool permisoUsuarios =
-        permisos.Any(
-            p => p.Equals(
-                "Crear usuario",
-                StringComparison.OrdinalIgnoreCase
-            )
-        )
-        ||
-        permisos.Any(
-            p => p.Equals(
-                "Gestionar usuarios y permisos",
-                StringComparison.OrdinalIgnoreCase
-            )
+    /*
+        FUNCION PARA COMPROBAR PERMISOS
+    */
+
+    Func<string, bool> TienePermiso =
+        permiso =>
+            permisos.Any(
+                p => p.Equals(
+                    permiso,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            );
+
+
+
+    /* =========================================================
+       PERMISOS DE USUARIOS
+       ========================================================= */
+
+    bool puedeCrearUsuario =
+        TienePermiso(
+            "Crear usuario"
         );
 
 
-    bool permisoProductos =
-        permisos.Any(
-            p => p.Equals(
-                "Consultar productos",
-                StringComparison.OrdinalIgnoreCase
-            )
-        )
-        ||
-        permisos.Any(
-            p => p.Equals(
-                "Registrar productos",
-                StringComparison.OrdinalIgnoreCase
-            )
-        )
-        ||
-        permisos.Any(
-            p => p.Equals(
-                "Gestionar productos",
-                StringComparison.OrdinalIgnoreCase
-            )
+    bool puedeGestionarUsuarios =
+        TienePermiso(
+            "Gestionar usuarios y permisos"
         );
 
 
-    bool permisoMovimientos =
-        permisos.Any(
-            p => p.Equals(
-                "Registrar movimientos",
-                StringComparison.OrdinalIgnoreCase
-            )
-        )
+    bool mostrarModuloUsuarios =
+        puedeCrearUsuario
         ||
-        permisos.Any(
-            p => p.Equals(
-                "Consultar historial",
-                StringComparison.OrdinalIgnoreCase
-            )
-        )
-        ||
-        permisos.Any(
-            p => p.Equals(
-                "Gestionar movimientos",
-                StringComparison.OrdinalIgnoreCase
-            )
+        puedeGestionarUsuarios;
+
+
+
+    /* =========================================================
+       PERMISOS DE PRODUCTOS
+       ========================================================= */
+
+    bool puedeConsultarProductos =
+        TienePermiso(
+            "Consultar productos"
         );
 
 
-    bool permisoControlados =
-        permisos.Any(
-            p => p.Equals(
-                "Gestionar medicamentos controlados",
-                StringComparison.OrdinalIgnoreCase
-            )
+    bool puedeRegistrarProductos =
+        TienePermiso(
+            "Registrar productos"
         );
+
+
+    bool mostrarModuloProductos =
+        puedeConsultarProductos
+        ||
+        puedeRegistrarProductos;
+
+
+
+    /* =========================================================
+       PERMISOS DE MOVIMIENTOS E HISTORIAL
+       ========================================================= */
+
+    bool puedeConsultarHistorial =
+        TienePermiso(
+            "Consultar historial"
+        );
+
+
+    /*
+        COMO YA NO MOSTRAMOS "REGISTRAR MOVIMIENTOS"
+        EN LA BARRA LATERAL, ESTE MODULO SE MUESTRA
+        SOLAMENTE SI EL USUARIO PUEDE CONSULTAR HISTORIAL.
+    */
+
+    bool mostrarModuloMovimientos =
+        puedeConsultarHistorial;
+
+
+
+    /* =========================================================
+       PERMISOS DE MEDICAMENTOS CONTROLADOS
+       ========================================================= */
+
+    bool puedeGestionarControlados =
+        TienePermiso(
+            "Gestionar medicamentos controlados"
+        );
+
+
+
+    /* =========================================================
+       SABER EN QUE PAGINA ESTAMOS
+       ========================================================= */
+
+    string accionActual =
+        ViewContext
+            .RouteData
+            .Values["action"]
+            ?.ToString()
+        ?? "";
+
+
+
+    /* =========================================================
+       SABER QUE MODULO ESTA ACTIVO
+       ========================================================= */
+
+    bool usuariosActivo =
+        accionActual == "UsuariosPermisos"
+        ||
+        accionActual == "CrearUsuario"
+        ||
+        accionActual == "Usuarios"
+        ||
+        accionActual == "EditarUsuario"
+        ||
+        accionActual == "ListadoEliminarUsuarios"
+        ||
+        accionActual == "RolesPermisos"
+        ||
+        accionActual == "CrearRol"
+        ||
+        accionActual == "EditarRol"
+        ||
+        accionActual == "RolesInactivos";
+
+
+    bool productosActivo =
+        accionActual == "Productos"
+        ||
+        accionActual == "CrearProducto"
+        ||
+        accionActual == "ListadoProductos2"
+        ||
+        accionActual == "EditarProducto"
+        ||
+        accionActual == "CrearLote"
+        ||
+        accionActual == "Lotes"
+        ||
+        accionActual == "EditarLote";
+
+
+    bool movimientosActivo =
+        accionActual == "MovimientoHistorial"
+        ||
+        accionActual == "Historial"
+        ||
+        accionActual == "HistorialUsuarios"
+        ||
+        accionActual == "HistorialProductos";
+
+
+    bool controladosActivo =
+        accionActual == "MedicamentosControlados"
+        ||
+        accionActual == "RegistrarMovimientoControlado";
 }
+
 
 
 <aside class="sidebar">
@@ -98,111 +190,586 @@
 
 
 
-    <!-- OPCIONES -->
+    <!-- MENU -->
 
     <nav class="sidebar-menu">
 
 
-        @if (permisoUsuarios)
+
+        <!-- =====================================================
+             USUARIOS Y PERMISOS
+             ===================================================== -->
+
+        @if (mostrarModuloUsuarios)
         {
-            <a asp-controller="Home"
-               asp-action="UsuariosPermisos"
-               class="sidebar-opcion">
+            <div class="sidebar-grupo">
 
 
-                <span class="sidebar-icono">
-
-                    👥
-
-                </span>
+                <div class="sidebar-cabecera @(usuariosActivo ? "activo" : "")">
 
 
-                <span class="sidebar-texto">
+                    <a asp-controller="Home"
+                       asp-action="UsuariosPermisos"
+                       class="sidebar-modulo-enlace"
+                       title="Ir a Usuarios y Permisos">
 
-                    Usuarios y Permisos
 
-                </span>
+                        <span class="sidebar-icono">
+
+                            👥
+
+                        </span>
 
 
-            </a>
+                        <span class="sidebar-texto">
+
+                            Usuarios y Permisos
+
+                        </span>
+
+
+                    </a>
+
+
+
+                    <button type="button"
+                            class="sidebar-toggle"
+                            onclick="alternarSubmenu(this)"
+                            aria-label="Mostrar submódulos de Usuarios y Permisos"
+                            aria-expanded="false">
+
+
+                        <span class="sidebar-flecha">
+
+                            ▼
+
+                        </span>
+
+
+                    </button>
+
+
+                </div>
+
+
+
+                <div class="sidebar-submenu">
+
+
+                    @if (puedeCrearUsuario)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="CrearUsuario"
+                           class="sidebar-subopcion @(accionActual == "CrearUsuario" ? "activo" : "")">
+
+
+                            <span class="sidebar-subicono">
+
+                                ＋
+
+                            </span>
+
+
+                            <span>
+
+                                Crear usuario
+
+                            </span>
+
+
+                        </a>
+                    }
+
+
+
+                    @if (puedeGestionarUsuarios)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="Usuarios"
+                           class="sidebar-subopcion @(accionActual == "Usuarios" || accionActual == "EditarUsuario" ? "activo" : "")">
+
+
+                            <span class="sidebar-subicono">
+
+                                ≡
+
+                            </span>
+
+
+                            <span>
+
+                                Listado de usuarios
+
+                            </span>
+
+
+                        </a>
+
+
+
+                        <a asp-controller="Home"
+                           asp-action="RolesPermisos"
+                           class="sidebar-subopcion @(accionActual == "RolesPermisos" || accionActual == "CrearRol" || accionActual == "EditarRol" || accionActual == "RolesInactivos" ? "activo" : "")">
+
+
+                            <span class="sidebar-subicono">
+
+                                ⚙
+
+                            </span>
+
+
+                            <span>
+
+                                Roles y permisos
+
+                            </span>
+
+
+                        </a>
+
+
+
+                        <a asp-controller="Home"
+                           asp-action="ListadoEliminarUsuarios"
+                           class="sidebar-subopcion @(accionActual == "ListadoEliminarUsuarios" ? "activo" : "")">
+
+
+                            <span class="sidebar-subicono">
+
+                                ○
+
+                            </span>
+
+
+                            <span>
+
+                                Usuarios inactivos
+
+                            </span>
+
+
+                        </a>
+                    }
+
+
+                </div>
+
+
+            </div>
         }
 
 
 
-        @if (permisoProductos)
+        <!-- =====================================================
+             PRODUCTOS
+             ===================================================== -->
+
+        @if (mostrarModuloProductos)
         {
-            <a asp-controller="Home"
-               asp-action="Productos"
-               class="sidebar-opcion">
+            <div class="sidebar-grupo">
 
 
-                <span class="sidebar-icono">
-
-                    📦
-
-                </span>
+                <div class="sidebar-cabecera @(productosActivo ? "activo" : "")">
 
 
-                <span class="sidebar-texto">
+                    <a asp-controller="Home"
+                       asp-action="Productos"
+                       class="sidebar-modulo-enlace"
+                       title="Ir a Productos">
 
-                    Productos
 
-                </span>
+                        <span class="sidebar-icono">
+
+                            📦
+
+                        </span>
 
 
-            </a>
+                        <span class="sidebar-texto">
+
+                            Productos
+
+                        </span>
+
+
+                    </a>
+
+
+
+                    <button type="button"
+                            class="sidebar-toggle"
+                            onclick="alternarSubmenu(this)"
+                            aria-label="Mostrar submódulos de Productos"
+                            aria-expanded="false">
+
+
+                        <span class="sidebar-flecha">
+
+                            ▼
+
+                        </span>
+
+
+                    </button>
+
+
+                </div>
+
+
+
+                <div class="sidebar-submenu">
+
+
+                    @if (puedeRegistrarProductos)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="CrearProducto"
+                           class="sidebar-subopcion @(accionActual == "CrearProducto" ? "activo" : "")">
+
+
+                            <span class="sidebar-subicono">
+
+                                ＋
+
+                            </span>
+
+
+                            <span>
+
+                                Registrar producto
+
+                            </span>
+
+
+                        </a>
+                    }
+
+
+
+                    @if (puedeConsultarProductos)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="ListadoProductos2"
+                           class="sidebar-subopcion @(accionActual == "ListadoProductos2" || accionActual == "EditarProducto" ? "activo" : "")">
+
+
+                            <span class="sidebar-subicono">
+
+                                ≡
+
+                            </span>
+
+
+                            <span>
+
+                                Listado de productos
+
+                            </span>
+
+
+                        </a>
+                    }
+
+
+
+                    @if (puedeRegistrarProductos)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="CrearLote"
+                           class="sidebar-subopcion @(accionActual == "CrearLote" ? "activo" : "")">
+
+
+                            <span class="sidebar-subicono">
+
+                                ＋
+
+                            </span>
+
+
+                            <span>
+
+                                Registrar lote
+
+                            </span>
+
+
+                        </a>
+                    }
+
+
+
+                    @if (puedeConsultarProductos)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="Lotes"
+                           class="sidebar-subopcion @(accionActual == "Lotes" || accionActual == "EditarLote" ? "activo" : "")">
+
+
+                            <span class="sidebar-subicono">
+
+                                ≡
+
+                            </span>
+
+
+                            <span>
+
+                                Listado de lotes
+
+                            </span>
+
+
+                        </a>
+                    }
+
+
+                </div>
+
+
+            </div>
         }
 
 
 
-        @if (permisoMovimientos)
+        <!-- =====================================================
+             MOVIMIENTOS E HISTORIAL
+             ===================================================== -->
+
+        @if (mostrarModuloMovimientos)
         {
-            <a asp-controller="Home"
-               asp-action="MovimientoHistorial"
-               class="sidebar-opcion">
+            <div class="sidebar-grupo">
 
 
-                <span class="sidebar-icono">
-
-                    ↔
-
-                </span>
+                <div class="sidebar-cabecera @(movimientosActivo ? "activo" : "")">
 
 
-                <span class="sidebar-texto">
+                    <!--
+                        EL NOMBRE DEL MODULO LLEVA AL MENU
+                        DE MOVIMIENTOS E HISTORIAL.
+                    -->
 
-                    Movimientos e Historial
+                    <a asp-controller="Home"
+                       asp-action="MovimientoHistorial"
+                       class="sidebar-modulo-enlace"
+                       title="Ir a Movimientos e Historial">
 
-                </span>
+
+                        <span class="sidebar-icono">
+
+                            ↔
+
+                        </span>
 
 
-            </a>
+                        <span class="sidebar-texto">
+
+                            Movimientos e Historial
+
+                        </span>
+
+
+                    </a>
+
+
+
+                    <!--
+                        LA FLECHA SOLO ABRE Y CIERRA
+                        LOS HISTORIALES.
+                    -->
+
+                    <button type="button"
+                            class="sidebar-toggle"
+                            onclick="alternarSubmenu(this)"
+                            aria-label="Mostrar historiales"
+                            aria-expanded="false">
+
+
+                        <span class="sidebar-flecha">
+
+                            ▼
+
+                        </span>
+
+
+                    </button>
+
+
+                </div>
+
+
+
+                <div class="sidebar-submenu">
+
+
+                    <!--
+                        YA NO EXISTE LA OPCION
+                        "REGISTRAR MOVIMIENTOS".
+                    -->
+
+
+                    <a asp-controller="Home"
+                       asp-action="Historial"
+                       class="sidebar-subopcion @(accionActual == "Historial" ? "activo" : "")">
+
+
+                        <span class="sidebar-subicono">
+
+                            ◷
+
+                        </span>
+
+
+                        <span>
+
+                            Historial general
+
+                        </span>
+
+
+                    </a>
+
+
+
+                    <a asp-controller="Home"
+                       asp-action="HistorialUsuarios"
+                       class="sidebar-subopcion @(accionActual == "HistorialUsuarios" ? "activo" : "")">
+
+
+                        <span class="sidebar-subicono">
+
+                            👤
+
+                        </span>
+
+
+                        <span>
+
+                            Historial de usuarios
+
+                        </span>
+
+
+                    </a>
+
+
+
+                    <a asp-controller="Home"
+                       asp-action="HistorialProductos"
+                       class="sidebar-subopcion @(accionActual == "HistorialProductos" ? "activo" : "")">
+
+
+                        <span class="sidebar-subicono">
+
+                            📦
+
+                        </span>
+
+
+                        <span>
+
+                            Historial de productos
+
+                        </span>
+
+
+                    </a>
+
+
+                </div>
+
+
+            </div>
         }
 
 
 
-        @if (permisoControlados)
+        <!-- =====================================================
+             MEDICAMENTOS CONTROLADOS
+             ===================================================== -->
+
+        @if (puedeGestionarControlados)
         {
-            <a asp-controller="Home"
-               asp-action="MedicamentosControlados"
-               class="sidebar-opcion">
+            <div class="sidebar-grupo">
 
 
-                <span class="sidebar-icono">
-
-                    💊
-
-                </span>
+                <div class="sidebar-cabecera @(controladosActivo ? "activo" : "")">
 
 
-                <span class="sidebar-texto">
+                    <a asp-controller="Home"
+                       asp-action="MedicamentosControlados"
+                       class="sidebar-modulo-enlace"
+                       title="Ir a Medicamentos Controlados">
 
-                    Medicamentos Controlados
 
-                </span>
+                        <span class="sidebar-icono">
+
+                            💊
+
+                        </span>
 
 
-            </a>
+                        <span class="sidebar-texto">
+
+                            Medicamentos Controlados
+
+                        </span>
+
+
+                    </a>
+
+
+
+                    <button type="button"
+                            class="sidebar-toggle"
+                            onclick="alternarSubmenu(this)"
+                            aria-label="Mostrar submódulos de Medicamentos Controlados"
+                            aria-expanded="false">
+
+
+                        <span class="sidebar-flecha">
+
+                            ▼
+
+                        </span>
+
+
+                    </button>
+
+
+                </div>
+
+
+
+                <div class="sidebar-submenu">
+
+
+                    <a asp-controller="Home"
+                       asp-action="MedicamentosControlados"
+                       class="sidebar-subopcion @(accionActual == "MedicamentosControlados" ? "activo" : "")">
+
+
+                        <span class="sidebar-subicono">
+
+                            💊
+
+                        </span>
+
+
+                        <span>
+
+                            Gestionar controlados
+
+                        </span>
+
+
+                    </a>
+
+
+                </div>
+
+
+            </div>
         }
 
 
@@ -210,3 +777,115 @@
 
 
 </aside>
+
+
+
+<script>
+
+    /*
+        SOLO LA FLECHA ABRE O CIERRA
+        LOS SUBMODULOS.
+
+        PRESIONAR EL NOMBRE DEL MODULO
+        NAVEGA A SU MENU PRINCIPAL.
+    */
+
+    function alternarSubmenu(
+        boton
+    ) {
+
+        const grupo =
+            boton.closest(
+                ".sidebar-grupo"
+            );
+
+
+        if (!grupo) {
+
+            return;
+
+        }
+
+
+        const estabaAbierto =
+            grupo.classList.contains(
+                "abierto"
+            );
+
+
+        /*
+            CERRAR LOS OTROS SUBMENUS
+        */
+
+        const grupos =
+            document.querySelectorAll(
+                ".sidebar-grupo"
+            );
+
+
+        grupos.forEach(
+            function (otroGrupo) {
+
+                if (otroGrupo !== grupo) {
+
+                    otroGrupo.classList.remove(
+                        "abierto"
+                    );
+
+
+                    const otroBoton =
+                        otroGrupo.querySelector(
+                            ".sidebar-toggle"
+                        );
+
+
+                    if (otroBoton) {
+
+                        otroBoton.setAttribute(
+                            "aria-expanded",
+                            "false"
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+
+        /*
+            ABRIR O CERRAR
+            EL SUBMENU SELECCIONADO
+        */
+
+        if (estabaAbierto) {
+
+            grupo.classList.remove(
+                "abierto"
+            );
+
+
+            boton.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+        }
+        else {
+
+            grupo.classList.add(
+                "abierto"
+            );
+
+
+            boton.setAttribute(
+                "aria-expanded",
+                "true"
+            );
+
+        }
+
+    }
+
+</script>

@@ -1,12 +1,4663 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <p>Medicamentos Controlados</p>
+﻿@using LoginSARMedix.Models
+@model List<Producto>
 
-</body>
-</html>
+@{
+    ViewData["Title"] = "Medicamentos Controlados";
+    ViewData["TituloBarra"] = "Medicamentos Controlados";
+
+    var medicamentos =
+        Model ?? new List<Producto>();
+
+    var lotesControlados =
+        ViewBag.LotesControlados as List<Lote>
+        ?? new List<Lote>();
+
+    var movimientosControlados =
+        ViewBag.MovimientosControlados as List<MovimientoControladoHistorial>
+        ?? new List<MovimientoControladoHistorial>();
+
+    int totalMedicamentos =
+        medicamentos.Count;
+
+    int totalLotes =
+        lotesControlados.Count;
+
+    int stockRegistrado =
+        lotesControlados.Sum(
+            l => l.cantidad_actual
+        );
+
+    DateTime hoy =
+        DateTime.Today;
+
+    DateTime fechaLimiteProximo =
+        hoy.AddDays(30);
+
+    int totalStockBajo =
+        medicamentos.Count(
+            medicamento =>
+            {
+                int stock =
+                    lotesControlados
+                        .Where(
+                            l =>
+                                l.id_producto
+                                ==
+                                medicamento.id_producto
+                        )
+                        .Sum(
+                            l => l.cantidad_actual
+                        );
+
+                return
+                    stock
+                    <=
+                    medicamento.stock_minimo;
+            }
+        );
+
+    int totalProximosAVencer =
+        medicamentos.Count(
+            medicamento =>
+                lotesControlados
+                    .Where(
+                        l =>
+                            l.id_producto
+                            ==
+                            medicamento.id_producto
+                    )
+                    .Any(
+                        lote =>
+                            lote.fecha_vencimiento.HasValue
+                            &&
+                            lote.fecha_vencimiento.Value.Date >= hoy
+                            &&
+                            lote.fecha_vencimiento.Value.Date <= fechaLimiteProximo
+                    )
+        );
+
+    int totalVencidos =
+        medicamentos.Count(
+            medicamento =>
+                lotesControlados
+                    .Where(
+                        l =>
+                            l.id_producto
+                            ==
+                            medicamento.id_producto
+                    )
+                    .Any(
+                        lote =>
+                            lote.fecha_vencimiento.HasValue
+                            &&
+                            lote.fecha_vencimiento.Value.Date < hoy
+                    )
+        );
+
+    string mensaje =
+        TempData["Mensaje"]?.ToString()
+        ?? "";
+
+    string tipoMensaje =
+        TempData["TipoMensaje"]?.ToString()
+        ?? "";
+}
+
+
+<div class="controlados-pagina">
+
+
+    <!-- =========================================================
+         ENCABEZADO
+         ========================================================= -->
+
+    <section class="controlados-encabezado">
+
+        <span class="controlados-etiqueta">
+            Acceso restringido
+        </span>
+
+        <h1>
+            Medicamentos Controlados
+        </h1>
+
+        <p>
+            Consulta los medicamentos que requieren control,
+            su stock registrado y realiza movimientos de
+            entrada o salida por lote.
+        </p>
+
+    </section>
+
+
+
+    <!-- =========================================================
+         MENSAJE GENERAL
+         ========================================================= -->
+
+    @if (!string.IsNullOrWhiteSpace(mensaje))
+    {
+        <div class="controlados-mensaje
+                    @(tipoMensaje == "exito"
+                        ? "controlados-mensaje-exito"
+                        : "controlados-mensaje-error")">
+
+            <span class="controlados-mensaje-icono">
+
+                @(tipoMensaje == "exito"
+                    ? "✓"
+                    : "!")
+
+            </span>
+
+            <span>
+                @mensaje
+            </span>
+
+        </div>
+    }
+
+
+
+    <!-- =========================================================
+         RESUMEN
+         ========================================================= -->
+
+    <section class="controlados-resumen">
+
+        <article class="controlados-resumen-tarjeta">
+
+            <span class="controlados-resumen-icono">
+                💊
+            </span>
+
+            <div>
+
+                <span class="controlados-resumen-numero">
+                    @totalMedicamentos
+                </span>
+
+                <span class="controlados-resumen-texto">
+                    Medicamentos controlados
+                </span>
+
+            </div>
+
+        </article>
+
+
+        <article class="controlados-resumen-tarjeta">
+
+            <span class="controlados-resumen-icono">
+                📦
+            </span>
+
+            <div>
+
+                <span class="controlados-resumen-numero">
+                    @totalLotes
+                </span>
+
+                <span class="controlados-resumen-texto">
+                    Lotes registrados
+                </span>
+
+            </div>
+
+        </article>
+
+
+        <article class="controlados-resumen-tarjeta">
+
+            <span class="controlados-resumen-icono">
+                #️⃣
+            </span>
+
+            <div>
+
+                <span class="controlados-resumen-numero">
+                    @stockRegistrado
+                </span>
+
+                <span class="controlados-resumen-texto">
+                    Unidades registradas
+                </span>
+
+            </div>
+
+        </article>
+
+    </section>
+
+
+
+    <!-- =========================================================
+         PANEL PRINCIPAL
+         ========================================================= -->
+
+    <section class="controlados-panel">
+
+
+        <!-- =====================================================
+             BUSCADOR Y FILTRO
+             ===================================================== -->
+
+        <div class="controlados-herramientas">
+
+
+            <!-- BUSCADOR -->
+
+            <div class="controlados-form-busqueda">
+
+                <div class="controlados-buscador">
+
+                    <svg viewBox="0 0 24 24"
+                         aria-hidden="true">
+
+                        <circle cx="11"
+                                cy="11"
+                                r="7">
+                        </circle>
+
+                        <path d="M20 20L16.5 16.5">
+                        </path>
+
+                    </svg>
+
+                    <input type="text"
+                           id="buscadorControlados"
+                           placeholder="Buscar por código, medicamento, principio activo o concentración..."
+                           autocomplete="off" />
+
+                </div>
+
+
+                <button type="button"
+                        class="controlados-btn-buscar"
+                        onclick="buscarMedicamentosControlados()">
+
+                    Buscar
+
+                </button>
+
+            </div>
+
+
+
+            <!-- FILTRO -->
+
+            <div class="controlados-form-filtros">
+
+                <div class="controlados-filtro-campo">
+
+                    <label for="filtroEstadoControlados">
+                        Estado
+                    </label>
+
+                    <select id="filtroEstadoControlados">
+
+                        <option value="todos">
+                            Todos los estados
+                        </option>
+
+                        <option value="stock">
+                            Stock bajo (@totalStockBajo)
+                        </option>
+
+                        <option value="proximo">
+                            Próximos a vencer (@totalProximosAVencer)
+                        </option>
+
+                        <option value="vencido">
+                            Vencidos (@totalVencidos)
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <button type="button"
+                        class="controlados-btn-aplicar"
+                        onclick="aplicarFiltroControlados()">
+
+                    Aplicar
+
+                </button>
+
+
+                <button type="button"
+                        class="controlados-btn-limpiar"
+                        onclick="limpiarFiltroControlados()">
+
+                    Limpiar
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =====================================================
+             RESULTADOS
+             ===================================================== -->
+
+        <div class="controlados-resumen-filtros">
+
+            <span>
+
+                Medicamentos encontrados:
+
+                <strong id="cantidadResultadosControlados">
+                    @totalMedicamentos
+                </strong>
+
+            </span>
+
+
+            <span id="etiquetaBusquedaControlados"
+                  class="controlados-filtro-activo-texto"
+                  style="display:none;">
+            </span>
+
+
+            <span id="etiquetaFiltroControlados"
+                  class="controlados-filtro-activo-texto"
+                  style="display:none;">
+            </span>
+
+        </div>
+
+
+
+        <!-- =====================================================
+             TABLA
+             ===================================================== -->
+
+        <div class="controlados-tabla-contenedor">
+
+            <table class="controlados-tabla">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Código
+                        </th>
+
+                        <th>
+                            Medicamento
+                        </th>
+
+                        <th>
+                            Principio activo
+                        </th>
+
+                        <th>
+                            Concentración
+                        </th>
+
+                        <th class="controlados-columna-centro">
+                            Lotes
+                        </th>
+
+                        <th class="controlados-columna-centro">
+                            Stock
+                        </th>
+
+                        <th class="controlados-columna-centro">
+                            Estado
+                        </th>
+
+                        <th class="controlados-columna-centro">
+                            Acción
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="cuerpoMedicamentosControlados">
+
+
+                    @if (medicamentos.Count == 0)
+                    {
+                        <tr>
+
+                            <td colspan="8"
+                                class="controlados-vacio">
+
+                                <div class="controlados-vacio-icono">
+                                    💊
+                                </div>
+
+                                <strong>
+                                    No hay medicamentos controlados registrados
+                                </strong>
+
+                                <span>
+                                    Los medicamentos marcados como
+                                    "requiere control" aparecerán aquí.
+                                </span>
+
+                            </td>
+
+                        </tr>
+                    }
+
+
+
+                    @if (medicamentos.Count > 0)
+                    {
+                        @foreach (var medicamento in medicamentos)
+                        {
+                            var lotesMedicamento =
+                                lotesControlados
+                                    .Where(
+                                        l =>
+                                            l.id_producto
+                                            ==
+                                            medicamento.id_producto
+                                    )
+                                    .OrderBy(
+                                        l => l.fecha_vencimiento
+                                    )
+                                    .ToList();
+
+
+                            int stockMedicamento =
+                                lotesMedicamento.Sum(
+                                    l => l.cantidad_actual
+                                );
+
+
+                            bool stockBajo =
+                                stockMedicamento
+                                <=
+                                medicamento.stock_minimo;
+
+
+                            bool tieneLotesVencidos =
+                                lotesMedicamento.Any(
+                                    lote =>
+                                        lote.fecha_vencimiento.HasValue
+                                        &&
+                                        lote.fecha_vencimiento.Value.Date
+                                        <
+                                        hoy
+                                );
+
+
+                            bool tieneLotesProximos =
+                                lotesMedicamento.Any(
+                                    lote =>
+                                        lote.fecha_vencimiento.HasValue
+                                        &&
+                                        lote.fecha_vencimiento.Value.Date
+                                        >=
+                                        hoy
+                                        &&
+                                        lote.fecha_vencimiento.Value.Date
+                                        <=
+                                        fechaLimiteProximo
+                                );
+
+
+                            string textoBusqueda =
+                                (
+                                    (medicamento.codigo_interno ?? "")
+                                    + " "
+                                    + (medicamento.nombre ?? "")
+                                    + " "
+                                    + (medicamento.principio_activo ?? "")
+                                    + " "
+                                    + (medicamento.concentracion ?? "")
+                                )
+                                .ToLowerInvariant();
+
+
+
+                            <!-- =========================================
+                                 FILA DEL MEDICAMENTO
+                                 ========================================= -->
+
+                            <tr class="fila-medicamento-controlado"
+                                data-busqueda="@textoBusqueda"
+                                data-producto="@medicamento.id_producto"
+                                data-stock-bajo="@(stockBajo ? "true" : "false")"
+                                data-proximo-vencer="@(tieneLotesProximos ? "true" : "false")"
+                                data-vencido="@(tieneLotesVencidos ? "true" : "false")">
+
+
+                                <td>
+
+                                    <span class="controlados-codigo">
+
+                                        @(medicamento.codigo_interno ?? "-")
+
+                                    </span>
+
+                                </td>
+
+
+
+                                <td>
+
+                                    <div class="controlados-medicamento">
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                                medicamento.imagen_url))
+                                        {
+                                            <img src="@medicamento.imagen_url"
+                                                 alt="Imagen de @medicamento.nombre"
+                                                 class="controlados-imagen" />
+                                        }
+
+
+                                        @if (string.IsNullOrWhiteSpace(
+                                                medicamento.imagen_url))
+                                        {
+                                            <div class="controlados-imagen-vacia">
+                                                💊
+                                            </div>
+                                        }
+
+
+                                        <span>
+                                            @(medicamento.nombre ?? "-")
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+
+
+                                <td>
+
+                                    @(medicamento.principio_activo ?? "-")
+
+                                </td>
+
+
+
+                                <td>
+
+                                    @(medicamento.concentracion ?? "-")
+
+                                </td>
+
+
+
+                                <td class="controlados-columna-centro">
+
+                                    @lotesMedicamento.Count
+
+                                </td>
+
+
+
+                                <td class="controlados-columna-centro">
+
+                                    <strong>
+
+                                        @stockMedicamento
+
+                                    </strong>
+
+                                </td>
+
+
+
+                                <td class="controlados-columna-centro">
+
+                                    @if (stockBajo)
+                                    {
+                                        <span class="controlados-estado
+                                                     controlados-estado-alerta">
+
+                                            Stock bajo
+
+                                        </span>
+                                    }
+
+
+                                    @if (!stockBajo)
+                                    {
+                                        <span class="controlados-estado
+                                                     controlados-estado-correcto">
+
+                                            Stock OK
+
+                                        </span>
+                                    }
+
+                                </td>
+
+
+
+                                <td class="controlados-columna-centro">
+
+                                    <button type="button"
+                                            class="controlados-btn-lotes"
+                                            onclick="alternarLotesControlado(
+                                                @medicamento.id_producto,
+                                                this
+                                            )"
+                                            aria-expanded="false">
+
+                                        <span>
+                                            Ver lotes
+                                        </span>
+
+                                        <span class="controlados-btn-flecha">
+                                            ▼
+                                        </span>
+
+                                    </button>
+
+                                </td>
+
+                            </tr>
+
+
+
+                            <!-- =========================================
+                                 DETALLE LOTES
+                                 ========================================= -->
+
+                            <tr id="detalle-controlado-@medicamento.id_producto"
+                                class="fila-detalle-controlado">
+
+                                <td colspan="8">
+
+                                    <div class="controlados-detalle">
+
+
+                                        <div class="controlados-detalle-cabecera">
+
+                                            <div>
+
+                                                <strong>
+
+                                                    Lotes de
+                                                    @(medicamento.nombre ?? "medicamento")
+
+                                                </strong>
+
+                                                <span>
+
+                                                    Stock mínimo:
+                                                    @medicamento.stock_minimo
+
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+
+
+                                        @if (lotesMedicamento.Count == 0)
+                                        {
+                                            <div class="controlados-sin-lotes">
+
+                                                Este medicamento todavía
+                                                no tiene lotes registrados.
+
+                                            </div>
+                                        }
+
+
+
+                                        @if (lotesMedicamento.Count > 0)
+                                        {
+                                            <div class="controlados-subtabla-contenedor">
+
+                                                <table class="controlados-subtabla">
+
+                                                    <thead>
+
+                                                        <tr>
+
+                                                            <th>
+                                                                N.º de lote
+                                                            </th>
+
+                                                            <th>
+                                                                Vencimiento
+                                                            </th>
+
+                                                            <th>
+                                                                Cantidad
+                                                            </th>
+
+                                                            <th>
+                                                                Ubicación
+                                                            </th>
+
+                                                            <th>
+                                                                Estado
+                                                            </th>
+
+                                                            <th class="controlados-columna-centro">
+                                                                Movimiento
+                                                            </th>
+
+                                                        </tr>
+
+                                                    </thead>
+
+
+                                                    <tbody>
+
+
+                                                        @foreach (var lote in lotesMedicamento)
+                                                        {
+                                                            bool vencido =
+                                                                lote.fecha_vencimiento.HasValue
+                                                                &&
+                                                                lote.fecha_vencimiento.Value.Date
+                                                                <
+                                                                DateTime.Today;
+
+
+                                                            bool proximoAVencer =
+                                                                lote.fecha_vencimiento.HasValue
+                                                                &&
+                                                                !vencido
+                                                                &&
+                                                                lote.fecha_vencimiento.Value.Date
+                                                                <=
+                                                                DateTime.Today.AddDays(30);
+
+
+                                                            var movimientosLote =
+                                                                movimientosControlados
+                                                                    .Where(
+                                                                        m =>
+                                                                            m.id_lote
+                                                                            ==
+                                                                            lote.id_lote
+                                                                    )
+                                                                    .OrderByDescending(
+                                                                        m => m.fecha_hora
+                                                                    )
+                                                                    .ThenByDescending(
+                                                                        m => m.id_movimiento
+                                                                    )
+                                                                    .ToList();
+
+
+
+                                                            <!-- FILA LOTE -->
+
+                                                            <tr>
+
+
+                                                                <td>
+
+                                                                    @(lote.numero_lote ?? "-")
+
+                                                                </td>
+
+
+
+                                                                <td>
+
+                                                                    @(
+                                                                        lote.fecha_vencimiento.HasValue
+                                                                            ? lote.fecha_vencimiento.Value.ToString("dd/MM/yyyy")
+                                                                            : "-"
+                                                                    )
+
+                                                                </td>
+
+
+
+                                                                <td>
+
+                                                                    <strong>
+
+                                                                        @lote.cantidad_actual
+
+                                                                    </strong>
+
+                                                                </td>
+
+
+
+                                                                <td>
+
+                                                                    @(lote.nombre_ubicacion ?? "-")
+
+                                                                </td>
+
+
+
+                                                                <td>
+
+
+                                                                    @if (vencido)
+                                                                    {
+                                                                        <span class="controlados-lote-estado
+                                                                                     controlados-lote-vencido">
+
+                                                                            Vencido
+
+                                                                        </span>
+                                                                    }
+
+
+                                                                    @if (!vencido &&
+                                                                         proximoAVencer)
+                                                                    {
+                                                                        <span class="controlados-lote-estado
+                                                                                     controlados-lote-proximo">
+
+                                                                            Próximo a vencer
+
+                                                                        </span>
+                                                                    }
+
+
+                                                                    @if (!vencido &&
+                                                                         !proximoAVencer)
+                                                                    {
+                                                                        <span class="controlados-lote-estado
+                                                                                     controlados-lote-vigente">
+
+                                                                            Vigente
+
+                                                                        </span>
+                                                                    }
+
+
+                                                                </td>
+
+
+
+                                                                <td class="controlados-columna-centro">
+
+                                                                    <div class="controlados-acciones-movimiento">
+
+
+                                                                        <!-- ENTRADA -->
+
+                                                                        <button type="button"
+                                                                                class="controlados-btn-movimiento
+                                                                                       controlados-btn-entrada"
+                                                                                data-id-lote="@lote.id_lote"
+                                                                                data-tipo="Entrada"
+                                                                                data-medicamento="@(medicamento.nombre ?? "")"
+                                                                                data-lote="@(lote.numero_lote ?? "")"
+                                                                                data-stock="@lote.cantidad_actual"
+                                                                                onclick="abrirModalMovimiento(this)">
+
+                                                                            + Entrada
+
+                                                                        </button>
+
+
+
+                                                                        <!-- SALIDA -->
+
+                                                                        @if (lote.cantidad_actual > 0)
+                                                                        {
+                                                                            <button type="button"
+                                                                                    class="controlados-btn-movimiento
+                                                                                           controlados-btn-salida"
+                                                                                    data-id-lote="@lote.id_lote"
+                                                                                    data-tipo="Salida"
+                                                                                    data-medicamento="@(medicamento.nombre ?? "")"
+                                                                                    data-lote="@(lote.numero_lote ?? "")"
+                                                                                    data-stock="@lote.cantidad_actual"
+                                                                                    onclick="abrirModalMovimiento(this)">
+
+                                                                                − Salida
+
+                                                                            </button>
+                                                                        }
+
+
+                                                                        @if (lote.cantidad_actual <= 0)
+                                                                        {
+                                                                            <button type="button"
+                                                                                    class="controlados-btn-movimiento
+                                                                                           controlados-btn-salida"
+                                                                                    disabled>
+
+                                                                                − Salida
+
+                                                                            </button>
+                                                                        }
+
+
+
+                                                                        <!-- HISTORIAL -->
+
+                                                                        <button type="button"
+                                                                                class="controlados-btn-movimiento
+                                                                                       controlados-btn-historial"
+                                                                                onclick="alternarHistorialLote(
+                                                                                    @lote.id_lote,
+                                                                                    this
+                                                                                )"
+                                                                                aria-expanded="false">
+
+                                                                            <span>
+                                                                                ◷ Historial
+                                                                            </span>
+
+                                                                            <span class="controlados-historial-contador">
+
+                                                                                @movimientosLote.Count
+
+                                                                            </span>
+
+                                                                        </button>
+
+
+                                                                    </div>
+
+                                                                </td>
+
+                                                            </tr>
+
+
+
+                                                            <!-- =========================================
+                                                                 HISTORIAL DEL LOTE
+                                                                 ========================================= -->
+
+                                                            <tr id="historial-lote-@lote.id_lote"
+                                                                class="controlados-fila-historial">
+
+                                                                <td colspan="6">
+
+                                                                    <div class="controlados-historial-lote">
+
+
+                                                                        <div class="controlados-historial-cabecera">
+
+                                                                            <div>
+
+                                                                                <span class="controlados-historial-etiqueta">
+
+                                                                                    Trazabilidad
+
+                                                                                </span>
+
+                                                                                <strong>
+
+                                                                                    Historial del lote
+                                                                                    @(lote.numero_lote ?? "-")
+
+                                                                                </strong>
+
+                                                                            </div>
+
+
+                                                                            <span class="controlados-historial-total">
+
+                                                                                @movimientosLote.Count
+
+                                                                                @(movimientosLote.Count == 1
+                                                                                    ? "movimiento"
+                                                                                    : "movimientos")
+
+                                                                            </span>
+
+                                                                        </div>
+
+
+
+                                                                        @if (movimientosLote.Count == 0)
+                                                                        {
+                                                                            <div class="controlados-historial-vacio">
+
+                                                                                <span class="controlados-historial-vacio-icono">
+                                                                                    ◷
+                                                                                </span>
+
+                                                                                <div>
+
+                                                                                    <strong>
+
+                                                                                        Este lote todavía
+                                                                                        no registra movimientos.
+
+                                                                                    </strong>
+
+                                                                                    <span>
+
+                                                                                        Las entradas y salidas
+                                                                                        aparecerán aquí
+                                                                                        automáticamente.
+
+                                                                                    </span>
+
+                                                                                </div>
+
+                                                                            </div>
+                                                                        }
+
+
+
+                                                                        @if (movimientosLote.Count > 0)
+                                                                        {
+                                                                            <div class="controlados-historial-tabla-contenedor">
+
+                                                                                <table class="controlados-historial-tabla">
+
+                                                                                    <thead>
+
+                                                                                        <tr>
+
+                                                                                            <th>
+                                                                                                Fecha y hora
+                                                                                            </th>
+
+                                                                                            <th>
+                                                                                                Tipo
+                                                                                            </th>
+
+                                                                                            <th>
+                                                                                                Cantidad
+                                                                                            </th>
+
+                                                                                            <th>
+                                                                                                Stock
+                                                                                            </th>
+
+                                                                                            <th>
+                                                                                                Responsable
+                                                                                            </th>
+
+                                                                                            <th>
+                                                                                                Motivo
+                                                                                            </th>
+
+                                                                                        </tr>
+
+                                                                                    </thead>
+
+
+                                                                                    <tbody>
+
+
+                                                                                        @foreach (var movimiento in movimientosLote)
+                                                                                        {
+                                                                                            bool esEntrada =
+                                                                                                string.Equals(
+                                                                                                    movimiento.tipo_movimiento,
+                                                                                                    "Entrada",
+                                                                                                    StringComparison.OrdinalIgnoreCase
+                                                                                                );
+
+
+                                                                                            <tr>
+
+
+                                                                                                <td>
+
+                                                                                                    <div class="controlados-historial-fecha">
+
+                                                                                                        <strong>
+
+                                                                                                            @(movimiento.fecha_hora.ToString("dd/MM/yyyy"))
+
+                                                                                                        </strong>
+
+                                                                                                        <span>
+
+                                                                                                            @(movimiento.fecha_hora.ToString("HH:mm:ss"))
+
+                                                                                                        </span>
+
+                                                                                                    </div>
+
+                                                                                                </td>
+
+
+
+                                                                                                <td>
+
+                                                                                                    <span class="controlados-historial-tipo
+                                                                                                                 @(esEntrada
+                                                                                                                    ? "controlados-historial-entrada"
+                                                                                                                    : "controlados-historial-salida")">
+
+                                                                                                        @(esEntrada
+                                                                                                            ? "↑ Entrada"
+                                                                                                            : "↓ Salida")
+
+                                                                                                    </span>
+
+                                                                                                </td>
+
+
+
+                                                                                                <td>
+
+                                                                                                    <strong class="@(esEntrada
+                                                                                                                        ? "controlados-cantidad-entrada"
+                                                                                                                        : "controlados-cantidad-salida")">
+
+                                                                                                        @(
+                                                                                                            (esEntrada
+                                                                                                                ? "+"
+                                                                                                                : "-")
+                                                                                                            +
+                                                                                                            movimiento.cantidad
+                                                                                                        )
+
+                                                                                                    </strong>
+
+                                                                                                </td>
+
+
+
+                                                                                                <td>
+
+                                                                                                    <span class="controlados-stock-cambio">
+
+                                                                                                        @movimiento.stock_anterior
+
+                                                                                                        <strong>
+                                                                                                            →
+                                                                                                        </strong>
+
+                                                                                                        @movimiento.stock_resultante
+
+                                                                                                    </span>
+
+                                                                                                </td>
+
+
+
+                                                                                                <td>
+
+                                                                                                    <div class="controlados-historial-responsable">
+
+                                                                                                        <span>
+                                                                                                            👤
+                                                                                                        </span>
+
+                                                                                                        <strong>
+
+                                                                                                            @(movimiento.usuario_responsable
+                                                                                                                ?? "Usuario no disponible")
+
+                                                                                                        </strong>
+
+                                                                                                    </div>
+
+                                                                                                </td>
+
+
+
+                                                                                                <td>
+
+                                                                                                    <span class="controlados-historial-motivo">
+
+                                                                                                        @(movimiento.observacion ?? "-")
+
+                                                                                                    </span>
+
+                                                                                                </td>
+
+
+                                                                                            </tr>
+                                                                                        }
+
+
+                                                                                    </tbody>
+
+                                                                                </table>
+
+                                                                            </div>
+                                                                        }
+
+
+                                                                    </div>
+
+                                                                </td>
+
+                                                            </tr>
+                                                        }
+
+
+                                                    </tbody>
+
+                                                </table>
+
+                                            </div>
+                                        }
+
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        }
+
+
+
+                        <!-- =================================================
+                             SIN RESULTADOS
+                             ================================================= -->
+
+                        <tr id="sinResultadosControlados"
+                            class="controlados-sin-resultados">
+
+                            <td colspan="8">
+
+                                <div class="controlados-sin-resultados-contenido">
+
+                                    <span>
+                                        🔎
+                                    </span>
+
+                                    <strong>
+
+                                        No se encontraron medicamentos
+
+                                    </strong>
+
+                                    <small>
+
+                                        Prueba cambiando la búsqueda
+                                        o modificando el filtro.
+
+                                    </small>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                    }
+
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+
+<!-- =============================================================
+     MODAL MOVIMIENTO
+     ============================================================= -->
+
+<div id="modalMovimientoControlado"
+     class="mc-overlay">
+
+    <div class="mc-modal">
+
+
+        <!-- BOTON CERRAR -->
+
+        <button type="button"
+                class="mc-cerrar"
+                onclick="cerrarModalMovimiento()">
+
+            ×
+
+        </button>
+
+
+
+        <!-- CABECERA -->
+
+        <div id="mcCabeceraUnica"
+             class="mc-cabecera">
+
+            <span id="modalMovimientoEtiqueta"
+                  class="mc-etiqueta">
+
+                ENTRADA
+
+            </span>
+
+
+            <div id="modalMovimientoIcono"
+                 class="mc-icono"
+                 aria-hidden="true">
+            </div>
+
+
+            <h2 id="modalMovimientoTitulo"
+                class="mc-titulo">
+
+                Registrar entrada
+
+            </h2>
+
+
+            <p class="mc-subtitulo">
+                SAR de Chiguay
+            </p>
+
+        </div>
+
+
+
+        <!-- ERROR -->
+
+        <div id="mensajeErrorMovimiento"
+             class="mc-error-general"
+             style="display:none;">
+        </div>
+
+
+
+        <!-- INFORMACION -->
+
+        <div class="mc-info">
+
+            <div>
+
+                <span>
+                    Medicamento
+                </span>
+
+                <strong id="modalMedicamento">
+                    -
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Lote
+                </span>
+
+                <strong id="modalLote">
+                    -
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Stock actual
+                </span>
+
+                <strong id="modalStock">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- FORMULARIO -->
+
+        <form asp-controller="Home"
+              asp-action="RegistrarMovimientoControlado"
+              method="post"
+              id="formMovimientoControlado"
+              novalidate>
+
+            @Html.AntiForgeryToken()
+
+
+            <input type="hidden"
+                   id="movimientoIdLote"
+                   name="idLote" />
+
+
+            <input type="hidden"
+                   id="movimientoTipo"
+                   name="tipoMovimiento" />
+
+
+            <input type="hidden"
+                   id="movimientoStockActual"
+                   value="0" />
+
+
+
+            <!-- CANTIDAD -->
+
+            <div class="mc-campo">
+
+                <label for="movimientoCantidad">
+                    Cantidad
+                </label>
+
+
+                <input type="number"
+                       id="movimientoCantidad"
+                       name="cantidad"
+                       min="1"
+                       step="1"
+                       class="mc-input"
+                       required />
+
+
+                <small id="movimientoAyudaCantidad">
+
+                    Ingresa la cantidad que ingresará al lote.
+
+                </small>
+
+            </div>
+
+
+
+            <!-- MOTIVO -->
+
+            <div class="mc-campo">
+
+                <label for="movimientoObservacion">
+
+                    Motivo / observación
+
+                </label>
+
+
+                <textarea id="movimientoObservacion"
+                          name="observacion"
+                          maxlength="255"
+                          rows="4"
+                          class="mc-input"
+                          placeholder="Indique el motivo o detalle del movimiento..."
+                          required></textarea>
+
+
+                <div class="mc-contador">
+
+                    <span id="contadorObservacion">
+                        0
+                    </span>/255
+
+                </div>
+
+            </div>
+
+
+
+            <!-- BOTONES -->
+
+            <div class="mc-botones">
+
+                <button type="button"
+                        class="mc-btn-cancelar"
+                        onclick="cerrarModalMovimiento()">
+
+                    Cancelar
+
+                </button>
+
+
+                <button type="submit"
+                        id="btnConfirmarMovimiento"
+                        class="mc-btn-confirmar">
+
+                    Registrar entrada
+
+                </button>
+
+            </div>
+
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<!-- =============================================================
+     MODAL CONFIRMACION
+     ============================================================= -->
+
+<div id="modalConfirmacionMovimiento"
+     class="mcc-overlay">
+
+    <div class="mcc-modal">
+
+
+        <div class="mcc-icono">
+
+            ?
+
+        </div>
+
+
+        <h2 class="mcc-titulo">
+
+            Confirmar acción
+
+        </h2>
+
+
+        <p id="mensajeConfirmacionMovimiento"
+           class="mcc-mensaje">
+
+            ¿Quieres confirmar este movimiento?
+
+        </p>
+
+
+        <div class="mcc-botones">
+
+
+            <button type="button"
+                    class="mcc-btn mcc-btn-si"
+                    onclick="confirmarMovimientoControlado()">
+
+                Sí
+
+            </button>
+
+
+            <button type="button"
+                    class="mcc-btn mcc-btn-no"
+                    onclick="cerrarConfirmacionMovimiento()">
+
+                No
+
+            </button>
+
+
+            <button type="button"
+                    class="mcc-btn mcc-btn-cancelar"
+                    onclick="cancelarConfirmacionMovimiento()">
+
+                Cancelar
+
+            </button>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<style>
+
+    /* =========================================================
+       PAGINA
+       ========================================================= */
+
+    .controlados-pagina {
+        width: 100%;
+        padding: 28px 34px 45px;
+        box-sizing: border-box;
+    }
+
+
+    .controlados-encabezado {
+        margin-bottom: 20px;
+        padding: 20px 22px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 6px 18px rgba(26, 64, 86, 0.09);
+    }
+
+
+    .controlados-etiqueta {
+        display: inline-flex;
+        margin-bottom: 8px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: #fff0f0;
+        color: #b42318;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+
+    .controlados-encabezado h1 {
+        margin: 0 0 7px;
+        color: #073b64;
+        font-size: 29px;
+        font-weight: 800;
+    }
+
+
+    .controlados-encabezado p {
+        margin: 0;
+        color: #687b87;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+
+
+    /* =========================================================
+       MENSAJES
+       ========================================================= */
+
+    .controlados-mensaje {
+        margin-bottom: 18px;
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        border-radius: 9px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+
+    .controlados-mensaje-exito {
+        border: 1px solid #bfe7cf;
+        background: #edf9f2;
+        color: #18794e;
+    }
+
+
+    .controlados-mensaje-error {
+        border: 1px solid #f1c8c8;
+        background: #fff2f2;
+        color: #b42318;
+    }
+
+
+    .controlados-mensaje-icono {
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: white;
+        font-weight: 900;
+    }
+
+
+
+    /* =========================================================
+       RESUMEN
+       ========================================================= */
+
+    .controlados-resumen {
+        margin-bottom: 20px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+
+    .controlados-resumen-tarjeta {
+        padding: 17px 18px;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        border-radius: 11px;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 5px 16px rgba(28, 65, 95, 0.08);
+    }
+
+
+    .controlados-resumen-icono {
+        width: 43px;
+        height: 43px;
+        min-width: 43px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        background: #eef8fa;
+        font-size: 21px;
+    }
+
+
+    .controlados-resumen-tarjeta > div {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+
+    .controlados-resumen-numero {
+        color: #073b64;
+        font-size: 22px;
+        font-weight: 800;
+    }
+
+
+    .controlados-resumen-texto {
+        color: #71818a;
+        font-size: 12px;
+    }
+
+
+
+    /* =========================================================
+       PANEL
+       ========================================================= */
+
+    .controlados-panel {
+        overflow: hidden;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 6px 18px rgba(26, 64, 86, 0.09);
+    }
+
+
+
+    /* =========================================================
+       BUSCADOR Y FILTRO
+       ========================================================= */
+
+    .controlados-herramientas {
+        padding: 15px;
+
+        display: grid;
+
+        grid-template-columns:
+            minmax(380px, 1.4fr)
+            minmax(360px, 1fr);
+
+        gap: 14px;
+
+        align-items: end;
+
+        border-bottom: 1px solid #e4ecef;
+    }
+
+
+    .controlados-form-busqueda {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+    }
+
+
+    .controlados-buscador {
+        min-height: 43px;
+        padding: 0 13px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        border: 1px solid #cbdde4;
+        border-radius: 8px;
+        background: #fbfdfe;
+    }
+
+
+    .controlados-buscador:focus-within {
+        border-color: #087bc2;
+        box-shadow: 0 0 0 3px rgba(8, 123, 194, 0.11);
+    }
+
+
+    .controlados-buscador svg {
+        width: 17px;
+        height: 17px;
+        fill: none;
+        stroke: #657b87;
+        stroke-width: 2;
+    }
+
+
+    .controlados-buscador input {
+        width: 100%;
+        height: 41px;
+        border: none;
+        outline: none;
+        background: transparent;
+        color: #334b58;
+        font-size: 12px;
+    }
+
+
+    .controlados-btn-buscar,
+    .controlados-btn-aplicar,
+    .controlados-btn-limpiar {
+        min-height: 43px;
+        padding: 0 16px;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+
+    .controlados-btn-buscar {
+        border: 1px solid #087bc2;
+        background: #087bc2;
+        color: white;
+    }
+
+
+    .controlados-btn-aplicar {
+        border: 1px solid #1198a5;
+        background: #1198a5;
+        color: white;
+    }
+
+
+    .controlados-btn-limpiar {
+        border: 1px solid #b9cbd4;
+        background: white;
+        color: #527080;
+    }
+
+
+    .controlados-form-filtros {
+        display: grid;
+        grid-template-columns: minmax(190px, 1fr) auto auto;
+        gap: 8px;
+        align-items: end;
+    }
+
+
+    .controlados-filtro-campo {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+
+    .controlados-filtro-campo label {
+        color: #627985;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+
+    .controlados-filtro-campo select {
+        min-height: 43px;
+        padding: 0 10px;
+        border: 1px solid #cbdce4;
+        border-radius: 8px;
+        background: #fbfdfe;
+        color: #24485d;
+        outline: none;
+        font-family: inherit;
+        font-size: 12px;
+    }
+
+
+    .controlados-resumen-filtros {
+        min-height: 37px;
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        border-bottom: 1px solid #e8eef1;
+        color: #647985;
+        font-size: 11px;
+    }
+
+
+    .controlados-filtro-activo-texto {
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #e9f6f8;
+        color: #137683;
+        font-weight: 700;
+    }
+
+
+
+    /* =========================================================
+       TABLA
+       ========================================================= */
+
+    .controlados-tabla-contenedor {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+
+    .controlados-tabla {
+        width: 100%;
+        min-width: 1040px;
+        border-collapse: collapse;
+    }
+
+
+    .controlados-tabla > thead > tr > th {
+        padding: 12px 14px;
+        background: #f3f7f9;
+        color: #526975;
+        font-size: 10px;
+        font-weight: 800;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+
+    .controlados-tabla >
+    tbody >
+    tr.fila-medicamento-controlado >
+    td {
+        padding: 14px;
+        border-top: 1px solid #edf2f4;
+        color: #34434b;
+        font-size: 13px;
+        vertical-align: middle;
+    }
+
+
+    .controlados-columna-centro {
+        text-align: center !important;
+    }
+
+
+    .controlados-codigo {
+        display: inline-flex;
+        padding: 5px 8px;
+        border-radius: 6px;
+        background: #eef3f6;
+        color: #38515e;
+        font-family: Consolas, monospace;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+
+    .controlados-medicamento {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #183d55;
+        font-weight: 700;
+    }
+
+
+    .controlados-imagen,
+    .controlados-imagen-vacia {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        border-radius: 8px;
+    }
+
+
+    .controlados-imagen {
+        object-fit: cover;
+        border: 1px solid #dce8ed;
+    }
+
+
+    .controlados-imagen-vacia {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #eef8fa;
+        font-size: 18px;
+    }
+
+
+    .controlados-estado {
+        display: inline-flex;
+        justify-content: center;
+        min-width: 82px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+
+    .controlados-estado-correcto {
+        background: #eaf8f0;
+        color: #18794e;
+    }
+
+
+    .controlados-estado-alerta {
+        background: #fff0f0;
+        color: #b42318;
+    }
+
+
+    .controlados-btn-lotes {
+        min-height: 36px;
+        padding: 7px 11px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid #1198a5;
+        border-radius: 7px;
+        background: white;
+        color: #087f8b;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+
+    .controlados-btn-flecha {
+        font-size: 9px;
+        transition: transform 0.2s ease;
+    }
+
+
+    .controlados-btn-lotes.abierto
+    .controlados-btn-flecha {
+        transform: rotate(180deg);
+    }
+
+
+
+    /* =========================================================
+       LOTES
+       ========================================================= */
+
+    .fila-detalle-controlado {
+        display: none;
+    }
+
+
+    .fila-detalle-controlado > td {
+        padding: 0 !important;
+        background: #f7fbfc;
+    }
+
+
+    .controlados-detalle {
+        margin: 0 14px 16px;
+        padding: 16px;
+        border: 1px solid #dce8ed;
+        border-radius: 10px;
+        background: white;
+    }
+
+
+    .controlados-detalle-cabecera {
+        margin-bottom: 12px;
+    }
+
+
+    .controlados-detalle-cabecera div {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+
+    .controlados-detalle-cabecera strong {
+        color: #073b64;
+        font-size: 14px;
+    }
+
+
+    .controlados-detalle-cabecera span {
+        color: #6b7981;
+        font-size: 11px;
+    }
+
+
+    .controlados-subtabla-contenedor {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+
+    .controlados-subtabla {
+        width: 100%;
+        min-width: 980px;
+        border-collapse: collapse;
+    }
+
+
+    .controlados-subtabla th {
+        padding: 10px 12px;
+        border-bottom: 1px solid #dce8ed;
+        background: #f5f8fa;
+        color: #5b6c75;
+        font-size: 10px;
+        font-weight: 800;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+
+    .controlados-subtabla td {
+        padding: 11px 12px;
+        border-bottom: 1px solid #edf2f4;
+        color: #3e4e56;
+        font-size: 12px;
+        vertical-align: middle;
+    }
+
+
+    .controlados-sin-lotes {
+        padding: 18px;
+        border-radius: 8px;
+        background: #f7f9fa;
+        color: #66747c;
+        text-align: center;
+    }
+
+
+    .controlados-lote-estado {
+        display: inline-flex;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+
+    .controlados-lote-vigente {
+        background: #eaf8f0;
+        color: #18794e;
+    }
+
+
+    .controlados-lote-proximo {
+        background: #fff7e5;
+        color: #9a6700;
+    }
+
+
+    .controlados-lote-vencido {
+        background: #fff0f0;
+        color: #b42318;
+    }
+
+
+
+    /* =========================================================
+       MOVIMIENTOS
+       ========================================================= */
+
+    .controlados-acciones-movimiento {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+
+    .controlados-btn-movimiento {
+        min-height: 32px;
+        padding: 6px 9px;
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 10px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+
+    .controlados-btn-entrada {
+        border: 1px solid #16875b;
+        background: #ecf9f2;
+        color: #16875b;
+    }
+
+
+    .controlados-btn-salida {
+        border: 1px solid #c84646;
+        background: #fff1f1;
+        color: #b83232;
+    }
+
+
+    .controlados-btn-movimiento:disabled {
+        opacity: 0.38;
+        cursor: not-allowed;
+    }
+
+
+    .controlados-btn-historial {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: 1px solid #3577a8;
+        background: #eef6fc;
+        color: #21658f;
+    }
+
+
+    .controlados-btn-historial.activo {
+        background: #21658f;
+        color: white;
+    }
+
+
+    .controlados-historial-contador {
+        min-width: 19px;
+        height: 19px;
+        padding: 0 5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: white;
+        color: #21658f;
+        font-size: 9px;
+    }
+
+
+
+    /* =========================================================
+       HISTORIAL
+       ========================================================= */
+
+    .controlados-fila-historial {
+        display: none;
+    }
+
+
+    .controlados-fila-historial > td {
+        padding: 0 12px 14px !important;
+    }
+
+
+    .controlados-historial-lote {
+        padding: 14px;
+        border: 1px solid #d5e5ec;
+        border-left: 4px solid #3577a8;
+        border-radius: 9px;
+        background: white;
+    }
+
+
+    .controlados-historial-cabecera {
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+
+    .controlados-historial-cabecera > div {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+
+    .controlados-historial-etiqueta {
+        color: #3577a8;
+        font-size: 9px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+
+    .controlados-historial-total {
+        padding: 5px 8px;
+        border-radius: 999px;
+        background: #edf5fa;
+        color: #41687f;
+        font-size: 9px;
+        font-weight: 800;
+    }
+
+
+    .controlados-historial-tabla-contenedor {
+        overflow-x: auto;
+        border: 1px solid #e1e9ed;
+        border-radius: 8px;
+    }
+
+
+    .controlados-historial-tabla {
+        width: 100%;
+        min-width: 850px;
+        border-collapse: collapse;
+    }
+
+
+    .controlados-historial-tabla th {
+        padding: 9px 10px;
+        background: #f2f7fa;
+        color: #627681;
+        font-size: 9px;
+        font-weight: 900;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+
+    .controlados-historial-tabla td {
+        padding: 10px;
+        border-top: 1px solid #edf2f4;
+        font-size: 11px;
+    }
+
+
+    .controlados-historial-fecha {
+        display: flex;
+        flex-direction: column;
+    }
+
+
+    .controlados-historial-fecha span {
+        color: #81919a;
+        font-size: 10px;
+    }
+
+
+    .controlados-historial-tipo {
+        display: inline-flex;
+        padding: 4px 7px;
+        border-radius: 999px;
+        font-size: 9px;
+        font-weight: 800;
+    }
+
+
+    .controlados-historial-entrada {
+        background: #e9f8ef;
+        color: #17764b;
+    }
+
+
+    .controlados-historial-salida {
+        background: #fff0f0;
+        color: #b42318;
+    }
+
+
+    .controlados-cantidad-entrada {
+        color: #17764b;
+    }
+
+
+    .controlados-cantidad-salida {
+        color: #b42318;
+    }
+
+
+    .controlados-stock-cambio {
+        display: inline-flex;
+        gap: 5px;
+    }
+
+
+    .controlados-stock-cambio strong {
+        color: #1198a5;
+    }
+
+
+    .controlados-historial-responsable {
+        display: flex;
+        gap: 5px;
+    }
+
+
+    .controlados-historial-motivo {
+        display: block;
+        max-width: 260px;
+        overflow-wrap: anywhere;
+    }
+
+
+    .controlados-historial-vacio {
+        padding: 17px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        border-radius: 8px;
+        background: #f6f9fa;
+    }
+
+
+    .controlados-historial-vacio > div {
+        display: flex;
+        flex-direction: column;
+    }
+
+
+
+    /* =========================================================
+       VACIOS
+       ========================================================= */
+
+    .controlados-vacio {
+        padding: 55px 20px !important;
+        text-align: center;
+    }
+
+
+    .controlados-vacio strong,
+    .controlados-vacio span {
+        display: block;
+    }
+
+
+    .controlados-sin-resultados {
+        display: none;
+    }
+
+
+    .controlados-sin-resultados td {
+        padding: 35px !important;
+        text-align: center;
+    }
+
+
+    .controlados-sin-resultados-contenido {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+
+
+
+    /* =========================================================
+       MODAL MOVIMIENTO
+       ========================================================= */
+
+    .mc-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 3000;
+
+        display: none;
+        align-items: center;
+        justify-content: center;
+
+        padding: 20px;
+
+        background: rgba(3, 25, 41, 0.58);
+
+        backdrop-filter: blur(2px);
+    }
+
+
+    .mc-modal {
+        position: relative;
+
+        width: min(540px, 100%);
+
+        max-height: calc(100vh - 40px);
+
+        overflow-y: auto;
+
+        padding: 24px;
+
+        border-radius: 17px;
+
+        background: white;
+
+        box-shadow:
+            0 20px 60px
+            rgba(0, 0, 0, 0.25);
+
+        box-sizing: border-box;
+    }
+
+
+    .mc-cerrar {
+        position: absolute;
+
+        top: 18px;
+        right: 18px;
+
+        z-index: 5;
+
+        width: 35px;
+        height: 35px;
+
+        border: none;
+        border-radius: 50%;
+
+        background: #eef3f6;
+
+        color: #53656f;
+
+        font-size: 22px;
+
+        cursor: pointer;
+    }
+
+
+
+    /* =========================================================
+       CABECERA MODAL
+       ========================================================= */
+
+    .mc-cabecera {
+        position: relative;
+
+        margin-bottom: 22px;
+
+        padding: 35px 0 4px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: center;
+
+        text-align: center;
+    }
+
+
+    .mc-etiqueta {
+        position: absolute;
+
+        top: 0;
+        left: 0;
+
+        display: inline-flex;
+
+        padding: 5px 10px;
+
+        border-radius: 999px;
+
+        background: #e8f7f4;
+
+        color: #0c7e87;
+
+        font-size: 10px;
+
+        font-weight: 800;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.3px;
+    }
+
+
+
+    /* =========================================================
+       ICONO CLINICO
+       ========================================================= */
+
+    .mc-icono {
+        position: relative;
+
+        width: 76px;
+        height: 76px;
+
+        min-width: 76px;
+
+        margin-bottom: 17px;
+
+        border-radius: 18px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #087b96,
+                #159b9f
+            );
+
+        box-shadow:
+            0 8px 18px
+            rgba(
+                12,
+                126,
+                135,
+                0.24
+            );
+    }
+
+
+    .mc-icono::before {
+        content: "";
+
+        position: absolute;
+
+        width: 27px;
+        height: 5px;
+
+        top: 50%;
+        left: 50%;
+
+        border-radius: 2px;
+
+        background-color: white;
+
+        transform:
+            translate(
+                -50%,
+                -50%
+            );
+    }
+
+
+    .mc-icono::after {
+        content: "";
+
+        position: absolute;
+
+        width: 5px;
+        height: 27px;
+
+        top: 50%;
+        left: 50%;
+
+        border-radius: 2px;
+
+        background-color: white;
+
+        transform:
+            translate(
+                -50%,
+                -50%
+            );
+    }
+
+
+    .mc-titulo {
+        margin: 0 0 8px;
+
+        padding: 0;
+
+        width: auto;
+
+        max-width: none;
+
+        background: none;
+
+        box-shadow: none;
+
+        color: #073b64;
+
+        font-size: 22px;
+
+        font-weight: 800;
+
+        line-height: 1.15;
+    }
+
+
+    .mc-titulo::before,
+    .mc-titulo::after {
+        display: none;
+
+        content: none;
+    }
+
+
+    .mc-subtitulo {
+        margin: 0;
+
+        color: #708696;
+
+        font-size: 15px;
+    }
+
+
+
+    /* =========================================================
+       ERROR GENERAL
+       ========================================================= */
+
+    .mc-error-general {
+        margin-bottom: 16px;
+
+        padding: 14px 16px;
+
+        border: 1px solid #f0bbbb;
+
+        border-radius: 8px;
+
+        background: #fbdede;
+
+        color: #a71919;
+
+        font-size: 14px;
+
+        font-weight: 600;
+
+        text-align: center;
+    }
+
+
+
+    /* =========================================================
+       INFORMACION
+       ========================================================= */
+
+    .mc-info {
+        margin-bottom: 20px;
+
+        padding: 14px;
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(0, 1fr)
+            );
+
+        gap: 8px;
+
+        border-radius: 10px;
+
+        background: #f4f8fa;
+    }
+
+
+    .mc-info > div {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 4px;
+    }
+
+
+    .mc-info span {
+        color: #77858c;
+
+        font-size: 10px;
+    }
+
+
+    .mc-info strong {
+        color: #26333a;
+
+        font-size: 13px;
+    }
+
+
+
+    /* =========================================================
+       CAMPOS
+       ========================================================= */
+
+    .mc-campo {
+        margin-bottom: 17px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 6px;
+    }
+
+
+    .mc-campo label {
+        color: #354952;
+
+        font-size: 13px;
+
+        font-weight: 700;
+    }
+
+
+    .mc-input {
+        width: 100%;
+
+        padding: 11px 13px;
+
+        border: 1px solid #bfd3dc;
+
+        border-radius: 9px;
+
+        outline: none;
+
+        background: white;
+
+        color: #26333a;
+
+        font-family: inherit;
+
+        font-size: 14px;
+
+        box-sizing: border-box;
+    }
+
+
+    .mc-input:focus {
+        border-color: #12a1ab;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(
+                18,
+                161,
+                171,
+                0.12
+            );
+    }
+
+
+    .mc-input.error {
+        border-color: #d74b4b;
+
+        background: #fff8f8;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(
+                215,
+                75,
+                75,
+                0.08
+            );
+    }
+
+
+    textarea.mc-input {
+        min-height: 100px;
+
+        resize: vertical;
+    }
+
+
+    .mc-campo small {
+        color: #76858d;
+
+        font-size: 10px;
+    }
+
+
+    .mc-contador {
+        color: #89969c;
+
+        font-size: 10px;
+
+        text-align: right;
+    }
+
+
+
+    /* =========================================================
+       BOTONES MODAL MOVIMIENTO
+       ========================================================= */
+
+    .mc-botones {
+        margin-top: 20px;
+
+        display: flex;
+
+        justify-content: flex-end;
+
+        gap: 9px;
+    }
+
+
+    .mc-btn-cancelar,
+    .mc-btn-confirmar {
+        min-height: 40px;
+
+        padding: 8px 17px;
+
+        border-radius: 8px;
+
+        font-family: inherit;
+
+        font-size: 12px;
+
+        font-weight: 700;
+
+        cursor: pointer;
+    }
+
+
+    .mc-btn-cancelar {
+        border: 1px solid #cbd5da;
+
+        background: white;
+
+        color: #5c6970;
+    }
+
+
+    .mc-btn-confirmar {
+        border: 1px solid #1198a5;
+
+        background: #1198a5;
+
+        color: white;
+    }
+
+
+    .mc-btn-confirmar.salida {
+        border-color: #b83232;
+
+        background: #b83232;
+    }
+
+
+    .mc-btn-confirmar:disabled {
+        opacity: 0.65;
+
+        cursor: wait;
+    }
+
+
+
+    /* =========================================================
+       MODAL CONFIRMACION
+       ========================================================= */
+
+    .mcc-overlay {
+        position: fixed;
+
+        inset: 0;
+
+        z-index: 4000;
+
+        display: none;
+
+        align-items: center;
+
+        justify-content: center;
+
+        padding: 20px;
+
+        background:
+            rgba(
+                24,
+                33,
+                39,
+                0.48
+            );
+
+        box-sizing: border-box;
+    }
+
+
+    .mcc-modal {
+        width: 100%;
+
+        max-width: 430px;
+
+        padding:
+            30px
+            28px
+            28px;
+
+        border-radius: 17px;
+
+        background: white;
+
+        box-shadow:
+            0 18px 48px
+            rgba(
+                0,
+                0,
+                0,
+                0.22
+            );
+
+        text-align: center;
+
+        box-sizing: border-box;
+    }
+
+
+    .mcc-icono {
+        width: 58px;
+
+        height: 58px;
+
+        margin:
+            0
+            auto
+            20px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 50%;
+
+        background: #1198a5;
+
+        color: white;
+
+        font-size: 31px;
+
+        font-weight: 800;
+
+        line-height: 1;
+    }
+
+
+    .mcc-titulo {
+        margin:
+            0
+            0
+            16px;
+
+        padding: 0;
+
+        color: #073b64;
+
+        font-size: 25px;
+
+        font-weight: 800;
+
+        line-height: 1.2;
+    }
+
+
+    .mcc-mensaje {
+        margin:
+            0
+            0
+            26px;
+
+        color: #4e565c;
+
+        font-size: 16px;
+
+        line-height: 1.5;
+    }
+
+
+    .mcc-botones {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 10px;
+
+        flex-wrap: wrap;
+    }
+
+
+    .mcc-btn {
+        min-width: 90px;
+
+        min-height: 44px;
+
+        padding:
+            10px
+            18px;
+
+        border: none;
+
+        border-radius: 7px;
+
+        color: white;
+
+        font-family: inherit;
+
+        font-size: 14px;
+
+        font-weight: 700;
+
+        cursor: pointer;
+
+        transition:
+            transform 0.15s ease,
+            opacity 0.15s ease;
+    }
+
+
+    .mcc-btn:hover {
+        transform:
+            translateY(
+                -1px
+            );
+
+        opacity: 0.92;
+    }
+
+
+    .mcc-btn-si {
+        background: #19945b;
+    }
+
+
+    .mcc-btn-no {
+        background: #d32236;
+    }
+
+
+    .mcc-btn-cancelar {
+        background: #5f6970;
+    }
+
+
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @@media (max-width: 1100px) {
+
+        .controlados-herramientas {
+            grid-template-columns: 1fr;
+        }
+
+    }
+
+
+    @@media (max-width: 900px) {
+
+        .controlados-pagina {
+            padding: 22px 20px 35px;
+        }
+
+
+        .controlados-resumen {
+            grid-template-columns: 1fr;
+        }
+
+    }
+
+
+    @@media (max-width: 700px) {
+
+        .controlados-pagina {
+            padding: 16px 12px 28px;
+        }
+
+
+        .controlados-form-busqueda,
+        .controlados-form-filtros {
+            grid-template-columns: 1fr;
+        }
+
+
+        .mc-modal {
+            padding: 20px 18px;
+        }
+
+
+        .mc-info {
+            grid-template-columns: 1fr;
+        }
+
+
+        .mc-botones {
+            flex-direction: column-reverse;
+        }
+
+
+        .mc-btn-cancelar,
+        .mc-btn-confirmar {
+            width: 100%;
+        }
+
+    }
+
+
+    @@media (max-width: 520px) {
+
+        .mcc-modal {
+            padding:
+                28px
+                20px
+                22px;
+        }
+
+
+        .mcc-botones {
+            flex-direction: column;
+        }
+
+
+        .mcc-btn {
+            width: 100%;
+        }
+
+    }
+
+</style>
+
+
+
+<script>
+
+    // =========================================================
+    // BUSQUEDA Y FILTRO
+    // =========================================================
+
+    let busquedaControladosActual =
+        "";
+
+
+    let filtroControladosActual =
+        "todos";
+
+
+
+    function buscarMedicamentosControlados() {
+
+        const buscador =
+            document.getElementById(
+                "buscadorControlados"
+            );
+
+
+        busquedaControladosActual =
+            buscador
+                ? buscador.value
+                    .trim()
+                    .toLowerCase()
+                : "";
+
+
+        aplicarVistaMedicamentosControlados();
+
+    }
+
+
+
+    document
+        .getElementById(
+            "buscadorControlados"
+        )
+        ?.addEventListener(
+            "keydown",
+            function (evento) {
+
+                if (
+                    evento.key
+                    ===
+                    "Enter"
+                ) {
+
+                    evento.preventDefault();
+
+                    buscarMedicamentosControlados();
+
+                }
+
+            }
+        );
+
+
+
+    function aplicarFiltroControlados() {
+
+        const select =
+            document.getElementById(
+                "filtroEstadoControlados"
+            );
+
+
+        filtroControladosActual =
+            select
+                ? select.value
+                : "todos";
+
+
+        aplicarVistaMedicamentosControlados();
+
+    }
+
+
+
+    function limpiarFiltroControlados() {
+
+        filtroControladosActual =
+            "todos";
+
+
+        const select =
+            document.getElementById(
+                "filtroEstadoControlados"
+            );
+
+
+        if (select) {
+
+            select.value =
+                "todos";
+
+        }
+
+
+        aplicarVistaMedicamentosControlados();
+
+    }
+
+
+
+    function aplicarVistaMedicamentosControlados() {
+
+        const filas =
+            document.querySelectorAll(
+                ".fila-medicamento-controlado"
+            );
+
+
+        let visibles =
+            0;
+
+
+        filas.forEach(
+            function (fila) {
+
+                const contenido =
+                    fila.dataset.busqueda
+                    ?? "";
+
+
+                const coincideBusqueda =
+                    contenido.includes(
+                        busquedaControladosActual
+                    );
+
+
+                let coincideFiltro =
+                    true;
+
+
+                if (
+                    filtroControladosActual
+                    ===
+                    "stock"
+                ) {
+
+                    coincideFiltro =
+                        fila.dataset.stockBajo
+                        ===
+                        "true";
+
+                }
+
+
+                if (
+                    filtroControladosActual
+                    ===
+                    "proximo"
+                ) {
+
+                    coincideFiltro =
+                        fila.dataset.proximoVencer
+                        ===
+                        "true";
+
+                }
+
+
+                if (
+                    filtroControladosActual
+                    ===
+                    "vencido"
+                ) {
+
+                    coincideFiltro =
+                        fila.dataset.vencido
+                        ===
+                        "true";
+
+                }
+
+
+                const visible =
+                    coincideBusqueda
+                    &&
+                    coincideFiltro;
+
+
+                fila.style.display =
+                    visible
+                        ? "table-row"
+                        : "none";
+
+
+                const idProducto =
+                    fila.dataset.producto;
+
+
+                const detalle =
+                    document.getElementById(
+                        "detalle-controlado-"
+                        +
+                        idProducto
+                    );
+
+
+                if (!visible && detalle) {
+
+                    detalle.style.display =
+                        "none";
+
+
+                    const boton =
+                        fila.querySelector(
+                            ".controlados-btn-lotes"
+                        );
+
+
+                    if (boton) {
+
+                        boton.classList.remove(
+                            "abierto"
+                        );
+
+
+                        boton.setAttribute(
+                            "aria-expanded",
+                            "false"
+                        );
+
+                    }
+
+
+                    detalle
+                        .querySelectorAll(
+                            ".controlados-fila-historial"
+                        )
+                        .forEach(
+                            function (historial) {
+
+                                historial.style.display =
+                                    "none";
+
+                            }
+                        );
+
+                }
+
+
+                if (visible) {
+
+                    visibles++;
+
+                }
+
+            }
+        );
+
+
+        const cantidad =
+            document.getElementById(
+                "cantidadResultadosControlados"
+            );
+
+
+        if (cantidad) {
+
+            cantidad.textContent =
+                visibles;
+
+        }
+
+
+        const etiquetaBusqueda =
+            document.getElementById(
+                "etiquetaBusquedaControlados"
+            );
+
+
+        if (etiquetaBusqueda) {
+
+            if (
+                busquedaControladosActual
+                !==
+                ""
+            ) {
+
+                etiquetaBusqueda.textContent =
+                    "Búsqueda: “"
+                    +
+                    busquedaControladosActual
+                    +
+                    "”";
+
+
+                etiquetaBusqueda.style.display =
+                    "inline-flex";
+
+            }
+            else {
+
+                etiquetaBusqueda.style.display =
+                    "none";
+
+            }
+
+        }
+
+
+        const etiquetaFiltro =
+            document.getElementById(
+                "etiquetaFiltroControlados"
+            );
+
+
+        if (etiquetaFiltro) {
+
+            if (
+                filtroControladosActual
+                ===
+                "todos"
+            ) {
+
+                etiquetaFiltro.style.display =
+                    "none";
+
+            }
+            else {
+
+                let texto =
+                    "";
+
+
+                if (
+                    filtroControladosActual
+                    ===
+                    "stock"
+                ) {
+
+                    texto =
+                        "Stock bajo";
+
+                }
+
+
+                if (
+                    filtroControladosActual
+                    ===
+                    "proximo"
+                ) {
+
+                    texto =
+                        "Próximos a vencer";
+
+                }
+
+
+                if (
+                    filtroControladosActual
+                    ===
+                    "vencido"
+                ) {
+
+                    texto =
+                        "Vencidos";
+
+                }
+
+
+                etiquetaFiltro.textContent =
+                    "Estado: "
+                    +
+                    texto;
+
+
+                etiquetaFiltro.style.display =
+                    "inline-flex";
+
+            }
+
+        }
+
+
+        const sinResultados =
+            document.getElementById(
+                "sinResultadosControlados"
+            );
+
+
+        if (sinResultados) {
+
+            sinResultados.style.display =
+                visibles === 0
+                    ? "table-row"
+                    : "none";
+
+        }
+
+    }
+
+
+
+    // =========================================================
+    // LOTES
+    // =========================================================
+
+    function alternarLotesControlado(
+        idProducto,
+        boton
+    ) {
+
+        const detalle =
+            document.getElementById(
+                "detalle-controlado-"
+                +
+                idProducto
+            );
+
+
+        if (!detalle) {
+
+            return;
+
+        }
+
+
+        const abierto =
+            detalle.style.display
+            ===
+            "table-row";
+
+
+        if (abierto) {
+
+            detalle.style.display =
+                "none";
+
+
+            boton.classList.remove(
+                "abierto"
+            );
+
+
+            boton.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+
+            detalle
+                .querySelectorAll(
+                    ".controlados-fila-historial"
+                )
+                .forEach(
+                    function (fila) {
+
+                        fila.style.display =
+                            "none";
+
+                    }
+                );
+
+
+            detalle
+                .querySelectorAll(
+                    ".controlados-btn-historial"
+                )
+                .forEach(
+                    function (botonHistorial) {
+
+                        botonHistorial.classList.remove(
+                            "activo"
+                        );
+
+                    }
+                );
+
+        }
+        else {
+
+            detalle.style.display =
+                "table-row";
+
+
+            boton.classList.add(
+                "abierto"
+            );
+
+
+            boton.setAttribute(
+                "aria-expanded",
+                "true"
+            );
+
+        }
+
+    }
+
+
+
+    // =========================================================
+    // HISTORIAL
+    // =========================================================
+
+    function alternarHistorialLote(
+        idLote,
+        boton
+    ) {
+
+        const fila =
+            document.getElementById(
+                "historial-lote-"
+                +
+                idLote
+            );
+
+
+        if (!fila) {
+
+            return;
+
+        }
+
+
+        const abierto =
+            fila.style.display
+            ===
+            "table-row";
+
+
+        if (abierto) {
+
+            fila.style.display =
+                "none";
+
+
+            boton.classList.remove(
+                "activo"
+            );
+
+
+            boton.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+
+            return;
+
+        }
+
+
+        const tabla =
+            boton.closest(
+                ".controlados-subtabla"
+            );
+
+
+        if (tabla) {
+
+            tabla
+                .querySelectorAll(
+                    ".controlados-fila-historial"
+                )
+                .forEach(
+                    function (otraFila) {
+
+                        if (
+                            otraFila
+                            !==
+                            fila
+                        ) {
+
+                            otraFila.style.display =
+                                "none";
+
+                        }
+
+                    }
+                );
+
+
+            tabla
+                .querySelectorAll(
+                    ".controlados-btn-historial"
+                )
+                .forEach(
+                    function (otroBoton) {
+
+                        if (
+                            otroBoton
+                            !==
+                            boton
+                        ) {
+
+                            otroBoton.classList.remove(
+                                "activo"
+                            );
+
+
+                            otroBoton.setAttribute(
+                                "aria-expanded",
+                                "false"
+                            );
+
+                        }
+
+                    }
+                );
+
+        }
+
+
+        fila.style.display =
+            "table-row";
+
+
+        boton.classList.add(
+            "activo"
+        );
+
+
+        boton.setAttribute(
+            "aria-expanded",
+            "true"
+        );
+
+    }
+
+
+
+    // =========================================================
+    // LIMPIAR ERRORES
+    // =========================================================
+
+    function limpiarErroresMovimiento() {
+
+        const alerta =
+            document.getElementById(
+                "mensajeErrorMovimiento"
+            );
+
+
+        if (alerta) {
+
+            alerta.style.display =
+                "none";
+
+
+            alerta.textContent =
+                "";
+
+        }
+
+
+        const cantidad =
+            document.getElementById(
+                "movimientoCantidad"
+            );
+
+
+        const observacion =
+            document.getElementById(
+                "movimientoObservacion"
+            );
+
+
+        cantidad
+            ?.classList
+            .remove(
+                "error"
+            );
+
+
+        observacion
+            ?.classList
+            .remove(
+                "error"
+            );
+
+    }
+
+
+
+    // =========================================================
+    // MENSAJE GENERAL
+    // =========================================================
+
+    function mostrarErrorGeneralMovimiento(
+        mensaje
+    ) {
+
+        const alerta =
+            document.getElementById(
+                "mensajeErrorMovimiento"
+            );
+
+
+        if (!alerta) {
+
+            return;
+
+        }
+
+
+        alerta.textContent =
+            mensaje;
+
+
+        alerta.style.display =
+            "block";
+
+    }
+
+
+
+    // =========================================================
+    // ABRIR MODAL MOVIMIENTO
+    // =========================================================
+
+    function abrirModalMovimiento(
+        boton
+    ) {
+
+        const modal =
+            document.getElementById(
+                "modalMovimientoControlado"
+            );
+
+
+        if (!modal) {
+
+            return;
+
+        }
+
+
+        const idLote =
+            boton.dataset.idLote;
+
+
+        const tipo =
+            boton.dataset.tipo;
+
+
+        const medicamento =
+            boton.dataset.medicamento;
+
+
+        const lote =
+            boton.dataset.lote;
+
+
+        const stock =
+            parseInt(
+                boton.dataset.stock
+                ??
+                "0"
+            );
+
+
+        limpiarErroresMovimiento();
+
+
+        document.getElementById(
+            "movimientoIdLote"
+        ).value =
+            idLote;
+
+
+        document.getElementById(
+            "movimientoTipo"
+        ).value =
+            tipo;
+
+
+        document.getElementById(
+            "movimientoStockActual"
+        ).value =
+            stock;
+
+
+        document.getElementById(
+            "modalMedicamento"
+        ).textContent =
+            medicamento;
+
+
+        document.getElementById(
+            "modalLote"
+        ).textContent =
+            lote;
+
+
+        document.getElementById(
+            "modalStock"
+        ).textContent =
+            stock;
+
+
+        document.getElementById(
+            "modalMovimientoEtiqueta"
+        ).textContent =
+            tipo.toUpperCase();
+
+
+        document.getElementById(
+            "modalMovimientoTitulo"
+        ).textContent =
+            tipo === "Salida"
+                ? "Registrar salida"
+                : "Registrar entrada";
+
+
+        const cantidad =
+            document.getElementById(
+                "movimientoCantidad"
+            );
+
+
+        cantidad.value =
+            "";
+
+
+        cantidad.min =
+            "1";
+
+
+        if (tipo === "Salida") {
+
+            cantidad.max =
+                stock;
+
+
+            document.getElementById(
+                "movimientoAyudaCantidad"
+            ).textContent =
+                "Máximo disponible en este lote: "
+                +
+                stock
+                +
+                " unidades.";
+
+        }
+        else {
+
+            cantidad.removeAttribute(
+                "max"
+            );
+
+
+            document.getElementById(
+                "movimientoAyudaCantidad"
+            ).textContent =
+                "Ingresa la cantidad que ingresará al lote.";
+
+        }
+
+
+        const observacion =
+            document.getElementById(
+                "movimientoObservacion"
+            );
+
+
+        observacion.value =
+            "";
+
+
+        document.getElementById(
+            "contadorObservacion"
+        ).textContent =
+            "0";
+
+
+        const confirmar =
+            document.getElementById(
+                "btnConfirmarMovimiento"
+            );
+
+
+        confirmar.disabled =
+            false;
+
+
+        confirmar.textContent =
+            tipo === "Salida"
+                ? "Registrar salida"
+                : "Registrar entrada";
+
+
+        if (tipo === "Salida") {
+
+            confirmar.classList.add(
+                "salida"
+            );
+
+        }
+        else {
+
+            confirmar.classList.remove(
+                "salida"
+            );
+
+        }
+
+
+        modal.style.display =
+            "flex";
+
+
+        setTimeout(
+            function () {
+
+                cantidad.focus();
+
+            },
+            50
+        );
+
+    }
+
+
+
+    // =========================================================
+    // VALIDAR FORMULARIO
+    // =========================================================
+
+    function validarFormularioMovimiento() {
+
+        limpiarErroresMovimiento();
+
+
+        let valido =
+            true;
+
+
+        let primerError =
+            "";
+
+
+        const tipo =
+            document.getElementById(
+                "movimientoTipo"
+            ).value;
+
+
+        const cantidadInput =
+            document.getElementById(
+                "movimientoCantidad"
+            );
+
+
+        const observacionInput =
+            document.getElementById(
+                "movimientoObservacion"
+            );
+
+
+        const stockActual =
+            parseInt(
+                document.getElementById(
+                    "movimientoStockActual"
+                ).value
+                ??
+                "0"
+            );
+
+
+        const cantidad =
+            parseInt(
+                cantidadInput.value
+                ??
+                "0"
+            );
+
+
+        const observacion =
+            observacionInput.value
+                .trim();
+
+
+
+        // CANTIDAD
+
+        if (
+            !cantidadInput.value
+            ||
+            isNaN(cantidad)
+            ||
+            cantidad <= 0
+        ) {
+
+            valido =
+                false;
+
+
+            cantidadInput.classList.add(
+                "error"
+            );
+
+
+            primerError =
+                "Debe ingresar una cantidad válida.";
+
+        }
+
+
+
+        // SALIDA MAYOR AL STOCK
+
+        if (
+            cantidadInput.value
+            &&
+            !isNaN(cantidad)
+            &&
+            tipo === "Salida"
+            &&
+            cantidad > stockActual
+        ) {
+
+            valido =
+                false;
+
+
+            cantidadInput.classList.add(
+                "error"
+            );
+
+
+            if (primerError === "") {
+
+                primerError =
+                    "La cantidad no puede ser mayor al stock disponible.";
+
+            }
+
+        }
+
+
+
+        // OBSERVACION
+
+        if (observacion === "") {
+
+            valido =
+                false;
+
+
+            observacionInput.classList.add(
+                "error"
+            );
+
+
+            if (primerError === "") {
+
+                primerError =
+                    "Debe ingresar el motivo u observación.";
+
+            }
+
+        }
+
+
+
+        if (!valido) {
+
+            mostrarErrorGeneralMovimiento(
+                primerError
+            );
+
+        }
+
+
+        return valido;
+
+    }
+
+
+
+    // =========================================================
+    // CERRAR MODAL MOVIMIENTO
+    // =========================================================
+
+    function cerrarModalMovimiento() {
+
+        const modal =
+            document.getElementById(
+                "modalMovimientoControlado"
+            );
+
+
+        if (modal) {
+
+            modal.style.display =
+                "none";
+
+        }
+
+
+        limpiarErroresMovimiento();
+
+
+        const confirmacion =
+            document.getElementById(
+                "modalConfirmacionMovimiento"
+            );
+
+
+        if (confirmacion) {
+
+            confirmacion.style.display =
+                "none";
+
+        }
+
+    }
+
+
+
+    // =========================================================
+    // OBSERVACION
+    // =========================================================
+
+    document
+        .getElementById(
+            "movimientoObservacion"
+        )
+        ?.addEventListener(
+            "input",
+            function () {
+
+                document.getElementById(
+                    "contadorObservacion"
+                ).textContent =
+                    this.value.length;
+
+
+                this.classList.remove(
+                    "error"
+                );
+
+            }
+        );
+
+
+
+    // =========================================================
+    // CANTIDAD
+    // =========================================================
+
+    document
+        .getElementById(
+            "movimientoCantidad"
+        )
+        ?.addEventListener(
+            "input",
+            function () {
+
+                this.classList.remove(
+                    "error"
+                );
+
+            }
+        );
+
+
+
+    // =========================================================
+    // ABRIR CONFIRMACION
+    // =========================================================
+
+    function abrirConfirmacionMovimiento() {
+
+        const modal =
+            document.getElementById(
+                "modalConfirmacionMovimiento"
+            );
+
+
+        const mensaje =
+            document.getElementById(
+                "mensajeConfirmacionMovimiento"
+            );
+
+
+        const tipo =
+            document.getElementById(
+                "movimientoTipo"
+            )?.value
+            ??
+            "";
+
+
+        if (
+            !modal
+            ||
+            !mensaje
+        ) {
+
+            return;
+
+        }
+
+
+        mensaje.textContent =
+            tipo === "Salida"
+                ? "¿Quieres registrar esta salida?"
+                : "¿Quieres registrar esta entrada?";
+
+
+        modal.style.display =
+            "flex";
+
+    }
+
+
+
+    // =========================================================
+    // NO
+    //
+    // Cierra solamente la confirmacion.
+    // Los datos escritos siguen en el formulario.
+    // =========================================================
+
+    function cerrarConfirmacionMovimiento() {
+
+        const modal =
+            document.getElementById(
+                "modalConfirmacionMovimiento"
+            );
+
+
+        if (modal) {
+
+            modal.style.display =
+                "none";
+
+        }
+
+    }
+
+
+
+    // =========================================================
+    // CANCELAR
+    //
+    // Cierra la confirmacion y también el movimiento completo.
+    // =========================================================
+
+    function cancelarConfirmacionMovimiento() {
+
+        cerrarConfirmacionMovimiento();
+
+
+        cerrarModalMovimiento();
+
+    }
+
+
+
+    // =========================================================
+    // SI
+    //
+    // Ahora sí enviamos el formulario al controlador.
+    // =========================================================
+
+    function confirmarMovimientoControlado() {
+
+        const formulario =
+            document.getElementById(
+                "formMovimientoControlado"
+            );
+
+
+        const boton =
+            document.getElementById(
+                "btnConfirmarMovimiento"
+            );
+
+
+        if (!formulario) {
+
+            return;
+
+        }
+
+
+        cerrarConfirmacionMovimiento();
+
+
+        if (boton) {
+
+            boton.disabled =
+                true;
+
+
+            boton.textContent =
+                "Registrando...";
+
+        }
+
+
+        /*
+            submit() se usa aquí intencionalmente.
+
+            La validación ya se realizó antes de abrir
+            la confirmación y el usuario acaba de presionar Sí.
+        */
+
+        formulario.submit();
+
+    }
+
+
+
+    // =========================================================
+    // INTENTO DE ENVIO
+    //
+    // Antes se enviaba inmediatamente.
+    //
+    // Ahora:
+    //
+    // 1. valida
+    // 2. abre confirmación
+    // 3. solo "Sí" registra el movimiento
+    // =========================================================
+
+    document
+        .getElementById(
+            "formMovimientoControlado"
+        )
+        ?.addEventListener(
+            "submit",
+            function (evento) {
+
+                evento.preventDefault();
+
+
+                if (!validarFormularioMovimiento()) {
+
+                    return;
+
+                }
+
+
+                abrirConfirmacionMovimiento();
+
+            }
+        );
+
+
+
+    // =========================================================
+    // CERRAR MODAL MOVIMIENTO PRESIONANDO EL FONDO
+    // =========================================================
+
+    document
+        .getElementById(
+            "modalMovimientoControlado"
+        )
+        ?.addEventListener(
+            "click",
+            function (evento) {
+
+                if (evento.target === this) {
+
+                    cerrarModalMovimiento();
+
+                }
+
+            }
+        );
+
+
+
+    // =========================================================
+    // CERRAR CONFIRMACION PRESIONANDO EL FONDO
+    // =========================================================
+
+    document
+        .getElementById(
+            "modalConfirmacionMovimiento"
+        )
+        ?.addEventListener(
+            "click",
+            function (evento) {
+
+                if (evento.target === this) {
+
+                    cerrarConfirmacionMovimiento();
+
+                }
+
+            }
+        );
+
+
+
+    // =========================================================
+    // ESC
+    // =========================================================
+
+    document.addEventListener(
+        "keydown",
+        function (evento) {
+
+            if (evento.key !== "Escape") {
+
+                return;
+
+            }
+
+
+            const confirmacion =
+                document.getElementById(
+                    "modalConfirmacionMovimiento"
+                );
+
+
+            if (
+                confirmacion
+                &&
+                confirmacion.style.display === "flex"
+            ) {
+
+                cerrarConfirmacionMovimiento();
+
+
+                return;
+
+            }
+
+
+            cerrarModalMovimiento();
+
+        }
+    );
+
+</script>

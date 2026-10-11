@@ -4,12 +4,20 @@ using LoginSARMedix.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+
 builder.Services.AddScoped<EmailService>();
+
 builder.Services.AddScoped<UsuarioRepository>();
+
 builder.Services.AddScoped<ProductoRepository>();
+
 builder.Services.AddScoped<LoteRepository>();
+
 builder.Services.AddScoped<PermisoRepository>();
+
 builder.Services.AddScoped<HistorialRepository>();
+
+builder.Services.AddScoped<MovimientoRepository>();
 
 builder.Services.AddSession();
 
@@ -18,6 +26,7 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
+
     app.UseHsts();
 }
 

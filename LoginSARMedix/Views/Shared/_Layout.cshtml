@@ -10,19 +10,45 @@
     string rol =
         Context.Session.GetString("Rol") ?? "";
 
+
+    int? idUsuario =
+        Context.Session.GetInt32(
+            "IdUsuario"
+        );
+
+
     string nombreCompleto =
-        (nombre + " " + apellido).Trim();
+        (nombre + " " + apellido)
+            .Trim();
+
 
     string inicial =
         !string.IsNullOrEmpty(nombre)
-            ? nombre.Substring(0, 1).ToUpper()
+            ? nombre
+                .Substring(
+                    0,
+                    1
+                )
+                .ToUpper()
             : "U";
 
+
+    /*
+        Ahora utilizamos IdUsuario para determinar
+        si existe una sesión autenticada.
+
+        Esto es más seguro que comprobar únicamente
+        si existe un nombre en Session.
+    */
+
     bool sesionIniciada =
-        !string.IsNullOrEmpty(nombre);
+        idUsuario.HasValue;
+
 
     string tituloBarra =
-        ViewData["TituloBarra"]?.ToString() ?? "";
+        ViewData["TituloBarra"]?.ToString()
+        ??
+        "";
 }
 
 
@@ -35,12 +61,15 @@
 
     <meta charset="utf-8" />
 
+
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0" />
 
 
     <title>
+
         @ViewData["Title"] - SARMedix
+
     </title>
 
 
@@ -68,12 +97,16 @@
 <body>
 
 
-    <!-- BARRA SUPERIOR -->
+    <!-- =========================================================
+         BARRA SUPERIOR
+         ========================================================= -->
 
     <header class="barra-layout">
 
 
-        <!-- LOGO -->
+        <!-- =====================================================
+             LOGO
+             ===================================================== -->
 
         <a asp-controller="Home"
            asp-action="Modulos"
@@ -95,7 +128,9 @@
 
 
 
-        <!-- TITULO CENTRAL -->
+        <!-- =====================================================
+             TITULO CENTRAL
+             ===================================================== -->
 
         <div class="titulo-layout">
 
@@ -105,12 +140,28 @@
 
 
 
-        <!-- USUARIO -->
+        <!-- =====================================================
+             USUARIO
+             ===================================================== -->
 
         @if (sesionIniciada)
         {
             <div class="usuario-layout">
 
+
+                <!-- =================================================
+                     ALERTAS
+                     ================================================= -->
+
+                @await Component.InvokeAsync(
+                    "Alertas"
+                )
+
+
+
+                <!-- =================================================
+                     DATOS DEL USUARIO
+                     ================================================= -->
 
                 <div class="usuario-datos-layout">
 
@@ -133,6 +184,10 @@
 
 
 
+                <!-- =================================================
+                     INICIAL
+                     ================================================= -->
+
                 <div class="usuario-circulo-layout">
 
                     @inicial
@@ -141,7 +196,9 @@
 
 
 
-                <!-- CERRAR SESION -->
+                <!-- =================================================
+                     CERRAR SESION
+                     ================================================= -->
 
                 <form asp-controller="Home"
                       asp-action="CerrarSesion"
@@ -166,7 +223,16 @@
         }
         else
         {
-            <div></div>
+            /*
+                Si no existe sesión:
+
+                - No mostramos usuario.
+                - No mostramos campana.
+                - No ejecutamos el componente de alertas.
+            */
+
+            <div>
+            </div>
         }
 
 
@@ -174,20 +240,26 @@
 
 
 
-    <!-- CONTENIDO -->
+    <!-- =========================================================
+         CONTENIDO
+         ========================================================= -->
 
     @if (sesionIniciada)
     {
         <div class="estructura-app">
 
 
-            <!-- BARRA LATERAL -->
+            <!-- =================================================
+                 BARRA LATERAL
+                 ================================================= -->
 
             <partial name="_Sidebar" />
 
 
 
-            <!-- CONTENIDO DE LA VISTA -->
+            <!-- =================================================
+                 CONTENIDO DE LA VISTA
+                 ================================================= -->
 
             <div class="contenido-app">
 
@@ -223,7 +295,9 @@
 
 
 
-    <!-- FOOTER -->
+    <!-- =========================================================
+         FOOTER
+         ========================================================= -->
 
     <footer class="footer-layout">
 
@@ -233,7 +307,9 @@
 
 
 
-    <!-- CONFIRMACION CERRAR SESION -->
+    <!-- =========================================================
+         CONFIRMACION CERRAR SESION
+         ========================================================= -->
 
     @if (sesionIniciada)
     {
@@ -297,7 +373,9 @@
 
 
 
-    <!-- SCRIPTS -->
+    <!-- =========================================================
+         SCRIPTS
+         ========================================================= -->
 
     <script src="~/lib/jquery/dist/jquery.min.js">
     </script>
@@ -312,9 +390,12 @@
     </script>
 
 
+
     <script>
 
+        // =====================================================
         // ABRIR CONFIRMACION
+        // =====================================================
 
         function abrirConfirmacionCerrarSesion() {
 
@@ -335,7 +416,9 @@
 
 
 
-        // NO
+        // =====================================================
+        // CANCELAR
+        // =====================================================
 
         function cerrarConfirmacionCerrarSesion() {
 
@@ -356,7 +439,9 @@
 
 
 
-        // SI - CERRAR SESION
+        // =====================================================
+        // CERRAR SESION
+        // =====================================================
 
         function confirmarCerrarSesion() {
 
@@ -375,6 +460,7 @@
         }
 
     </script>
+
 
 
     @await RenderSectionAsync(
