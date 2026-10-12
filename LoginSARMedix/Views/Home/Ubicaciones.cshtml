@@ -1,0 +1,2266 @@
+﻿@using LoginSARMedix.Models
+@model List<Ubicacion>
+
+@{
+    ViewData["Title"] = "Ubicaciones";
+    ViewData["TituloBarra"] = "Ubicaciones";
+
+
+    string mensaje =
+        TempData["Mensaje"]?.ToString()
+        ?? "";
+
+
+    string tipoMensaje =
+        TempData["TipoMensaje"]?.ToString()
+        ?? "";
+
+
+    var lotesUbicaciones =
+        ViewBag.LotesUbicaciones as List<Lote>
+        ??
+        new List<Lote>();
+
+
+    var productosUbicaciones =
+        ViewBag.ProductosUbicaciones as List<Producto>
+        ??
+        new List<Producto>();
+
+
+    DateTime hoy =
+        DateTime.Today;
+
+
+    DateTime limiteVencimiento =
+        hoy.AddDays(30);
+
+
+    bool abrirConAlertas =
+        Context.Request.Query["soloAlertas"]
+            .ToString()
+            .Equals(
+                "true",
+                StringComparison.OrdinalIgnoreCase
+            );
+}
+
+<style>
+
+    /* =========================================================
+           PAGINA GENERAL
+           ========================================================= */
+
+    .ubicaciones-pagina {
+        width: 100%;
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 10px 10px 30px;
+    }
+
+
+    /* =========================================================
+           ENCABEZADO
+           ========================================================= */
+
+    .ubicaciones-encabezado {
+        margin-bottom: 25px;
+    }
+
+
+        .ubicaciones-encabezado h1 {
+            margin: 0;
+            color: #093b62;
+            font-size: 34px;
+            font-weight: 750;
+        }
+
+
+        .ubicaciones-encabezado p {
+            margin: 7px 0 0;
+            color: #657d90;
+            font-size: 16px;
+        }
+
+
+    /* =========================================================
+           MENSAJES
+           ========================================================= */
+
+    .ubicaciones-mensaje {
+        margin-bottom: 18px;
+        padding: 13px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-radius: 9px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+
+    .ubicaciones-mensaje-icono {
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-weight: 800;
+    }
+
+
+    .ubicaciones-mensaje-exito {
+        border: 1px solid #b7dfc2;
+        background: #e9f8ed;
+        color: #17733a;
+    }
+
+
+        .ubicaciones-mensaje-exito
+        .ubicaciones-mensaje-icono {
+            background: #17733a;
+            color: white;
+        }
+
+
+    .ubicaciones-mensaje-error {
+        border: 1px solid #f1b9b9;
+        background: #fff0f0;
+        color: #b42318;
+    }
+
+
+        .ubicaciones-mensaje-error
+        .ubicaciones-mensaje-icono {
+            background: #b42318;
+            color: white;
+        }
+
+
+    /* =========================================================
+           BARRA DE HERRAMIENTAS
+           ========================================================= */
+
+    .ubicaciones-herramientas {
+        display: grid;
+        grid-template-columns: minmax(260px, 1fr) 180px 210px auto auto;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+
+    .ubicaciones-buscador {
+        position: relative;
+    }
+
+
+        .ubicaciones-buscador span {
+            position: absolute;
+            top: 50%;
+            left: 16px;
+            transform: translateY(-50%);
+            color: #7890a3;
+            font-size: 18px;
+        }
+
+
+        .ubicaciones-buscador input {
+            width: 100%;
+            height: 48px;
+            padding: 0 15px 0 46px;
+            border: 1px solid #c9d9e3;
+            border-radius: 9px;
+            background: rgba(255, 255, 255, 0.96);
+            color: #17324d;
+            font-size: 15px;
+            outline: none;
+        }
+
+
+            .ubicaciones-buscador input:focus {
+                border-color: #0d7898;
+                box-shadow: 0 0 0 3px rgba(13, 120, 152, 0.10);
+            }
+
+
+    .ubicaciones-select {
+        width: 100%;
+        height: 48px;
+        padding: 0 14px;
+        border: 1px solid #c9d9e3;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.96);
+        color: #17324d;
+        font-size: 14px;
+        outline: none;
+    }
+
+
+        .ubicaciones-select:disabled {
+            background: #eef2f5;
+            color: #8293a0;
+            cursor: not-allowed;
+        }
+
+
+    .ubicaciones-alertas-filtro {
+        height: 48px;
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        border: 1px solid #c9d9e3;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.96);
+        color: #17324d;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+
+        .ubicaciones-alertas-filtro input {
+            width: 17px;
+            height: 17px;
+            cursor: pointer;
+        }
+
+
+    .btn-agregar-ubicacion {
+        height: 48px;
+        padding: 0 21px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: none;
+        border-radius: 9px;
+        background: linear-gradient(90deg, #087ca0, #0f6fc5);
+        color: white;
+        font-size: 15px;
+        font-weight: 650;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: 0 7px 16px rgba(7, 89, 133, 0.18);
+        white-space: nowrap;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+
+        .btn-agregar-ubicacion:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(7, 89, 133, 0.24);
+        }
+
+
+    .btn-agregar-icono {
+        font-size: 23px;
+        line-height: 1;
+        font-weight: 400;
+    }
+
+
+    /* =========================================================
+           GRID
+           ========================================================= */
+
+    .ubicaciones-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+
+    /* =========================================================
+           TARJETA
+           ========================================================= */
+
+    .ubicacion-card {
+        min-height: 330px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.97);
+        border: 1px solid #dce6ed;
+        border-radius: 14px;
+        box-shadow: 0 10px 25px rgba(16, 65, 95, 0.10);
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+
+        .ubicacion-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 35px rgba(16, 65, 95, 0.16);
+        }
+
+
+    .ubicacion-card-superior {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+
+    .ubicacion-icono {
+        width: 54px;
+        height: 54px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
+        background: #e6f3fb;
+        font-size: 30px;
+    }
+
+
+    .ubicacion-datos-principales {
+        flex: 1;
+    }
+
+
+        .ubicacion-datos-principales h2 {
+            margin: 2px 0 4px;
+            color: #123a5d;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+
+    .ubicacion-tipo {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 6px;
+        background: #e9f2fb;
+        color: #27618d;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+
+    .ubicacion-menu {
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: #587086;
+        font-size: 22px;
+        cursor: pointer;
+    }
+
+    .ubicacion-menu-opciones form {
+        margin: 0;
+    }
+
+
+    .ubicacion-menu-opcion-inactivar {
+        color: #b26a00;
+    }
+
+
+        .ubicacion-menu-opcion-inactivar:hover {
+            background: #fff5df;
+        }
+
+
+    .ubicacion-menu:hover {
+        background: #eef5f8;
+    }
+
+    /* =========================================================
+           MENU DE OPCIONES DE UBICACION
+           ========================================================= */
+
+    .ubicacion-menu-contenedor {
+        position: relative;
+    }
+
+
+    .ubicacion-menu-opciones {
+        position: absolute;
+        top: 40px;
+        right: 0;
+        z-index: 100;
+        min-width: 180px;
+        display: none;
+        padding: 6px;
+        border: 1px solid #d9e5ec;
+        border-radius: 9px;
+        background: white;
+        box-shadow: 0 10px 25px rgba(20, 60, 85, 0.18);
+    }
+
+
+        .ubicacion-menu-opciones.abierto {
+            display: block;
+        }
+
+
+    .ubicacion-menu-opcion {
+        width: 100%;
+        padding: 10px 12px;
+        border: none;
+        border-radius: 7px;
+        background: transparent;
+        color: #27485c;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: left;
+        cursor: pointer;
+    }
+
+
+        .ubicacion-menu-opcion:hover {
+            background: #edf6fb;
+        }
+
+
+    /* =========================================================
+           RESUMEN
+           ========================================================= */
+
+    .ubicacion-resumen {
+        margin-top: 20px;
+        padding: 16px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        border: 1px solid #e1eaf0;
+        border-radius: 10px;
+        background: #f8fbfd;
+    }
+
+
+    .ubicacion-resumen-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+
+    .ubicacion-resumen-icono {
+        font-size: 23px;
+    }
+
+
+    .ubicacion-resumen-numero {
+        display: block;
+        color: #123a5d;
+        font-size: 19px;
+        font-weight: 750;
+        line-height: 1.1;
+    }
+
+
+    .ubicacion-resumen-texto {
+        display: block;
+        margin-top: 3px;
+        color: #718696;
+        font-size: 13px;
+    }
+
+
+    /* =========================================================
+           ALERTAS
+           ========================================================= */
+
+    .ubicacion-alertas {
+        margin-top: 16px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+
+    .ubicacion-alerta {
+        padding: 7px 11px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        border-radius: 7px;
+        font-size: 13px;
+        font-weight: 650;
+    }
+
+
+    .ubicacion-alerta-ok {
+        background: #dff5e5;
+        color: #17733a;
+    }
+
+
+    .ubicacion-alerta-vencido {
+        background: #fde5e5;
+        color: #b42318;
+    }
+
+
+    .ubicacion-alerta-proximo {
+        background: #fff0dd;
+        color: #c45c00;
+    }
+
+
+    .ubicacion-alerta-stock {
+        background: #fff4cc;
+        color: #9a6800;
+    }
+
+
+    /* =========================================================
+           BOTON INVENTARIO
+           ========================================================= */
+
+    .ubicacion-acciones {
+        margin-top: auto;
+        padding-top: 20px;
+    }
+
+
+    .btn-ver-inventario {
+        width: 100%;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        border: 1px solid #cbddea;
+        border-radius: 8px;
+        background: #eef6ff;
+        color: #0f67b1;
+        font-size: 14px;
+        font-weight: 650;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+
+        .btn-ver-inventario:hover {
+            background: #e2f0fc;
+            color: #0b5797;
+        }
+
+
+    /* =========================================================
+           TARJETA AGREGAR
+           ========================================================= */
+
+    .ubicacion-card-agregar {
+        min-height: 330px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed #b9d1e2;
+        background: rgba(255, 255, 255, 0.72);
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+
+        .ubicacion-card-agregar:hover {
+            background: rgba(255, 255, 255, 0.92);
+            border-color: #6daed0;
+        }
+
+
+    .ubicacion-agregar-contenido {
+        text-align: center;
+    }
+
+
+    .ubicacion-agregar-circulo {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #e5f2fc;
+        color: #1976c8;
+        font-size: 42px;
+        font-weight: 300;
+    }
+
+
+    .ubicacion-agregar-contenido h3 {
+        margin: 0;
+        color: #0f5d9d;
+        font-size: 19px;
+        font-weight: 700;
+    }
+
+
+    .ubicacion-agregar-contenido p {
+        margin: 7px 0 0;
+        color: #718696;
+        font-size: 14px;
+    }
+
+
+    /* =========================================================
+           INFORMACION INFERIOR
+           ========================================================= */
+
+    .ubicaciones-info {
+        margin-top: 24px;
+        padding: 13px 17px;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        border: 1px solid #b9d9f4;
+        border-radius: 9px;
+        background: #e8f4ff;
+        color: #1f5f93;
+        font-size: 14px;
+    }
+
+
+    .ubicaciones-info-icono {
+        width: 25px;
+        height: 25px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #2387d8;
+        color: white;
+        font-weight: 700;
+    }
+
+
+    /* =========================================================
+           SIN UBICACIONES
+           ========================================================= */
+
+    .ubicaciones-vacio {
+        grid-column: 1 / -1;
+        padding: 35px;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid #dce6ed;
+        border-radius: 14px;
+        color: #657d90;
+        box-shadow: 0 10px 25px rgba(16, 65, 95, 0.08);
+    }
+
+
+        .ubicaciones-vacio h3 {
+            margin: 0 0 7px;
+            color: #123a5d;
+            font-size: 20px;
+        }
+
+
+        .ubicaciones-vacio p {
+            margin: 0;
+        }
+
+
+    /* =========================================================
+           OCULTAR POR FILTROS
+           ========================================================= */
+
+    .ubicacion-oculta {
+        display: none !important;
+    }
+
+    /* =========================================================
+           MODAL AGREGAR UBICACION
+           ========================================================= */
+
+    .ubicacion-modal-fondo {
+        position: fixed;
+        inset: 0;
+        z-index: 20000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(5, 35, 55, 0.48);
+    }
+
+
+        .ubicacion-modal-fondo.abierto {
+            display: flex;
+        }
+
+
+    .ubicacion-modal {
+        width: 100%;
+        max-width: 520px;
+        overflow: hidden;
+        border-radius: 14px;
+        background: white;
+        box-shadow: 0 22px 60px rgba(0, 40, 70, 0.28);
+    }
+
+
+    .ubicacion-modal-cabecera {
+        padding: 20px 22px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        border-bottom: 1px solid #e2ebf0;
+    }
+
+
+        .ubicacion-modal-cabecera h2 {
+            margin: 0;
+            color: #123a5d;
+            font-size: 22px;
+        }
+
+
+        .ubicacion-modal-cabecera p {
+            margin: 5px 0 0;
+            color: #718696;
+            font-size: 14px;
+        }
+
+
+    .ubicacion-modal-cerrar {
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 8px;
+        background: #eef4f7;
+        color: #587086;
+        font-size: 25px;
+        cursor: pointer;
+    }
+
+
+    .ubicacion-modal-cuerpo {
+        padding: 22px;
+    }
+
+
+        .ubicacion-modal-cuerpo label {
+            display: block;
+            margin-bottom: 8px;
+            color: #173d55;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+
+        .ubicacion-modal-cuerpo input {
+            width: 100%;
+            height: 46px;
+            padding: 0 13px;
+            box-sizing: border-box;
+            border: 1px solid #c9d9e3;
+            border-radius: 8px;
+            color: #17324d;
+            font-size: 15px;
+            outline: none;
+        }
+
+
+            .ubicacion-modal-cuerpo input:focus {
+                border-color: #0d7898;
+                box-shadow: 0 0 0 3px rgba(13, 120, 152, 0.10);
+            }
+
+
+    .ubicacion-modal-ayuda {
+        display: block;
+        margin-top: 7px;
+        color: #7b8d99;
+        font-size: 12px;
+    }
+
+
+    .ubicacion-modal-pie {
+        padding: 16px 22px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        border-top: 1px solid #e2ebf0;
+        background: #f8fbfd;
+    }
+
+
+    .btn-ubicacion-cancelar,
+    .btn-ubicacion-guardar {
+        min-width: 120px;
+        height: 42px;
+        padding: 0 17px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 650;
+        cursor: pointer;
+    }
+
+
+    .btn-ubicacion-cancelar {
+        border: 1px solid #cbd9e2;
+        background: white;
+        color: #506979;
+    }
+
+
+    .btn-ubicacion-guardar {
+        border: none;
+        background: linear-gradient(90deg, #087ca0, #0f6fc5);
+        color: white;
+    }
+
+
+
+
+    /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+    @@media (max-width: 1200px) {
+
+        .ubicaciones-herramientas {
+            grid-template-columns: 1fr 1fr;
+        }
+
+
+        .ubicaciones-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+
+    @@media (max-width: 760px) {
+
+        .ubicaciones-herramientas {
+            grid-template-columns: 1fr;
+        }
+
+
+        .ubicaciones-grid {
+            grid-template-columns: 1fr;
+        }
+
+
+        .ubicaciones-encabezado h1 {
+            font-size: 28px;
+        }
+    }
+
+    .ubicacion-menu-opcion-reactivar {
+        color: #17733a;
+    }
+
+
+        .ubicacion-menu-opcion-reactivar:hover {
+            background: #e8f7ed;
+        }
+
+    .ubicacion-menu-opcion-eliminar {
+        color: #b42318;
+    }
+
+
+        .ubicacion-menu-opcion-eliminar:hover {
+            background: #fff0f0;
+        }
+
+
+    /* =========================================================
+       UBICACION INACTIVA
+       ========================================================= */
+
+    .ubicacion-card-inactiva {
+        opacity: 0.78;
+        background: rgba(245, 247, 249, 0.97);
+        border-color: #cbd4da;
+    }
+
+
+        .ubicacion-card-inactiva:hover {
+            opacity: 1;
+        }
+
+
+    .ubicacion-estado-inactiva {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 3px 9px;
+        border-radius: 6px;
+        background: #eceff1;
+        color: #64717a;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+</style>
+
+
+
+<div class="ubicaciones-pagina">
+
+
+    <!-- =========================================================
+         ENCABEZADO
+         ========================================================= -->
+
+    <section class="ubicaciones-encabezado">
+
+        <h1>
+            Ubicaciones
+        </h1>
+
+        <p>
+            Monitorea y administra las áreas de almacenamiento
+            donde se encuentran los medicamentos.
+        </p>
+
+    </section>
+
+
+    <!-- =========================================================
+         MENSAJE GENERAL
+         ========================================================= -->
+    @if (!string.IsNullOrWhiteSpace(mensaje))
+    {
+        <div class="ubicaciones-mensaje
+            @(tipoMensaje == "exito"
+                ? "ubicaciones-mensaje-exito"
+                : "ubicaciones-mensaje-error")">
+
+            <span class="ubicaciones-mensaje-icono">
+
+                @(tipoMensaje == "exito" ? "✓" : "!")
+
+            </span>
+
+
+            <span>
+                @mensaje
+            </span>
+
+        </div>
+    }
+
+
+
+    <!-- =========================================================
+         HERRAMIENTAS
+         ========================================================= -->
+
+    <section class="ubicaciones-herramientas">
+
+
+        <!-- BUSCADOR -->
+
+        <div class="ubicaciones-buscador">
+
+            <span>
+                🔎
+            </span>
+
+            <input type="text"
+                   id="buscarUbicacion"
+                   placeholder="Buscar ubicación..."
+                   oninput="filtrarUbicaciones()" />
+
+        </div>
+
+
+
+        <!-- FILTRO ESTADO -->
+
+        <select id="filtroEstado"
+                class="ubicaciones-select"
+                onchange="filtrarUbicaciones()">
+
+            <option value="todas">
+                Todas
+            </option>
+
+            <option value="activas">
+                Activas
+            </option>
+
+            <option value="inactivas">
+                Inactivas
+            </option>
+
+        </select>
+
+
+
+        <!-- =====================================================
+             FILTRO TIPO
+
+             TODAVIA NO LO USAMOS PORQUE LA TABLA UBICACION
+             ACTUAL SOLO TIENE ID Y NOMBRE_SECTOR.
+             ===================================================== -->
+
+        <select class="ubicaciones-select"
+                disabled>
+
+            <option>
+                Tipo: por definir
+            </option>
+
+        </select>
+
+
+
+        <!-- FILTRO ALERTAS -->
+
+        <label class="ubicaciones-alertas-filtro">
+
+            <input type="checkbox"
+                   id="filtroAlertas"
+                   onchange="filtrarUbicaciones()" />
+
+            <span>
+                ⚠ Con alertas
+            </span>
+
+        </label>
+
+
+
+        <!-- AGREGAR -->
+
+        <button type="button"
+                class="btn-agregar-ubicacion"
+                onclick="abrirModalUbicacion()">
+
+            <span class="btn-agregar-icono">
+                +
+            </span>
+
+            <span>
+                Agregar ubicación
+            </span>
+
+        </button>
+
+
+    </section>
+
+
+
+    <!-- =========================================================
+         TARJETAS
+         ========================================================= -->
+
+    <section class="ubicaciones-grid"
+             id="contenedorUbicaciones">
+
+
+        <!-- =====================================================
+             UBICACIONES REALES DESDE MYSQL
+             ===================================================== -->
+        @if (Model != null && Model.Any())
+        {
+
+            foreach (var ubicacion in Model)
+            {
+                var lotesDeUbicacion =
+                    lotesUbicaciones
+                        .Where(
+                            lote =>
+                                lote.id_ubicacion
+                                ==
+                                ubicacion.id_ubicacion
+                        )
+                        .ToList();
+
+
+                int totalUnidades =
+                    lotesDeUbicacion
+                        .Sum(
+                            lote =>
+                                lote.cantidad_actual
+                        );
+
+
+                int totalProductos =
+                    lotesDeUbicacion
+                        .Where(
+                            lote =>
+                                lote.cantidad_actual > 0
+                        )
+                        .Select(
+                            lote =>
+                                lote.id_producto
+                        )
+                        .Distinct()
+                        .Count();
+
+
+                int vencidos =
+                    lotesDeUbicacion
+                        .Count(
+                            lote =>
+                                lote.cantidad_actual > 0
+                                &&
+                                lote.fecha_vencimiento.HasValue
+                                &&
+                                lote.fecha_vencimiento.Value.Date
+                                <
+                                hoy
+                        );
+
+
+                int proximosVencer =
+                    lotesDeUbicacion
+                        .Count(
+                            lote =>
+                                lote.cantidad_actual > 0
+                                &&
+                                lote.fecha_vencimiento.HasValue
+                                &&
+                                lote.fecha_vencimiento.Value.Date
+                                >=
+                                hoy
+                                &&
+                                lote.fecha_vencimiento.Value.Date
+                                <=
+                                limiteVencimiento
+                        );
+
+
+                int stockBajo =
+                    productosUbicaciones
+                        .Count(
+                            producto =>
+                            {
+                                int stockProductoUbicacion =
+                                    lotesDeUbicacion
+                                        .Where(
+                                            lote =>
+                                                lote.id_producto
+                                                ==
+                                                producto.id_producto
+                                        )
+                                        .Sum(
+                                            lote =>
+                                                lote.cantidad_actual
+                                        );
+
+
+                                return
+                                    stockProductoUbicacion > 0
+                                    &&
+                                    stockProductoUbicacion
+                                    <=
+                                    producto.stock_minimo;
+                            }
+                        );
+
+
+                bool tieneAlertas =
+                    vencidos > 0
+                    ||
+                    proximosVencer > 0
+                    ||
+                    stockBajo > 0;
+
+
+                <article class="ubicacion-card @(ubicacion.activo ? "" : "ubicacion-card-inactiva")"
+                         data-nombre="@(ubicacion.nombre_sector?.ToLower())"
+                         data-activa="@(ubicacion.activo ? "true" : "false")"
+                         data-alertas="@(tieneAlertas ? "true" : "false")">
+
+
+                    <div class="ubicacion-card-superior">
+
+
+                        <div class="ubicacion-icono">
+                            📍
+                        </div>
+
+
+                        <div class="ubicacion-datos-principales">
+
+                            <h2>
+                                @ubicacion.nombre_sector
+                            </h2>
+
+                            <span class="ubicacion-tipo">
+                                Ubicación
+                            </span>
+
+                            @if (!ubicacion.activo)
+                            {
+                                <span class="ubicacion-estado-inactiva">
+
+                                    ● Inactiva
+
+                                </span>
+                            }
+
+                        </div>
+
+
+                        <div class="ubicacion-menu-contenedor">
+
+                            <button type="button"
+                                    class="ubicacion-menu"
+                                    onclick="alternarMenuUbicacion(this)"
+                                    title="Opciones">
+
+                                ⋮
+
+                            </button>
+
+
+                            <div class="ubicacion-menu-opciones">
+
+                                <button type="button"
+                                        class="ubicacion-menu-opcion"
+                                        data-id="@ubicacion.id_ubicacion"
+                                        data-nombre="@ubicacion.nombre_sector"
+                                        onclick="abrirModalEditarUbicacion(this)">
+
+                                    ✏️ Editar ubicación
+
+                                </button>
+
+
+                                @if (ubicacion.activo)
+                                {
+                                    <form asp-controller="Home"
+                                          asp-action="InactivarUbicacion"
+                                          method="post"
+                                          onsubmit="return confirmarInactivarUbicacion('@ubicacion.nombre_sector');">
+
+                                        @Html.AntiForgeryToken()
+
+
+                                        <input type="hidden"
+                                               name="idUbicacion"
+                                               value="@ubicacion.id_ubicacion" />
+
+
+                                        <input type="hidden"
+                                               name="nombreUbicacion"
+                                               value="@ubicacion.nombre_sector" />
+
+
+                                        <button type="submit"
+                                                class="ubicacion-menu-opcion ubicacion-menu-opcion-inactivar">
+
+                                            ⏸ Inactivar ubicación
+
+                                        </button>
+
+                                    </form>
+                                }
+                                @if (!ubicacion.activo)
+                                {
+                                    <form asp-controller="Home"
+                                          asp-action="ReactivarUbicacion"
+                                          method="post"
+                                          onsubmit="return confirmarReactivarUbicacion('@ubicacion.nombre_sector');">
+
+                                        @Html.AntiForgeryToken()
+
+
+                                        <input type="hidden"
+                                               name="idUbicacion"
+                                               value="@ubicacion.id_ubicacion" />
+
+
+                                        <input type="hidden"
+                                               name="nombreUbicacion"
+                                               value="@ubicacion.nombre_sector" />
+
+
+                                        <button type="submit"
+                                                class="ubicacion-menu-opcion ubicacion-menu-opcion-reactivar">
+
+                                            ▶ Reactivar ubicación
+
+                                        </button>
+
+                                    </form>
+                                }
+                                <form asp-controller="Home"
+                                      asp-action="EliminarUbicacion"
+                                      method="post"
+                                      onsubmit="return confirmarEliminarUbicacion('@ubicacion.nombre_sector');">
+
+                                    @Html.AntiForgeryToken()
+
+
+                                    <input type="hidden"
+                                           name="idUbicacion"
+                                           value="@ubicacion.id_ubicacion" />
+
+
+                                    <input type="hidden"
+                                           name="nombreUbicacion"
+                                           value="@ubicacion.nombre_sector" />
+
+
+                                    <button type="submit"
+                                            class="ubicacion-menu-opcion ubicacion-menu-opcion-eliminar">
+
+                                        🗑 Eliminar ubicación
+
+                                    </button>
+
+                                </form>
+
+
+
+
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <div class="ubicacion-resumen">
+
+
+                        <div class="ubicacion-resumen-item">
+
+                            <span class="ubicacion-resumen-icono">
+                                📦
+                            </span>
+
+                            <div>
+
+                                <span class="ubicacion-resumen-numero">
+                                    @totalUnidades
+                                </span>
+
+                                <span class="ubicacion-resumen-texto">
+                                    unidades
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="ubicacion-resumen-item">
+
+                            <span class="ubicacion-resumen-icono">
+                                💊
+                            </span>
+
+                            <div>
+
+                                <span class="ubicacion-resumen-numero">
+                                    @totalProductos
+                                </span>
+
+                                <span class="ubicacion-resumen-texto">
+                                    productos
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <div class="ubicacion-alertas">
+
+
+                        @if (!tieneAlertas)
+                        {
+                            <span class="ubicacion-alerta ubicacion-alerta-ok">
+
+                                ✓ Sin alertas
+
+                            </span>
+                        }
+
+
+                        @if (vencidos > 0)
+                        {
+                            <span class="ubicacion-alerta ubicacion-alerta-vencido">
+
+                                ⛔ @vencidos vencido@(vencidos == 1 ? "" : "s")
+
+                            </span>
+                        }
+
+
+                        @if (proximosVencer > 0)
+                        {
+                            <span class="ubicacion-alerta ubicacion-alerta-proximo">
+
+                                ◷ @proximosVencer próximo@(proximosVencer == 1 ? "" : "s") a vencer
+
+                            </span>
+                        }
+
+
+                        @if (stockBajo > 0)
+                        {
+                            <span class="ubicacion-alerta ubicacion-alerta-stock">
+
+                                ⚠ @stockBajo stock bajo
+
+                            </span>
+                        }
+
+
+                    </div>
+
+
+
+                    <div class="ubicacion-acciones">
+
+                        <a asp-controller="Home"
+                           asp-action="InventarioUbicacion"
+                           asp-route-idUbicacion="@ubicacion.id_ubicacion"
+                           class="btn-ver-inventario">
+
+                            <span>
+                                ≡
+                            </span>
+
+                            Ver inventario
+
+                        </a>
+
+                    </div>
+
+
+                </article>
+            }
+
+        }
+        else
+        {
+
+            <!-- =============================================
+                 SI LA BASE DE DATOS NO TIENE UBICACIONES
+                 ============================================= -->
+
+            <div class="ubicaciones-vacio">
+
+                <h3>
+                    No existen ubicaciones registradas
+                </h3>
+
+                <p>
+                    Puedes registrar la primera ubicación
+                    utilizando el botón Agregar ubicación.
+                </p>
+
+            </div>
+
+        }
+
+
+
+        <!-- =====================================================
+             AGREGAR UBICACION
+             ===================================================== -->
+
+        <button type="button"
+                class="ubicacion-card ubicacion-card-agregar"
+                onclick="abrirModalUbicacion()">
+
+
+            <div class="ubicacion-agregar-contenido">
+
+
+                <div class="ubicacion-agregar-circulo">
+                    +
+                </div>
+
+
+                <h3>
+                    Agregar ubicación
+                </h3>
+
+
+                <p>
+                    Registra una nueva área
+                    de almacenamiento.
+                </p>
+
+
+            </div>
+
+
+        </button>
+
+
+    </section>
+    <!-- =========================================================
+     MODAL AGREGAR UBICACION
+     ========================================================= -->
+
+    <div id="modalAgregarUbicacion"
+         class="ubicacion-modal-fondo">
+
+
+        <div class="ubicacion-modal">
+
+
+            <div class="ubicacion-modal-cabecera">
+
+                <div>
+
+                    <h2>
+                        Agregar ubicación
+                    </h2>
+
+                    <p>
+                        Registra una nueva área de almacenamiento.
+                    </p>
+
+                </div>
+
+
+                <button type="button"
+                        class="ubicacion-modal-cerrar"
+                        onclick="cerrarModalUbicacion()">
+
+                    ×
+
+                </button>
+
+            </div>
+
+
+
+            <form asp-controller="Home"
+                  asp-action="CrearUbicacion"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+
+                <div class="ubicacion-modal-cuerpo">
+
+
+                    <label for="nombreSector">
+                        Nombre de la ubicación
+                    </label>
+
+
+                    <input type="text"
+                           id="nombreSector"
+                           name="nombreSector"
+                           maxlength="100"
+                           placeholder="Ej: Estante A"
+                           autocomplete="off"
+                           required />
+
+
+                    <span class="ubicacion-modal-ayuda">
+
+                        Ingresa un nombre que permita identificar
+                        claramente el área.
+
+                    </span>
+
+
+                </div>
+
+
+
+                <div class="ubicacion-modal-pie">
+
+
+                    <button type="button"
+                            class="btn-ubicacion-cancelar"
+                            onclick="cerrarModalUbicacion()">
+
+                        Cancelar
+
+                    </button>
+
+
+                    <button type="submit"
+                            class="btn-ubicacion-guardar">
+
+                        Guardar ubicación
+
+                    </button>
+
+
+                </div>
+
+
+            </form>
+
+
+        </div>
+
+
+    </div>
+
+    <!-- =========================================================
+     MODAL EDITAR UBICACION
+     ========================================================= -->
+
+    <div id="modalEditarUbicacion"
+         class="ubicacion-modal-fondo">
+
+
+        <div class="ubicacion-modal">
+
+
+            <div class="ubicacion-modal-cabecera">
+
+                <div>
+
+                    <h2>
+                        Editar ubicación
+                    </h2>
+
+                    <p>
+                        Modifica el nombre del área seleccionada.
+                    </p>
+
+                </div>
+
+
+                <button type="button"
+                        class="ubicacion-modal-cerrar"
+                        onclick="cerrarModalEditarUbicacion()">
+
+                    ×
+
+                </button>
+
+            </div>
+
+
+
+            <form asp-controller="Home"
+                  asp-action="EditarUbicacion"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+
+                <input type="hidden"
+                       id="editarIdUbicacion"
+                       name="idUbicacion" />
+
+
+                <div class="ubicacion-modal-cuerpo">
+
+
+                    <label for="editarNombreSector">
+                        Nombre de la ubicación
+                    </label>
+
+
+                    <input type="text"
+                           id="editarNombreSector"
+                           name="nombreSector"
+                           maxlength="100"
+                           autocomplete="off"
+                           required />
+
+
+                    <span class="ubicacion-modal-ayuda">
+
+                        Cambiar el nombre no modifica
+                        los lotes almacenados en esta ubicación.
+
+                    </span>
+
+
+                </div>
+
+
+
+                <div class="ubicacion-modal-pie">
+
+
+                    <button type="button"
+                            class="btn-ubicacion-cancelar"
+                            onclick="cerrarModalEditarUbicacion()">
+
+                        Cancelar
+
+                    </button>
+
+
+                    <button type="submit"
+                            class="btn-ubicacion-guardar">
+
+                        Guardar cambios
+
+                    </button>
+
+
+                </div>
+
+
+            </form>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =========================================================
+         INFORMACION
+         ========================================================= -->
+
+    <section class="ubicaciones-info">
+
+
+        <span class="ubicaciones-info-icono">
+            i
+        </span>
+
+
+        <span>
+
+            Este módulo permite visualizar stock,
+            vencimientos y alertas de todas las ubicaciones.
+
+        </span>
+
+
+    </section>
+
+
+</div>
+
+
+
+@section Scripts {
+
+    <script>
+                // =========================================================
+        // ABRIR MODAL AGREGAR UBICACION
+        // =========================================================
+
+        function abrirModalUbicacion() {
+
+            const modal =
+                document.getElementById(
+                    "modalAgregarUbicacion"
+                );
+
+
+            if (!modal) {
+
+                return;
+
+            }
+
+
+            modal.classList.add(
+                "abierto"
+            );
+
+
+            const input =
+                document.getElementById(
+                    "nombreSector"
+                );
+
+
+            if (input) {
+
+                input.value =
+                    "";
+
+
+                setTimeout(
+                    function () {
+
+                        input.focus();
+
+                    },
+                    100
+                );
+
+            }
+
+        }
+
+
+        // =========================================================
+        // CERRAR MODAL AGREGAR UBICACION
+        // =========================================================
+
+        function cerrarModalUbicacion() {
+
+            const modal =
+                document.getElementById(
+                    "modalAgregarUbicacion"
+                );
+
+
+            modal
+                ?.classList
+                .remove(
+                    "abierto"
+                );
+
+        }
+
+
+
+                // =========================================================
+        // FILTRAR AUTOMATICAMENTE AL VENIR DESDE LA CAMPANA
+        // =========================================================
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                const abrirConAlertas =
+                    @(abrirConAlertas ? "true" : "false");
+
+
+                if (!abrirConAlertas) {
+
+                    return;
+
+                }
+
+
+                const filtroAlertas =
+                    document.getElementById(
+                        "filtroAlertas"
+                    );
+
+
+                if (filtroAlertas) {
+
+                    filtroAlertas.checked =
+                        true;
+
+                    filtrarUbicaciones();
+
+                }
+
+            }
+        );
+
+
+        // =========================================================
+        // MENU DE OPCIONES
+        // =========================================================
+
+        function alternarMenuUbicacion(
+            boton
+        ) {
+
+            const contenedor =
+                boton.closest(
+                    ".ubicacion-menu-contenedor"
+                );
+
+
+            if (!contenedor) {
+
+                return;
+
+            }
+
+
+            const menu =
+                contenedor.querySelector(
+                    ".ubicacion-menu-opciones"
+                );
+
+
+            document
+                .querySelectorAll(
+                    ".ubicacion-menu-opciones"
+                )
+                .forEach(
+                    function (
+                        otroMenu
+                    ) {
+
+                        if (otroMenu !== menu) {
+
+                            otroMenu.classList.remove(
+                                "abierto"
+                            );
+
+                        }
+
+                    }
+                );
+
+
+            menu
+                ?.classList
+                .toggle(
+                    "abierto"
+                );
+
+        }
+
+
+        // =========================================================
+        // ABRIR MODAL EDITAR
+        // =========================================================
+
+        function abrirModalEditarUbicacion(
+            boton
+        ) {
+
+            const idUbicacion =
+                boton.dataset.id;
+
+
+            const nombreUbicacion =
+                boton.dataset.nombre;
+
+
+            const modal =
+                document.getElementById(
+                    "modalEditarUbicacion"
+                );
+
+
+            const inputId =
+                document.getElementById(
+                    "editarIdUbicacion"
+                );
+
+
+            const inputNombre =
+                document.getElementById(
+                    "editarNombreSector"
+                );
+
+
+            if (
+                !modal
+                ||
+                !inputId
+                ||
+                !inputNombre
+            ) {
+
+                return;
+
+            }
+
+
+            inputId.value =
+                idUbicacion;
+
+
+            inputNombre.value =
+                nombreUbicacion;
+
+
+            modal.classList.add(
+                "abierto"
+            );
+
+
+            document
+                .querySelectorAll(
+                    ".ubicacion-menu-opciones"
+                )
+                .forEach(
+                    function (
+                        menu
+                    ) {
+
+                        menu.classList.remove(
+                            "abierto"
+                        );
+
+                    }
+                );
+
+
+            setTimeout(
+                function () {
+
+                    inputNombre.focus();
+                    inputNombre.select();
+
+                },
+                100
+            );
+
+        }
+
+
+        // =========================================================
+        // CERRAR MODAL EDITAR
+        // =========================================================
+
+        function cerrarModalEditarUbicacion() {
+
+            document
+                .getElementById(
+                    "modalEditarUbicacion"
+                )
+                ?.classList
+                .remove(
+                    "abierto"
+                );
+
+        }
+
+        // =========================================================
+        // FILTRAR UBICACIONES
+        // =========================================================
+
+        function filtrarUbicaciones() {
+
+
+            // =====================================================
+            // TEXTO ESCRITO EN EL BUSCADOR
+            // =====================================================
+
+            const texto =
+                document
+                    .getElementById(
+                        "buscarUbicacion"
+                    )
+                    .value
+                    .toLowerCase()
+                    .trim();
+
+
+
+            // =====================================================
+            // FILTRO ACTIVA / INACTIVA
+            // =====================================================
+
+            const estado =
+                document
+                    .getElementById(
+                        "filtroEstado"
+                    )
+                    .value;
+
+
+
+            // =====================================================
+            // FILTRO CON ALERTAS
+            // =====================================================
+
+            const soloAlertas =
+                document
+                    .getElementById(
+                        "filtroAlertas"
+                    )
+                    .checked;
+
+
+
+            // =====================================================
+            // BUSCAR TODAS LAS TARJETAS REALES
+            //
+            // NO INCLUIMOS LA TARJETA "AGREGAR UBICACION"
+            // =====================================================
+
+            const tarjetas =
+                document
+                    .querySelectorAll(
+                        "#contenedorUbicaciones .ubicacion-card:not(.ubicacion-card-agregar)"
+                    );
+
+
+
+            // =====================================================
+            // REVISAMOS UNA TARJETA A LA VEZ
+            // =====================================================
+
+            tarjetas.forEach(
+
+                function (tarjeta) {
+
+
+                    const nombre =
+                        tarjeta.dataset.nombre
+                        ??
+                        "";
+
+
+                    const activa =
+                        tarjeta.dataset.activa
+                        ===
+                        "true";
+
+
+                    const tieneAlertas =
+                        tarjeta.dataset.alertas
+                        ===
+                        "true";
+
+
+                    let mostrar =
+                        true;
+
+
+
+                    // =============================================
+                    // BUSQUEDA POR NOMBRE
+                    // =============================================
+
+                    if (
+                        texto !== ""
+                        &&
+                        !nombre.includes(
+                            texto
+                        )
+                    ) {
+
+                        mostrar =
+                            false;
+
+                    }
+
+
+
+                    // =============================================
+                    // FILTRO ACTIVAS
+                    // =============================================
+
+                    if (
+                        estado === "activas"
+                        &&
+                        !activa
+                    ) {
+
+                        mostrar =
+                            false;
+
+                    }
+
+
+
+                    // =============================================
+                    // FILTRO INACTIVAS
+                    // =============================================
+
+                    if (
+                        estado === "inactivas"
+                        &&
+                        activa
+                    ) {
+
+                        mostrar =
+                            false;
+
+                    }
+
+
+
+                    // =============================================
+                    // FILTRO SOLO CON ALERTAS
+                    // =============================================
+
+                    if (
+                        soloAlertas
+                        &&
+                        !tieneAlertas
+                    ) {
+
+                        mostrar =
+                            false;
+
+                    }
+
+
+
+                    // =============================================
+                    // MOSTRAR U OCULTAR TARJETA
+                    // =============================================
+
+                    tarjeta.classList.toggle(
+                        "ubicacion-oculta",
+                        !mostrar
+                    );
+
+
+                }
+
+            );
+
+
+        }
+
+                // =========================================================
+        // CONFIRMAR INACTIVAR UBICACION
+        // =========================================================
+
+        function confirmarInactivarUbicacion(
+            nombre
+        ) {
+
+            return confirm(
+                "¿Deseas inactivar la ubicación \"" +
+                nombre +
+                "\"?\n\n" +
+                "Solo se podrá inactivar si no contiene stock."
+            );
+
+        }
+
+                // =========================================================
+        // CONFIRMAR REACTIVAR UBICACION
+        // =========================================================
+
+        function confirmarReactivarUbicacion(
+            nombre
+        ) {
+
+            return confirm(
+                "¿Deseas reactivar la ubicación \"" +
+                nombre +
+                "\"?"
+            );
+
+        }
+
+        // =========================================================
+        // CONFIRMAR ELIMINAR UBICACION
+        // =========================================================
+
+        function confirmarEliminarUbicacion(
+            nombre
+        ) {
+
+            return confirm(
+                "¿Deseas eliminar permanentemente la ubicación \"" +
+                nombre +
+                "\"?\n\n" +
+                "Solo podrá eliminarse si está vacía y nunca ha tenido lotes asociados."
+            );
+
+        }
+
+
+    </script>
+
+}

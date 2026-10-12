@@ -63,45 +63,519 @@ namespace LoginSARMedix.Repository
         }
 
 
-        //LISTADO DE UBICACIONES
+        // =========================================================
+        // LISTADO DE UBICACIONES
+        // =========================================================
+
         public async Task<List<Ubicacion>> ListadoUbicaciones()
         {
             List<Ubicacion> ubicaciones =
                 new List<Ubicacion>();
 
+
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"SELECT
+              id_ubicacion,
+              nombre_sector,
+              activo
+          FROM ubicacion
+          ORDER BY nombre_sector";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            using MySqlDataReader lector =
+                await comando.ExecuteReaderAsync();
+
+
+            while (await lector.ReadAsync())
+            {
+                ubicaciones.Add(
+                    new Ubicacion()
+                    {
+                        id_ubicacion =
+                            Convert.ToInt32(
+                                lector["id_ubicacion"]
+                            ),
+
+                        nombre_sector =
+                            lector["nombre_sector"]
+                                .ToString(),
+
+                        activo =
+                            Convert.ToBoolean(
+                                lector["activo"]
+                            )
+                    }
+                );
+            }
+
+
+            return ubicaciones;
+        }
+
+
+        // =========================================================
+        // LISTADO DE UBICACIONES ACTIVAS
+        // =========================================================
+
+        public async Task<List<Ubicacion>> ListadoUbicacionesActivas()
+        {
+            List<Ubicacion> ubicaciones =
+                new List<Ubicacion>();
+
+
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"SELECT
+              id_ubicacion,
+              nombre_sector,
+              activo
+          FROM ubicacion
+          WHERE activo = 1
+          ORDER BY nombre_sector";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            using MySqlDataReader lector =
+                await comando.ExecuteReaderAsync();
+
+
+            while (await lector.ReadAsync())
+            {
+                ubicaciones.Add(
+                    new Ubicacion()
+                    {
+                        id_ubicacion =
+                            Convert.ToInt32(
+                                lector["id_ubicacion"]
+                            ),
+
+                        nombre_sector =
+                            lector["nombre_sector"]
+                                .ToString(),
+
+                        activo =
+                            Convert.ToBoolean(
+                                lector["activo"]
+                            )
+                    }
+                );
+            }
+
+
+            return ubicaciones;
+        }
+
+
+        // =========================================================
+        // VERIFICAR SI EXISTE UNA UBICACION
+        // =========================================================
+
+        public async Task<bool> ExisteUbicacion(
+            string nombreSector)
+        {
             using MySqlConnection conexion =
                 new MySqlConnection(_conexion);
 
             await conexion.OpenAsync();
 
+
             string consulta =
-                @"SELECT id_ubicacion,
-                         nombre_sector
-                  FROM ubicacion
-                  ORDER BY nombre_sector";
+                @"SELECT COUNT(*)
+          FROM ubicacion
+          WHERE LOWER(TRIM(nombre_sector))
+                =
+                LOWER(TRIM(@nombreSector))";
+
 
             using MySqlCommand comando =
-                new MySqlCommand(consulta, conexion);
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
 
-            using MySqlDataReader lector =
-                await comando.ExecuteReaderAsync();
 
-            while (await lector.ReadAsync())
-            {
-                ubicaciones.Add(new Ubicacion()
-                {
-                    id_ubicacion =
-                        Convert.ToInt32(
-                            lector["id_ubicacion"]),
+            comando.Parameters.AddWithValue(
+                "@nombreSector",
+                nombreSector
+            );
 
-                    nombre_sector =
-                        lector["nombre_sector"].ToString()
-                });
-            }
 
-            return ubicaciones;
+            int cantidad =
+                Convert.ToInt32(
+                    await comando.ExecuteScalarAsync()
+                );
+
+
+            return cantidad > 0;
         }
 
+
+        // =========================================================
+        // CREAR UBICACION
+        // =========================================================
+
+        public async Task<bool> CrearUbicacion(
+            string nombreSector)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"INSERT INTO ubicacion
+          (nombre_sector)
+
+          VALUES
+          (@nombreSector)";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            comando.Parameters.AddWithValue(
+                "@nombreSector",
+                nombreSector
+            );
+
+
+            int resultado =
+                await comando.ExecuteNonQueryAsync();
+
+
+            return resultado > 0;
+        }
+
+        // =========================================================
+        // OBTENER STOCK DE UNA UBICACION
+        // =========================================================
+
+        public async Task<int> ObtenerStockUbicacion(
+            int idUbicacion)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"SELECT COALESCE(SUM(cantidad_actual), 0)
+          FROM lote
+          WHERE id_ubicacion = @idUbicacion";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            comando.Parameters.AddWithValue(
+                "@idUbicacion",
+                idUbicacion
+            );
+
+
+            int stock =
+                Convert.ToInt32(
+                    await comando.ExecuteScalarAsync()
+                );
+
+
+            return stock;
+        }
+
+
+        // =========================================================
+        // INACTIVAR UBICACION
+        // =========================================================
+
+        public async Task<bool> InactivarUbicacion(
+            int idUbicacion)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"UPDATE ubicacion
+          SET activo = 0
+          WHERE id_ubicacion = @idUbicacion";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            comando.Parameters.AddWithValue(
+                "@idUbicacion",
+                idUbicacion
+            );
+
+
+            int resultado =
+                await comando.ExecuteNonQueryAsync();
+
+
+            return resultado > 0;
+        }
+
+        // =========================================================
+        // REACTIVAR UBICACION
+        // =========================================================
+
+        public async Task<bool> ReactivarUbicacion(
+            int idUbicacion)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"UPDATE ubicacion
+          SET activo = 1
+          WHERE id_ubicacion = @idUbicacion";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            comando.Parameters.AddWithValue(
+                "@idUbicacion",
+                idUbicacion
+            );
+
+
+            int resultado =
+                await comando.ExecuteNonQueryAsync();
+
+
+            return resultado > 0;
+        }
+
+        // =========================================================
+        // VERIFICAR SI LA UBICACION TIENE LOTES ASOCIADOS
+        // =========================================================
+
+        public async Task<bool> TieneLotesUbicacion(
+            int idUbicacion)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"SELECT COUNT(*)
+          FROM lote
+          WHERE id_ubicacion = @idUbicacion";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            comando.Parameters.AddWithValue(
+                "@idUbicacion",
+                idUbicacion
+            );
+
+
+            int cantidad =
+                Convert.ToInt32(
+                    await comando.ExecuteScalarAsync()
+                );
+
+
+            return cantidad > 0;
+        }
+
+
+        // =========================================================
+        // ELIMINAR UBICACION
+        // =========================================================
+
+        public async Task<bool> EliminarUbicacion(
+            int idUbicacion)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"DELETE FROM ubicacion
+          WHERE id_ubicacion = @idUbicacion";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            comando.Parameters.AddWithValue(
+                "@idUbicacion",
+                idUbicacion
+            );
+
+
+            int resultado =
+                await comando.ExecuteNonQueryAsync();
+
+
+            return resultado > 0;
+        }
+
+
+
+        // =========================================================
+        // VERIFICAR NOMBRE DE UBICACION AL EDITAR
+        // =========================================================
+
+        public async Task<bool> ExisteUbicacionEditar(
+            int idUbicacion,
+            string nombreSector)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"SELECT COUNT(*)
+          FROM ubicacion
+          WHERE LOWER(TRIM(nombre_sector))
+                =
+                LOWER(TRIM(@nombreSector))
+          AND id_ubicacion <> @idUbicacion";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            comando.Parameters.AddWithValue(
+                "@nombreSector",
+                nombreSector
+            );
+
+
+            comando.Parameters.AddWithValue(
+                "@idUbicacion",
+                idUbicacion
+            );
+
+
+            int cantidad =
+                Convert.ToInt32(
+                    await comando.ExecuteScalarAsync()
+                );
+
+
+            return cantidad > 0;
+        }
+
+
+        // =========================================================
+        // ACTUALIZAR UBICACION
+        // =========================================================
+
+        public async Task<bool> ActualizarUbicacion(
+            int idUbicacion,
+            string nombreSector)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+            await conexion.OpenAsync();
+
+
+            string consulta =
+                @"UPDATE ubicacion
+          SET nombre_sector = @nombreSector
+          WHERE id_ubicacion = @idUbicacion";
+
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+
+            comando.Parameters.AddWithValue(
+                "@nombreSector",
+                nombreSector
+            );
+
+
+            comando.Parameters.AddWithValue(
+                "@idUbicacion",
+                idUbicacion
+            );
+
+
+            int resultado =
+                await comando.ExecuteNonQueryAsync();
+
+
+            return resultado > 0;
+        }
 
         //CREAR LOTE
         public async Task<bool> CrearLote(Lote reg)

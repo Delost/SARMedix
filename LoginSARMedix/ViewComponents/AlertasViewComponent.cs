@@ -859,6 +859,90 @@ namespace LoginSARMedix.ViewComponents
 
 
             // =================================================
+            // ALERTA GENERAL DE UBICACIONES
+            // =================================================
+            //
+            // Si existe AL MENOS un lote vencido,
+            // agregamos UNA SOLA alerta adicional.
+            //
+            // No importa si existen 1, 5 o 20 vencidos.
+            // La campana solamente suma +1 por Ubicaciones.
+            //
+            // Esta alerta solamente aparece al Administrador,
+            // porque actualmente Ubicaciones es exclusivo
+            // para ese rol.
+            // =================================================
+
+            string rolActual =
+                ViewContext
+                    .HttpContext
+                    .Session
+                    .GetString(
+                        "Rol"
+                    )
+                ??
+                "";
+
+
+            bool esAdministrador =
+                rolActual.Equals(
+                    "Administrador",
+                    StringComparison.OrdinalIgnoreCase
+                );
+
+
+            bool existeLoteVencido =
+                lotes.Any(
+                    lote =>
+                        lote.cantidad_actual > 0
+                        &&
+                        lote.fecha_vencimiento.HasValue
+                        &&
+                        lote.fecha_vencimiento.Value.Date < hoy
+                );
+
+
+            if (
+                esAdministrador
+                &&
+                existeLoteVencido
+            )
+            {
+                alertas.Add(
+                    new AlertaItemViewModel
+                    {
+                        Tipo =
+                            "ubicacion",
+
+                        Titulo =
+                            "Ubicaciones con vencidos",
+
+                        Detalle =
+                            "Existen medicamentos vencidos en una o más ubicaciones.",
+
+                        Prioridad =
+                            1,
+
+                        UrlDestino =
+                            Url.Action(
+                                "Ubicaciones",
+                                "Home",
+                                new
+                                {
+                                    soloAlertas = true
+                                }
+                            ),
+
+                        TextoDestino =
+                            "Ver ubicaciones con alertas"
+                    }
+                );
+            }
+
+
+
+
+            // =================================================
             // MODELO FINAL
             // =================================================
 

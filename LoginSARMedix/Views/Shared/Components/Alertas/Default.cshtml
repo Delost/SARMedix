@@ -178,55 +178,62 @@
                 @foreach (var alerta in Model.Alertas)
                 {
                     string claseTipo =
-                        alerta.Tipo switch
-                        {
-                            "vencido" =>
-                                "alerta-vencido",
+    alerta.Tipo switch
+    {
+        "vencido" =>
+            "alerta-vencido",
 
-                            "stock" =>
-                                "alerta-stock",
+        "stock" =>
+            "alerta-stock",
 
-                            "proximo" =>
-                                "alerta-proximo",
+        "proximo" =>
+            "alerta-proximo",
 
-                            _ =>
-                                ""
-                        };
+        "ubicacion" =>
+            "alerta-vencido",
+
+        _ =>
+            ""
+    };
 
 
                     string textoTipo =
-                        alerta.Tipo switch
-                        {
-                            "vencido" =>
-                                "Vencido",
+    alerta.Tipo switch
+    {
+        "vencido" =>
+            "Vencido",
 
-                            "stock" =>
-                                "Stock bajo",
+        "stock" =>
+            "Stock bajo",
 
-                            "proximo" =>
-                                "Próximo a vencer",
+        "proximo" =>
+            "Próximo a vencer",
 
-                            _ =>
-                                "Alerta"
-                        };
+        "ubicacion" =>
+            "Ubicación",
 
+        _ =>
+            "Alerta"
+    };
 
-                    string icono =
-                        alerta.Tipo switch
-                        {
-                            "vencido" =>
-                                "!",
+string icono =
+    alerta.Tipo switch
+    {
+        "vencido" =>
+            "!",
 
-                            "stock" =>
-                                "↓",
+        "stock" =>
+            "↓",
 
-                            "proximo" =>
-                                "◷",
+        "proximo" =>
+            "◷",
 
-                            _ =>
-                                "!"
-                        };
+        "ubicacion" =>
+            "!",
 
+        _ =>
+            "!"
+    };
 
 
                     <!-- ALERTA CON DESTINO -->

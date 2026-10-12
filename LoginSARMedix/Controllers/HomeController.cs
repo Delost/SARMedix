@@ -1727,6 +1727,59 @@ namespace LoginSARMedix.Controllers
         }
 
 
+        // =========================================================
+        // UBICACIONES
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult> Ubicaciones()
+        {
+            string rolActual =
+                HttpContext.Session.GetString("Rol") ?? "";
+
+            if (!rolActual.Equals(
+                    "Administrador",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var ubicaciones =
+                await _loteRepository
+                    .ListadoUbicaciones();
+
+
+            var lotes =
+                await _loteRepository
+                    .ListadoLotes();
+
+
+            var productos =
+                await _productoRepository
+                    .ListadoProductos();
+
+
+            ViewBag.LotesUbicaciones =
+                lotes;
+
+
+            ViewBag.ProductosUbicaciones =
+                productos;
+
+
+            await RegistrarAccionHistorial(
+                "Ingresó al módulo Ubicaciones"
+            );
+
+
+            return View(
+                "~/Views/Home/Ubicaciones.cshtml",
+                ubicaciones
+            );
+        }
+
+
 
         // =========================================================
         // REGISTRAR MOVIMIENTO CONTROLADO
@@ -1735,10 +1788,10 @@ namespace LoginSARMedix.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegistrarMovimientoControlado(
-            int idLote,
-            string tipoMovimiento,
-            int cantidad,
-            string observacion)
+        int idLote,
+        string tipoMovimiento,
+        int cantidad,
+        string observacion)
         {
             if (!TienePermiso(
                     "Gestionar medicamentos controlados"))
@@ -1805,6 +1858,544 @@ namespace LoginSARMedix.Controllers
 
             return RedirectToAction(
                 "MedicamentosControlados"
+            );
+        }
+        // =========================================================
+        // CREAR UBICACION
+        // =========================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CrearUbicacion(
+            string nombreSector)
+        {
+            string rolActual =
+                HttpContext.Session.GetString("Rol") ?? "";
+
+
+            if (!rolActual.Equals(
+                    "Administrador",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            nombreSector =
+                (nombreSector ?? "")
+                    .Trim();
+
+
+            if (string.IsNullOrWhiteSpace(
+                    nombreSector))
+            {
+                TempData["Mensaje"] =
+                    "Debe ingresar un nombre para la ubicación.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "Ubicaciones"
+                );
+            }
+
+
+            bool existe =
+                await _loteRepository
+                    .ExisteUbicacion(
+                        nombreSector
+                    );
+
+
+            if (existe)
+            {
+                TempData["Mensaje"] =
+                    "Ya existe una ubicación con ese nombre.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "Ubicaciones"
+                );
+            }
+
+
+            bool creada =
+                await _loteRepository
+                    .CrearUbicacion(
+                        nombreSector
+                    );
+
+
+            if (creada)
+            {
+                await RegistrarAccionHistorial(
+                    $"Creó la ubicación {nombreSector}"
+                );
+
+
+                TempData["Mensaje"] =
+                    "Ubicación creada correctamente.";
+
+                TempData["TipoMensaje"] =
+                    "exito";
+            }
+            else
+            {
+                TempData["Mensaje"] =
+                    "No se pudo crear la ubicación.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+            }
+
+
+            return RedirectToAction(
+                "Ubicaciones"
+            );
+        }
+
+
+        // =========================================================
+        // EDITAR UBICACION
+        // =========================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditarUbicacion(
+            int idUbicacion,
+            string nombreSector)
+        {
+            string rolActual =
+                HttpContext.Session.GetString("Rol") ?? "";
+
+
+            if (!rolActual.Equals(
+                    "Administrador",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            nombreSector =
+                (nombreSector ?? "")
+                    .Trim();
+
+
+            if (string.IsNullOrWhiteSpace(
+                    nombreSector))
+            {
+                TempData["Mensaje"] =
+                    "Debe ingresar un nombre para la ubicación.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "Ubicaciones"
+                );
+            }
+
+
+            bool existe =
+                await _loteRepository
+                    .ExisteUbicacionEditar(
+                        idUbicacion,
+                        nombreSector
+                    );
+
+
+            if (existe)
+            {
+                TempData["Mensaje"] =
+                    "Ya existe otra ubicación con ese nombre.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "Ubicaciones"
+                );
+            }
+
+
+            bool actualizado =
+                await _loteRepository
+                    .ActualizarUbicacion(
+                        idUbicacion,
+                        nombreSector
+                    );
+
+
+            if (actualizado)
+            {
+                await RegistrarAccionHistorial(
+                    $"Actualizó la ubicación {nombreSector}"
+                );
+
+
+                TempData["Mensaje"] =
+                    "Ubicación actualizada correctamente.";
+
+                TempData["TipoMensaje"] =
+                    "exito";
+            }
+            else
+            {
+                TempData["Mensaje"] =
+                    "No se pudo actualizar la ubicación.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+            }
+
+
+            return RedirectToAction(
+                "Ubicaciones"
+            );
+        }
+
+
+        // =========================================================
+        // INACTIVAR UBICACION
+        // =========================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> InactivarUbicacion(
+            int idUbicacion,
+            string nombreUbicacion)
+        {
+            string rolActual =
+                HttpContext.Session.GetString("Rol") ?? "";
+
+
+            if (!rolActual.Equals(
+                    "Administrador",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            int stock =
+                await _loteRepository
+                    .ObtenerStockUbicacion(
+                        idUbicacion
+                    );
+
+
+            if (stock > 0)
+            {
+                TempData["Mensaje"] =
+                    $"No se puede inactivar {nombreUbicacion} porque todavía contiene {stock} unidad(es).";
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "Ubicaciones"
+                );
+            }
+
+
+            bool resultado =
+                await _loteRepository
+                    .InactivarUbicacion(
+                        idUbicacion
+                    );
+
+
+            if (resultado)
+            {
+                await RegistrarAccionHistorial(
+                    $"Inactivó la ubicación {nombreUbicacion}"
+                );
+
+
+                TempData["Mensaje"] =
+                    "Ubicación inactivada correctamente.";
+
+                TempData["TipoMensaje"] =
+                    "exito";
+            }
+            else
+            {
+                TempData["Mensaje"] =
+                    "No se pudo inactivar la ubicación.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+            }
+
+
+            return RedirectToAction(
+                "Ubicaciones"
+            );
+        }
+
+        // =========================================================
+        // REACTIVAR UBICACION
+        // =========================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReactivarUbicacion(
+            int idUbicacion,
+            string nombreUbicacion)
+        {
+            string rolActual =
+                HttpContext.Session.GetString("Rol") ?? "";
+
+
+            if (!rolActual.Equals(
+                    "Administrador",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            bool resultado =
+                await _loteRepository
+                    .ReactivarUbicacion(
+                        idUbicacion
+                    );
+
+
+            if (resultado)
+            {
+                await RegistrarAccionHistorial(
+                    $"Reactivó la ubicación {nombreUbicacion}"
+                );
+
+
+                TempData["Mensaje"] =
+                    "Ubicación reactivada correctamente.";
+
+                TempData["TipoMensaje"] =
+                    "exito";
+            }
+            else
+            {
+                TempData["Mensaje"] =
+                    "No se pudo reactivar la ubicación.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+            }
+
+
+            return RedirectToAction(
+                "Ubicaciones"
+            );
+        }
+
+        // =========================================================
+        // INVENTARIO DE UNA UBICACION
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult> InventarioUbicacion(
+            int idUbicacion)
+        {
+            string rolActual =
+                HttpContext.Session.GetString("Rol") ?? "";
+
+
+            if (!rolActual.Equals(
+                    "Administrador",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var ubicaciones =
+                await _loteRepository
+                    .ListadoUbicaciones();
+
+
+            var ubicacion =
+                ubicaciones.FirstOrDefault(
+                    u =>
+                        u.id_ubicacion == idUbicacion
+                );
+
+
+            if (ubicacion == null)
+            {
+                TempData["Mensaje"] =
+                    "La ubicación seleccionada no existe.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "Ubicaciones"
+                );
+            }
+
+
+            var lotes =
+                await _loteRepository
+                    .ListadoLotes();
+
+
+            var lotesUbicacion =
+                lotes
+                    .Where(
+                        l =>
+                            l.id_ubicacion == idUbicacion
+                    )
+                    .OrderBy(
+                        l =>
+                            l.fecha_vencimiento
+                    )
+                    .ToList();
+
+
+            ViewBag.NombreUbicacion =
+                ubicacion.nombre_sector;
+
+            ViewBag.UbicacionActiva =
+                ubicacion.activo;
+
+
+            await RegistrarAccionHistorial(
+                $"Consultó el inventario de la ubicación {ubicacion.nombre_sector}"
+            );
+
+
+            return View(
+                "~/Views/Home/InventarioUbicacion.cshtml",
+                lotesUbicacion
+            );
+        }
+
+
+
+
+
+        // =========================================================
+        // ELIMINAR UBICACION
+        // =========================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EliminarUbicacion(
+            int idUbicacion,
+            string nombreUbicacion)
+        {
+            string rolActual =
+                HttpContext.Session.GetString("Rol") ?? "";
+
+
+            if (!rolActual.Equals(
+                    "Administrador",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            // =====================================================
+            // VERIFICAR STOCK ACTUAL
+            // =====================================================
+
+            int stock =
+                await _loteRepository
+                    .ObtenerStockUbicacion(
+                        idUbicacion
+                    );
+
+
+            if (stock > 0)
+            {
+                TempData["Mensaje"] =
+                    $"No se puede eliminar {nombreUbicacion} porque todavía contiene {stock} unidad(es).";
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "Ubicaciones"
+                );
+            }
+
+
+            // =====================================================
+            // VERIFICAR SI EXISTEN LOTES HISTORICOS
+            // =====================================================
+
+            bool tieneLotes =
+                await _loteRepository
+                    .TieneLotesUbicacion(
+                        idUbicacion
+                    );
+
+
+            if (tieneLotes)
+            {
+                TempData["Mensaje"] =
+                    $"No se puede eliminar {nombreUbicacion} porque tiene lotes asociados. Debe mantenerse inactiva para conservar la trazabilidad.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "Ubicaciones"
+                );
+            }
+
+
+            // =====================================================
+            // ELIMINAR
+            // =====================================================
+
+            bool resultado =
+                await _loteRepository
+                    .EliminarUbicacion(
+                        idUbicacion
+                    );
+
+
+            if (resultado)
+            {
+                await RegistrarAccionHistorial(
+                    $"Eliminó la ubicación {nombreUbicacion}"
+                );
+
+
+                TempData["Mensaje"] =
+                    "Ubicación eliminada correctamente.";
+
+                TempData["TipoMensaje"] =
+                    "exito";
+            }
+            else
+            {
+                TempData["Mensaje"] =
+                    "No se pudo eliminar la ubicación.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+            }
+
+
+            return RedirectToAction(
+                "Ubicaciones"
             );
         }
 
@@ -3726,8 +4317,8 @@ namespace LoginSARMedix.Controllers
 
 
             ViewBag.Ubicaciones =
-                await _loteRepository
-                    .ListadoUbicaciones();
+     await _loteRepository
+         .ListadoUbicacionesActivas();
 
 
             await RegistrarAccionHistorial(
@@ -3785,8 +4376,8 @@ namespace LoginSARMedix.Controllers
 
 
             ViewBag.Ubicaciones =
-                await _loteRepository
-                    .ListadoUbicaciones();
+    await _loteRepository
+        .ListadoUbicacionesActivas();
 
 
             return View(
@@ -3868,9 +4459,62 @@ namespace LoginSARMedix.Controllers
                     .ListadoProductos();
 
 
-            ViewBag.Ubicaciones =
+            // =====================================================
+            // SOLO UBICACIONES ACTIVAS
+            // =====================================================
+
+            var ubicaciones =
                 await _loteRepository
-                    .ListadoUbicaciones();
+                    .ListadoUbicacionesActivas();
+
+
+            // =====================================================
+            // SI EL LOTE YA PERTENECE A UNA UBICACION INACTIVA,
+            // LA MOSTRAMOS PARA NO PERDER SU UBICACION ACTUAL.
+            // =====================================================
+
+            bool existeUbicacionActual =
+                ubicaciones.Any(
+                    u =>
+                        u.id_ubicacion
+                        ==
+                        lote.id_ubicacion
+                );
+
+
+            if (!existeUbicacionActual)
+            {
+                var todasUbicaciones =
+                    await _loteRepository
+                        .ListadoUbicaciones();
+
+
+                var ubicacionActual =
+                    todasUbicaciones
+                        .FirstOrDefault(
+                            u =>
+                                u.id_ubicacion
+                                ==
+                                lote.id_ubicacion
+                        );
+
+
+                if (ubicacionActual != null)
+                {
+                    ubicaciones.Add(
+                        ubicacionActual
+                    );
+                }
+            }
+
+
+            ViewBag.Ubicaciones =
+                ubicaciones
+                    .OrderBy(
+                        u =>
+                            u.nombre_sector
+                    )
+                    .ToList();
 
 
             return View(
@@ -3900,6 +4544,131 @@ namespace LoginSARMedix.Controllers
                     .ObtenerLotePorId(
                         reg.id_lote
                     );
+
+            // =====================================================
+            // VALIDAR UBICACION DE DESTINO
+            // =====================================================
+
+            if (loteAnterior == null)
+            {
+                TempData["Mensaje"] =
+                    "El lote seleccionado no existe.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "Lotes"
+                );
+            }
+
+
+            var todasUbicaciones =
+                await _loteRepository
+                    .ListadoUbicaciones();
+
+
+            var ubicacionDestino =
+                todasUbicaciones
+                    .FirstOrDefault(
+                        u =>
+                            u.id_ubicacion
+                            ==
+                            reg.id_ubicacion
+                    );
+
+
+            if (ubicacionDestino == null)
+            {
+                ViewBag.Mensaje =
+                    "La ubicación seleccionada no existe.";
+
+
+                ViewBag.Productos =
+                    await _loteRepository
+                        .ListadoProductos();
+
+
+                ViewBag.Ubicaciones =
+                    await _loteRepository
+                        .ListadoUbicacionesActivas();
+
+
+                return View(
+                    "EditarLote",
+                    reg
+                );
+            }
+
+
+            // =====================================================
+            // NO PERMITIR MOVER EL LOTE A UNA UBICACION INACTIVA
+            // =====================================================
+
+            if (
+                !ubicacionDestino.activo
+                &&
+                loteAnterior.id_ubicacion
+                    !=
+                    reg.id_ubicacion
+            )
+            {
+                ViewBag.Mensaje =
+                    "No se puede mover el lote a una ubicación inactiva.";
+
+
+                ViewBag.Productos =
+                    await _loteRepository
+                        .ListadoProductos();
+
+
+                var ubicacionesActivas =
+                    await _loteRepository
+                        .ListadoUbicacionesActivas();
+
+
+                var ubicacionAnterior =
+                    todasUbicaciones
+                        .FirstOrDefault(
+                            u =>
+                                u.id_ubicacion
+                                ==
+                                loteAnterior.id_ubicacion
+                        );
+
+
+                if (
+                    ubicacionAnterior != null
+                    &&
+                    !ubicacionesActivas.Any(
+                        u =>
+                            u.id_ubicacion
+                            ==
+                            ubicacionAnterior.id_ubicacion
+                    )
+                )
+                {
+                    ubicacionesActivas.Add(
+                        ubicacionAnterior
+                    );
+                }
+
+
+                ViewBag.Ubicaciones =
+                    ubicacionesActivas
+                        .OrderBy(
+                            u =>
+                                u.nombre_sector
+                        )
+                        .ToList();
+
+
+                return View(
+                    "EditarLote",
+                    reg
+                );
+            }
 
 
             List<string> cambios =

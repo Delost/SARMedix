@@ -1,0 +1,772 @@
+﻿@using LoginSARMedix.Models
+@model List<Lote>
+
+@{
+    ViewData["Title"] = "Inventario de ubicación";
+    ViewData["TituloBarra"] = "Inventario de ubicación";
+
+    string nombreUbicacion =
+        ViewBag.NombreUbicacion?.ToString()
+        ?? "Ubicación";
+
+    bool ubicacionActiva =
+        ViewBag.UbicacionActiva != null
+        &&
+        Convert.ToBoolean(
+            ViewBag.UbicacionActiva
+        );
+
+    DateTime hoy =
+        DateTime.Today;
+
+    DateTime limiteVencimiento =
+        hoy.AddDays(30);
+
+
+    int totalUnidades =
+        Model
+            .Sum(
+                lote =>
+                    lote.cantidad_actual
+            );
+
+
+    int totalProductos =
+        Model
+            .Where(
+                lote =>
+                    lote.cantidad_actual > 0
+            )
+            .Select(
+                lote =>
+                    lote.id_producto
+            )
+            .Distinct()
+            .Count();
+
+
+    int totalLotes =
+        Model.Count;
+
+
+    int totalVencidos =
+        Model.Count(
+            lote =>
+                lote.cantidad_actual > 0
+                &&
+                lote.fecha_vencimiento.HasValue
+                &&
+                lote.fecha_vencimiento.Value.Date < hoy
+        );
+}
+
+
+<style>
+
+    /* =========================================================
+       PAGINA
+       ========================================================= */
+
+    .inventario-ubicacion-pagina {
+        width: 100%;
+        max-width: 1450px;
+        margin: 0 auto;
+        padding: 10px 10px 30px;
+    }
+
+
+    /* =========================================================
+       ENCABEZADO
+       ========================================================= */
+
+    .inventario-encabezado {
+        margin-bottom: 22px;
+    }
+
+
+    .inventario-volver {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+
+        margin-bottom: 18px;
+
+        color: #176dad;
+        font-size: 14px;
+        font-weight: 650;
+
+        text-decoration: none;
+    }
+
+
+    .inventario-volver:hover {
+        color: #0c568d;
+    }
+
+
+    .inventario-encabezado-superior {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+
+    .inventario-encabezado h1 {
+        margin: 0;
+
+        color: #093b62;
+
+        font-size: 32px;
+        font-weight: 750;
+    }
+
+
+    .inventario-encabezado p {
+        margin: 7px 0 0;
+
+        color: #657d90;
+
+        font-size: 15px;
+    }
+
+
+    /* =========================================================
+       ESTADO UBICACION
+       ========================================================= */
+
+    .inventario-estado {
+        padding: 7px 13px;
+
+        border-radius: 20px;
+
+        font-size: 13px;
+        font-weight: 700;
+
+        white-space: nowrap;
+    }
+
+
+    .inventario-estado-activa {
+        background: #e1f5e7;
+        color: #17733a;
+    }
+
+
+    .inventario-estado-inactiva {
+        background: #eeeeee;
+        color: #606b73;
+    }
+
+
+    /* =========================================================
+       RESUMEN
+       ========================================================= */
+
+    .inventario-resumen {
+        display: grid;
+
+        grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+
+        gap: 15px;
+
+        margin-bottom: 23px;
+    }
+
+
+    .inventario-resumen-card {
+        padding: 18px;
+
+        display: flex;
+        align-items: center;
+        gap: 14px;
+
+        border: 1px solid #dce7ed;
+        border-radius: 12px;
+
+        background: rgba(
+            255,
+            255,
+            255,
+            0.96
+        );
+
+        box-shadow:
+            0 7px 18px
+            rgba(20, 70, 100, 0.08);
+    }
+
+
+    .inventario-resumen-icono {
+        width: 46px;
+        height: 46px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 12px;
+
+        background: #e8f4fc;
+
+        font-size: 23px;
+    }
+
+
+    .inventario-resumen-numero {
+        display: block;
+
+        color: #103c5e;
+
+        font-size: 22px;
+        font-weight: 750;
+    }
+
+
+    .inventario-resumen-texto {
+        display: block;
+
+        margin-top: 2px;
+
+        color: #718696;
+
+        font-size: 13px;
+    }
+
+
+    /* =========================================================
+       TABLA
+       ========================================================= */
+
+    .inventario-tabla-contenedor {
+        overflow-x: auto;
+
+        border: 1px solid #d9e5ec;
+        border-radius: 12px;
+
+        background: rgba(
+            255,
+            255,
+            255,
+            0.97
+        );
+
+        box-shadow:
+            0 9px 25px
+            rgba(20, 65, 95, 0.09);
+    }
+
+
+    .inventario-tabla {
+        width: 100%;
+
+        border-collapse: collapse;
+    }
+
+
+    .inventario-tabla th {
+        padding: 15px 17px;
+
+        background: #eef6fb;
+
+        color: #31556f;
+
+        font-size: 13px;
+        font-weight: 700;
+
+        text-align: left;
+
+        border-bottom:
+            1px solid #d8e5ed;
+    }
+
+
+    .inventario-tabla td {
+        padding: 15px 17px;
+
+        color: #27475d;
+
+        font-size: 14px;
+
+        border-bottom:
+            1px solid #edf2f5;
+    }
+
+
+    .inventario-tabla tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+
+    .inventario-tabla tbody tr:hover {
+        background: #f7fbfd;
+    }
+
+
+    .inventario-producto {
+        color: #123d5e;
+        font-weight: 700;
+    }
+
+
+    .inventario-stock {
+        font-weight: 700;
+    }
+
+
+    /* =========================================================
+       ESTADOS DEL LOTE
+       ========================================================= */
+
+    .inventario-lote-estado {
+        display: inline-flex;
+        align-items: center;
+
+        padding: 6px 9px;
+
+        border-radius: 7px;
+
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+
+    .estado-normal {
+        background: #e1f5e7;
+        color: #17733a;
+    }
+
+
+    .estado-proximo {
+        background: #fff0dd;
+        color: #b85c00;
+    }
+
+
+    .estado-vencido {
+        background: #fde5e5;
+        color: #b42318;
+    }
+
+
+    .estado-sin-stock {
+        background: #eeeeee;
+        color: #66727b;
+    }
+
+
+    /* =========================================================
+       SIN INVENTARIO
+       ========================================================= */
+
+    .inventario-vacio {
+        padding: 45px 25px;
+
+        text-align: center;
+
+        border: 1px solid #dce6ed;
+        border-radius: 12px;
+
+        background: rgba(
+            255,
+            255,
+            255,
+            0.95
+        );
+    }
+
+
+    .inventario-vacio-icono {
+        display: block;
+
+        margin-bottom: 10px;
+
+        font-size: 40px;
+    }
+
+
+    .inventario-vacio h3 {
+        margin: 0 0 7px;
+
+        color: #123a5d;
+
+        font-size: 20px;
+    }
+
+
+    .inventario-vacio p {
+        margin: 0;
+
+        color: #718696;
+
+        font-size: 14px;
+    }
+
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @@media (max-width: 950px) {
+
+        .inventario-resumen {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+
+    }
+
+
+    @@media (max-width: 600px) {
+
+        .inventario-resumen {
+            grid-template-columns: 1fr;
+        }
+
+
+        .inventario-encabezado-superior {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+    }
+
+</style>
+
+
+<div class="inventario-ubicacion-pagina">
+
+
+    <!-- =========================================================
+         ENCABEZADO
+         ========================================================= -->
+
+    <section class="inventario-encabezado">
+
+
+        <a asp-controller="Home"
+           asp-action="Ubicaciones"
+           class="inventario-volver">
+
+            ← Volver a ubicaciones
+
+        </a>
+
+
+        <div class="inventario-encabezado-superior">
+
+
+            <div>
+
+                <h1>
+                    @nombreUbicacion
+                </h1>
+
+
+                <p>
+                    Inventario registrado actualmente
+                    en esta ubicación.
+                </p>
+
+            </div>
+
+
+            @if (ubicacionActiva)
+            {
+                <span class="inventario-estado inventario-estado-activa">
+
+                    ● Ubicación activa
+
+                </span>
+            }
+            else
+            {
+                <span class="inventario-estado inventario-estado-inactiva">
+
+                    ● Ubicación inactiva
+
+                </span>
+            }
+
+
+        </div>
+
+
+    </section>
+
+
+    <!-- =========================================================
+         RESUMEN
+         ========================================================= -->
+
+    <section class="inventario-resumen">
+
+
+        <article class="inventario-resumen-card">
+
+            <span class="inventario-resumen-icono">
+                📦
+            </span>
+
+            <div>
+
+                <span class="inventario-resumen-numero">
+                    @totalUnidades
+                </span>
+
+                <span class="inventario-resumen-texto">
+                    Unidades
+                </span>
+
+            </div>
+
+        </article>
+
+
+        <article class="inventario-resumen-card">
+
+            <span class="inventario-resumen-icono">
+                💊
+            </span>
+
+            <div>
+
+                <span class="inventario-resumen-numero">
+                    @totalProductos
+                </span>
+
+                <span class="inventario-resumen-texto">
+                    Productos con stock
+                </span>
+
+            </div>
+
+        </article>
+
+
+        <article class="inventario-resumen-card">
+
+            <span class="inventario-resumen-icono">
+                🧾
+            </span>
+
+            <div>
+
+                <span class="inventario-resumen-numero">
+                    @totalLotes
+                </span>
+
+                <span class="inventario-resumen-texto">
+                    Lotes registrados
+                </span>
+
+            </div>
+
+        </article>
+
+
+        <article class="inventario-resumen-card">
+
+            <span class="inventario-resumen-icono">
+                ⚠
+            </span>
+
+            <div>
+
+                <span class="inventario-resumen-numero">
+                    @totalVencidos
+                </span>
+
+                <span class="inventario-resumen-texto">
+                    Lotes vencidos con stock
+                </span>
+
+            </div>
+
+        </article>
+
+
+    </section>
+
+
+    <!-- =========================================================
+         INVENTARIO
+         ========================================================= -->
+
+    @if (Model != null && Model.Any())
+    {
+
+        <div class="inventario-tabla-contenedor">
+
+            <table class="inventario-tabla">
+
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Producto
+                        </th>
+
+                        <th>
+                            N° lote
+                        </th>
+
+                        <th>
+                            Stock
+                        </th>
+
+                        <th>
+                            Vencimiento
+                        </th>
+
+                        <th>
+                            Estado
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+
+                    @foreach (var lote in Model)
+                    {
+
+                        string estadoTexto;
+                        string estadoClase;
+
+
+                        if (lote.cantidad_actual <= 0)
+                        {
+                            estadoTexto =
+                                "Sin stock";
+
+                            estadoClase =
+                                "estado-sin-stock";
+                        }
+                        else if (
+                            lote.fecha_vencimiento.HasValue
+                            &&
+                            lote.fecha_vencimiento.Value.Date < hoy
+                        )
+                        {
+                            estadoTexto =
+                                "Vencido";
+
+                            estadoClase =
+                                "estado-vencido";
+                        }
+                        else if (
+                            lote.fecha_vencimiento.HasValue
+                            &&
+                            lote.fecha_vencimiento.Value.Date
+                                <= limiteVencimiento
+                        )
+                        {
+                            estadoTexto =
+                                "Próximo a vencer";
+
+                            estadoClase =
+                                "estado-proximo";
+                        }
+                        else
+                        {
+                            estadoTexto =
+                                "Normal";
+
+                            estadoClase =
+                                "estado-normal";
+                        }
+
+
+                        <tr>
+
+
+                            <td class="inventario-producto">
+
+                                @lote.nombre_producto
+
+                            </td>
+
+
+                            <td>
+
+                                @lote.numero_lote
+
+                            </td>
+
+
+                            <td class="inventario-stock">
+
+                                @lote.cantidad_actual
+
+                            </td>
+
+
+                            <td>
+
+                                @(
+                                    lote.fecha_vencimiento.HasValue
+                                    ?
+                                    lote.fecha_vencimiento.Value
+                                        .ToString("dd/MM/yyyy")
+                                    :
+                                    "Sin fecha"
+                                )
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="inventario-lote-estado @estadoClase">
+
+                                    @estadoTexto
+
+                                </span>
+
+                            </td>
+
+
+                        </tr>
+
+                    }
+
+
+                </tbody>
+
+
+            </table>
+
+        </div>
+
+    }
+    else
+    {
+
+        <div class="inventario-vacio">
+
+            <span class="inventario-vacio-icono">
+                📦
+            </span>
+
+            <h3>
+                Esta ubicación está vacía
+            </h3>
+
+            <p>
+                Actualmente no existen lotes
+                registrados en esta ubicación.
+            </p>
+
+        </div>
+
+    }
+
+
+</div>

@@ -84,6 +84,21 @@
         );
 
 
+
+
+    /* =========================================================
+UBICACIONES - SOLO ADMINISTRADOR
+========================================================= */
+
+    string rolActual =
+        Context.Session.GetString("Rol") ?? "";
+
+    bool puedeGestionarUbicaciones =
+        rolActual.Equals(
+            "Administrador",
+            StringComparison.OrdinalIgnoreCase
+        );
+
     /*
         COMO YA NO MOSTRAMOS "REGISTRAR MOVIMIENTOS"
         EN LA BARRA LATERAL, ESTE MODULO SE MUESTRA
@@ -173,6 +188,12 @@
         accionActual == "MedicamentosControlados"
         ||
         accionActual == "RegistrarMovimientoControlado";
+    bool ubicacionesActivo =
+        accionActual == "Ubicaciones";
+
+
+
+
 }
 
 
@@ -771,7 +792,34 @@
 
             </div>
         }
+        <!-- =====================================================
+     UBICACIONES
+     ===================================================== -->
+        @if (puedeGestionarUbicaciones)
+        {
+            <div class="sidebar-grupo">
 
+                <div class="sidebar-cabecera @(ubicacionesActivo ? "activo" : "")">
+
+                    <a asp-controller="Home"
+                       asp-action="Ubicaciones"
+                       class="sidebar-modulo-enlace"
+                       title="Ir a Ubicaciones">
+
+                        <span class="sidebar-icono">
+                            📍
+                        </span>
+
+                        <span class="sidebar-texto">
+                            Ubicaciones
+                        </span>
+
+                    </a>
+
+                </div>
+
+            </div>
+        }
 
     </nav>
 
