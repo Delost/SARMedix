@@ -99,13 +99,19 @@ UBICACIONES - SOLO ADMINISTRADOR
             StringComparison.OrdinalIgnoreCase
         );
 
-    /*
-        COMO YA NO MOSTRAMOS "REGISTRAR MOVIMIENTOS"
-        EN LA BARRA LATERAL, ESTE MODULO SE MUESTRA
-        SOLAMENTE SI EL USUARIO PUEDE CONSULTAR HISTORIAL.
-    */
+    /* =========================================================
+       MODULOS INVENTARIO Y MOVIMIENTOS
+       ========================================================= */
+
+    bool mostrarModuloInventario =
+        puedeConsultarProductos
+        ||
+        puedeRegistrarProductos;
+
 
     bool mostrarModuloMovimientos =
+        puedeRegistrarProductos
+        ||
         puedeConsultarHistorial;
 
 
@@ -165,16 +171,24 @@ UBICACIONES - SOLO ADMINISTRADOR
         ||
         accionActual == "ListadoProductos2"
         ||
-        accionActual == "EditarProducto"
-        ||
-        accionActual == "CrearLote"
-        ||
+        accionActual == "EditarProducto";
+
+
+    bool inventarioActivo =
         accionActual == "Lotes"
         ||
         accionActual == "EditarLote";
 
 
+    bool sectoresActivo =
+        accionActual == "Ubicaciones"
+        ||
+        accionActual == "InventarioUbicacion";
+
+
     bool movimientosActivo =
+        accionActual == "CrearLote"
+        ||
         accionActual == "MovimientoHistorial"
         ||
         accionActual == "Historial"
@@ -188,12 +202,6 @@ UBICACIONES - SOLO ADMINISTRADOR
         accionActual == "MedicamentosControlados"
         ||
         accionActual == "RegistrarMovimientoControlado";
-    bool ubicacionesActivo =
-        accionActual == "Ubicaciones";
-
-
-
-
 }
 
 
@@ -390,33 +398,20 @@ UBICACIONES - SOLO ADMINISTRADOR
         {
             <div class="sidebar-grupo">
 
-
                 <div class="sidebar-cabecera @(productosActivo ? "activo" : "")">
-
 
                     <a asp-controller="Home"
                        asp-action="Productos"
                        class="sidebar-modulo-enlace"
                        title="Ir a Productos">
 
-
-                        <span class="sidebar-icono">
-
-                            📦
-
-                        </span>
-
+                        <span class="sidebar-icono">📦</span>
 
                         <span class="sidebar-texto">
-
                             Productos
-
                         </span>
 
-
                     </a>
-
-
 
                     <button type="button"
                             class="sidebar-toggle"
@@ -424,23 +419,13 @@ UBICACIONES - SOLO ADMINISTRADOR
                             aria-label="Mostrar submódulos de Productos"
                             aria-expanded="false">
 
-
-                        <span class="sidebar-flecha">
-
-                            ▼
-
-                        </span>
-
+                        <span class="sidebar-flecha">▼</span>
 
                     </button>
 
-
                 </div>
 
-
-
                 <div class="sidebar-submenu">
-
 
                     @if (puedeRegistrarProductos)
                     {
@@ -448,25 +433,12 @@ UBICACIONES - SOLO ADMINISTRADOR
                            asp-action="CrearProducto"
                            class="sidebar-subopcion @(accionActual == "CrearProducto" ? "activo" : "")">
 
+                            <span class="sidebar-subicono">＋</span>
 
-                            <span class="sidebar-subicono">
-
-                                ＋
-
-                            </span>
-
-
-                            <span>
-
-                                Registrar producto
-
-                            </span>
-
+                            <span>Registrar producto</span>
 
                         </a>
                     }
-
-
 
                     @if (puedeConsultarProductos)
                     {
@@ -474,79 +446,14 @@ UBICACIONES - SOLO ADMINISTRADOR
                            asp-action="ListadoProductos2"
                            class="sidebar-subopcion @(accionActual == "ListadoProductos2" || accionActual == "EditarProducto" ? "activo" : "")">
 
+                            <span class="sidebar-subicono">≡</span>
 
-                            <span class="sidebar-subicono">
-
-                                ≡
-
-                            </span>
-
-
-                            <span>
-
-                                Listado de productos
-
-                            </span>
-
+                            <span>Listado de productos</span>
 
                         </a>
                     }
-
-
-
-                    @if (puedeRegistrarProductos)
-                    {
-                        <a asp-controller="Home"
-                           asp-action="CrearLote"
-                           class="sidebar-subopcion @(accionActual == "CrearLote" ? "activo" : "")">
-
-
-                            <span class="sidebar-subicono">
-
-                                ＋
-
-                            </span>
-
-
-                            <span>
-
-                                Registrar lote
-
-                            </span>
-
-
-                        </a>
-                    }
-
-
-
-                    @if (puedeConsultarProductos)
-                    {
-                        <a asp-controller="Home"
-                           asp-action="Lotes"
-                           class="sidebar-subopcion @(accionActual == "Lotes" || accionActual == "EditarLote" ? "activo" : "")">
-
-
-                            <span class="sidebar-subicono">
-
-                                ≡
-
-                            </span>
-
-
-                            <span>
-
-                                Listado de lotes
-
-                            </span>
-
-
-                        </a>
-                    }
-
 
                 </div>
-
 
             </div>
         }
@@ -554,7 +461,64 @@ UBICACIONES - SOLO ADMINISTRADOR
 
 
         <!-- =====================================================
-             MOVIMIENTOS E HISTORIAL
+             INVENTARIO
+             ===================================================== -->
+
+        @if (mostrarModuloInventario)
+        {
+            <div class="sidebar-grupo">
+
+                <div class="sidebar-cabecera @(inventarioActivo ? "activo" : "")">
+
+                    <a asp-controller="Home"
+                       asp-action="Lotes"
+                       class="sidebar-modulo-enlace"
+                       title="Ir a Inventario">
+
+                        <span class="sidebar-icono">🏬</span>
+
+                        <span class="sidebar-texto">
+                            Inventario
+                        </span>
+
+                    </a>
+
+                    <button type="button"
+                            class="sidebar-toggle"
+                            onclick="alternarSubmenu(this)"
+                            aria-label="Mostrar submódulos de Inventario"
+                            aria-expanded="false">
+
+                        <span class="sidebar-flecha">▼</span>
+
+                    </button>
+
+                </div>
+
+                <div class="sidebar-submenu">
+
+                    @if (puedeConsultarProductos)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="Lotes"
+                           class="sidebar-subopcion @(accionActual == "Lotes" || accionActual == "EditarLote" ? "activo" : "")">
+
+                            <span class="sidebar-subicono">▦</span>
+
+                            <span>Stock y lotes</span>
+
+                        </a>
+                    }
+
+                </div>
+
+            </div>
+        }
+
+
+
+        <!-- =====================================================
+             MOVIMIENTOS
              ===================================================== -->
 
         @if (mostrarModuloMovimientos)
@@ -573,7 +537,7 @@ UBICACIONES - SOLO ADMINISTRADOR
                     <a asp-controller="Home"
                        asp-action="MovimientoHistorial"
                        class="sidebar-modulo-enlace"
-                       title="Ir a Movimientos e Historial">
+                       title="Ir a Movimientos">
 
 
                         <span class="sidebar-icono">
@@ -585,7 +549,7 @@ UBICACIONES - SOLO ADMINISTRADOR
 
                         <span class="sidebar-texto">
 
-                            Movimientos e Historial
+                            Movimientos
 
                         </span>
 
@@ -602,7 +566,7 @@ UBICACIONES - SOLO ADMINISTRADOR
                     <button type="button"
                             class="sidebar-toggle"
                             onclick="alternarSubmenu(this)"
-                            aria-label="Mostrar historiales"
+                            aria-label="Mostrar submódulos de Movimientos"
                             aria-expanded="false">
 
 
@@ -622,15 +586,24 @@ UBICACIONES - SOLO ADMINISTRADOR
 
                 <div class="sidebar-submenu">
 
+                    @if (puedeRegistrarProductos)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="CrearLote"
+                           class="sidebar-subopcion @(accionActual == "CrearLote" ? "activo" : "")">
 
-                    <!--
-                        YA NO EXISTE LA OPCION
-                        "REGISTRAR MOVIMIENTOS".
-                    -->
+                            <span class="sidebar-subicono">⇩</span>
+
+                            <span>Registrar entrada</span>
+
+                        </a>
+                    }
 
 
-                    <a asp-controller="Home"
-                       asp-action="Historial"
+                    @if (puedeConsultarHistorial)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="Historial"
                        class="sidebar-subopcion @(accionActual == "Historial" ? "activo" : "")">
 
 
@@ -695,6 +668,7 @@ UBICACIONES - SOLO ADMINISTRADOR
 
 
                     </a>
+                    }
 
 
                 </div>
@@ -792,26 +766,29 @@ UBICACIONES - SOLO ADMINISTRADOR
 
             </div>
         }
+
+
         <!-- =====================================================
-     UBICACIONES
-     ===================================================== -->
+             SECTORES
+             ===================================================== -->
+
         @if (puedeGestionarUbicaciones)
         {
             <div class="sidebar-grupo">
 
-                <div class="sidebar-cabecera @(ubicacionesActivo ? "activo" : "")">
+                <div class="sidebar-cabecera @(sectoresActivo ? "activo" : "")">
 
                     <a asp-controller="Home"
                        asp-action="Ubicaciones"
                        class="sidebar-modulo-enlace"
-                       title="Ir a Ubicaciones">
+                       title="Ir a Sectores">
 
                         <span class="sidebar-icono">
                             📍
                         </span>
 
                         <span class="sidebar-texto">
-                            Ubicaciones
+                            Sectores
                         </span>
 
                     </a>
@@ -820,6 +797,7 @@ UBICACIONES - SOLO ADMINISTRADOR
 
             </div>
         }
+
 
     </nav>
 

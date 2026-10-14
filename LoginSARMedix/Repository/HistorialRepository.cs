@@ -388,9 +388,6 @@ namespace LoginSARMedix.Repository
         // =========================================================
         // CONVERTIR UNA FILA DE MYSQL EN HISTORIAL
         //
-        // ANTES TENIAMOS ESTE MISMO CODIGO
-        // REPETIDO EN LOS TRES METODOS.
-        //
         // AHORA ESTA CENTRALIZADO AQUI.
         // =========================================================
 

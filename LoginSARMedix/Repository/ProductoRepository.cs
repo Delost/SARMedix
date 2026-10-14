@@ -1,4 +1,4 @@
-﻿using LoginSARMedix.Models;
+using LoginSARMedix.Models;
 using MySqlConnector;
 
 namespace LoginSARMedix.Repository
@@ -13,200 +13,316 @@ namespace LoginSARMedix.Repository
         }
 
 
-        //CREAR PRODUCTO
+        // =========================================================
+        // CREAR PRODUCTO
+        // El código interno se genera automáticamente.
+        // =========================================================
         public async Task<bool> CrearProducto(Producto reg)
         {
+            if (reg == null)
+            {
+                return false;
+            }
+
+            if (reg.tipo != "Medicamento" && reg.tipo != "Insumo")
+            {
+                return false;
+            }
+
             using MySqlConnection conexion =
                 new MySqlConnection(_conexion);
 
             await conexion.OpenAsync();
 
-
-            //VER CODIGO INTERNO
-            string consultaExiste = @"SELECT COUNT(*)
-                                      FROM producto
-                                      WHERE codigo_interno = @codigoInterno";
-
-            using MySqlCommand comandoExiste =
-                new MySqlCommand(consultaExiste, conexion);
-
-            comandoExiste.Parameters.AddWithValue(
-                "@codigoInterno",
-                reg.codigo_interno
-            );
-
-            int cantidad = Convert.ToInt32(
-                await comandoExiste.ExecuteScalarAsync()
-            );
-
-            if (cantidad > 0)
-            {
-                return false;
-            }
-
-
-
             using MySqlTransaction transaccion =
-                conexion.BeginTransaction();
+                await conexion.BeginTransactionAsync();
 
-
-            //INSERTAR PRODUCTO GENERAL
-            string consultaProducto = @"INSERT INTO producto
-                                        (codigo_interno,
-                                         nombre,
-                                         stock_minimo,
-                                         imagen_url)
-                                        VALUES
-                                        (@codigoInterno,
-                                         @nombre,
-                                         @stockMinimo,
-                                         @imagenUrl)";
-
-            using MySqlCommand comandoProducto =
-                new MySqlCommand(
-                    consultaProducto,
-                    conexion,
-                    transaccion
-                );
-
-            comandoProducto.Parameters.AddWithValue(
-                "@codigoInterno",
-                reg.codigo_interno
-            );
-
-            comandoProducto.Parameters.AddWithValue(
-                "@nombre",
-                reg.nombre
-            );
-
-            comandoProducto.Parameters.AddWithValue(
-                "@stockMinimo",
-                reg.stock_minimo
-            );
-
-            comandoProducto.Parameters.AddWithValue(
-                "@imagenUrl",
-                (object?)reg.imagen_url
-                ?? DBNull.Value
-            );
-
-            await comandoProducto.ExecuteNonQueryAsync();
-
-
-            //OBTENER ID DEL PRODUCTO CREADO
-            long idProducto =
-                comandoProducto.LastInsertedId;
-
-
-            //SI ES MEDICAMENTO
-            if (reg.tipo == "Medicamento")
+            try
             {
-                string consultaMedicamento =
-                    @"INSERT INTO medicamento
-                      (id_producto,
-                       principio_activo,
-                       concentracion,
-                       requiere_control)
-                      VALUES
-                      (@idProducto,
-                       @principioActivo,
-                       @concentracion,
-                       @requiereControl)";
+                string? codigoBarras =
+                    string.IsNullOrWhiteSpace(reg.codigo_barras)
+                        ? null
+                        : reg.codigo_barras.Trim();
 
-                using MySqlCommand comandoMedicamento =
+                string? unidadMedida =
+                    string.IsNullOrWhiteSpace(reg.unidad_medida)
+                        ? null
+                        : reg.unidad_medida.Trim();
+
+
+                // VALIDAR CODIGO DE BARRAS SI VIENE INFORMADO
+                if (codigoBarras != null)
+                {
+                    string consultaCodigoBarras = @"
+                        SELECT COUNT(*)
+                        FROM producto
+                        WHERE codigo_barras = @codigoBarras";
+
+                    using MySqlCommand comandoCodigoBarras =
+                        new MySqlCommand(
+                            consultaCodigoBarras,
+                            conexion,
+                            transaccion
+                        );
+
+                    comandoCodigoBarras.Parameters.AddWithValue(
+                        "@codigoBarras",
+                        codigoBarras
+                    );
+
+                    int cantidadCodigos =
+                        Convert.ToInt32(
+                            await comandoCodigoBarras.ExecuteScalarAsync()
+                        );
+
+                    if (cantidadCodigos > 0)
+                    {
+                        await transaccion.RollbackAsync();
+                        return false;
+                    }
+                }
+
+
+                // CODIGO TEMPORAL PARA CUMPLIR EL UNIQUE/NOT NULL
+                string codigoTemporal =
+                    "TMP-" + Guid.NewGuid().ToString("N");
+
+
+                // INSERTAR DATOS GENERALES DEL PRODUCTO
+                string consultaProducto = @"
+                    INSERT INTO producto
+                    (
+                        codigo_interno,
+                        codigo_barras,
+                        nombre,
+                        contenido_por_envase,
+                        unidad_medida,
+                        stock_minimo,
+                        imagen_url
+                    )
+                    VALUES
+                    (
+                        @codigoInterno,
+                        @codigoBarras,
+                        @nombre,
+                        @contenidoPorEnvase,
+                        @unidadMedida,
+                        @stockMinimo,
+                        @imagenUrl
+                    )";
+
+                using MySqlCommand comandoProducto =
                     new MySqlCommand(
-                        consultaMedicamento,
+                        consultaProducto,
                         conexion,
                         transaccion
                     );
 
-                comandoMedicamento.Parameters.AddWithValue(
-                    "@idProducto",
-                    idProducto
+                comandoProducto.Parameters.AddWithValue(
+                    "@codigoInterno",
+                    codigoTemporal
                 );
 
-                comandoMedicamento.Parameters.AddWithValue(
-                    "@principioActivo",
-                    reg.principio_activo
+                comandoProducto.Parameters.AddWithValue(
+                    "@codigoBarras",
+                    codigoBarras == null
+                        ? DBNull.Value
+                        : codigoBarras
                 );
 
-                comandoMedicamento.Parameters.AddWithValue(
-                    "@concentracion",
-                    reg.concentracion
+                comandoProducto.Parameters.AddWithValue(
+                    "@nombre",
+                    reg.nombre
                 );
 
-                comandoMedicamento.Parameters.AddWithValue(
-                    "@requiereControl",
-                    reg.requiere_control
+                comandoProducto.Parameters.AddWithValue(
+                    "@contenidoPorEnvase",
+                    reg.contenido_por_envase <= 0
+                        ? 1
+                        : reg.contenido_por_envase
                 );
 
-                await comandoMedicamento.ExecuteNonQueryAsync();
-            }
+                comandoProducto.Parameters.AddWithValue(
+                    "@unidadMedida",
+                    unidadMedida == null
+                        ? DBNull.Value
+                        : unidadMedida
+                );
+
+                comandoProducto.Parameters.AddWithValue(
+                    "@stockMinimo",
+                    reg.stock_minimo
+                );
+
+                comandoProducto.Parameters.AddWithValue(
+                    "@imagenUrl",
+                    string.IsNullOrWhiteSpace(reg.imagen_url)
+                        ? DBNull.Value
+                        : reg.imagen_url
+                );
+
+                await comandoProducto.ExecuteNonQueryAsync();
 
 
-            //SI ES INSUMO
-            else if (reg.tipo == "Insumo")
-            {
-                string consultaInsumo =
-                    @"INSERT INTO insumo
-                      (id_producto,
-                       material,
-                       es_esteril)
-                      VALUES
-                      (@idProducto,
-                       @material,
-                       @esEsteril)";
+                // GENERAR CODIGO INTERNO CON EL ID REAL
+                long idProducto =
+                    comandoProducto.LastInsertedId;
 
-                using MySqlCommand comandoInsumo =
+                string prefijo =
+                    reg.tipo == "Medicamento"
+                        ? "MED"
+                        : "INS";
+
+                string codigoInterno =
+                    $"{prefijo}-{idProducto:000000}";
+
+                string consultaCodigoInterno = @"
+                    UPDATE producto
+                    SET codigo_interno = @codigoInterno
+                    WHERE id_producto = @idProducto";
+
+                using MySqlCommand comandoCodigoInterno =
                     new MySqlCommand(
-                        consultaInsumo,
+                        consultaCodigoInterno,
                         conexion,
                         transaccion
                     );
 
-                comandoInsumo.Parameters.AddWithValue(
+                comandoCodigoInterno.Parameters.AddWithValue(
+                    "@codigoInterno",
+                    codigoInterno
+                );
+
+                comandoCodigoInterno.Parameters.AddWithValue(
                     "@idProducto",
                     idProducto
                 );
 
-                comandoInsumo.Parameters.AddWithValue(
-                    "@material",
-                    reg.material
-                );
+                await comandoCodigoInterno.ExecuteNonQueryAsync();
 
-                comandoInsumo.Parameters.AddWithValue(
-                    "@esEsteril",
-                    reg.es_esteril
-                );
 
-                await comandoInsumo.ExecuteNonQueryAsync();
+                // MEDICAMENTO
+                if (reg.tipo == "Medicamento")
+                {
+                    string consultaMedicamento = @"
+                        INSERT INTO medicamento
+                        (
+                            id_producto,
+                            forma_farmaceutica,
+                            principio_activo,
+                            concentracion,
+                            requiere_control
+                        )
+                        VALUES
+                        (
+                            @idProducto,
+                            @formaFarmaceutica,
+                            @principioActivo,
+                            @concentracion,
+                            @requiereControl
+                        )";
+
+                    using MySqlCommand comandoMedicamento =
+                        new MySqlCommand(
+                            consultaMedicamento,
+                            conexion,
+                            transaccion
+                        );
+
+                    comandoMedicamento.Parameters.AddWithValue(
+                        "@idProducto",
+                        idProducto
+                    );
+
+                    comandoMedicamento.Parameters.AddWithValue(
+                        "@formaFarmaceutica",
+                        string.IsNullOrWhiteSpace(reg.forma_farmaceutica)
+                            ? DBNull.Value
+                            : reg.forma_farmaceutica.Trim()
+                    );
+
+                    comandoMedicamento.Parameters.AddWithValue(
+                        "@principioActivo",
+                        reg.principio_activo
+                    );
+
+                    comandoMedicamento.Parameters.AddWithValue(
+                        "@concentracion",
+                        reg.concentracion
+                    );
+
+                    comandoMedicamento.Parameters.AddWithValue(
+                        "@requiereControl",
+                        reg.requiere_control
+                    );
+
+                    await comandoMedicamento.ExecuteNonQueryAsync();
+                }
+
+
+                // INSUMO
+                if (reg.tipo == "Insumo")
+                {
+                    string consultaInsumo = @"
+                        INSERT INTO insumo
+                        (
+                            id_producto,
+                            material,
+                            es_esteril
+                        )
+                        VALUES
+                        (
+                            @idProducto,
+                            @material,
+                            @esEsteril
+                        )";
+
+                    using MySqlCommand comandoInsumo =
+                        new MySqlCommand(
+                            consultaInsumo,
+                            conexion,
+                            transaccion
+                        );
+
+                    comandoInsumo.Parameters.AddWithValue(
+                        "@idProducto",
+                        idProducto
+                    );
+
+                    comandoInsumo.Parameters.AddWithValue(
+                        "@material",
+                        reg.material
+                    );
+
+                    comandoInsumo.Parameters.AddWithValue(
+                        "@esEsteril",
+                        reg.es_esteril
+                    );
+
+                    await comandoInsumo.ExecuteNonQueryAsync();
+                }
+
+
+                await transaccion.CommitAsync();
+
+                reg.id_producto = Convert.ToInt32(idProducto);
+                reg.codigo_interno = codigoInterno;
+                reg.codigo_barras = codigoBarras;
+                reg.unidad_medida = unidadMedida;
+
+                return true;
             }
-
-
-            //SI NO SE SELECCIONÓ TIPO
-            else
+            catch
             {
-                transaccion.Rollback();
-
+                await transaccion.RollbackAsync();
                 return false;
             }
-
-
-            //GUARDAR TODO
-            transaccion.Commit();
-
-            return true;
         }
 
 
-
-
-
-
-
-
-
-        //LISTADO DE PRODUCTOS
+        // =========================================================
+        // LISTADO DE PRODUCTOS
+        // =========================================================
         public async Task<List<Producto>> ListadoProductos()
         {
             List<Producto> productos = new List<Producto>();
@@ -217,35 +333,38 @@ namespace LoginSARMedix.Repository
             await conexion.OpenAsync();
 
             string consulta = @"
-                                SELECT
-                                    p.id_producto,
-                                    p.codigo_interno,
-                                    p.nombre,
-                                    p.stock_minimo,
-                                    p.imagen_url,
+                SELECT
+                    p.id_producto,
+                    p.codigo_interno,
+                    p.codigo_barras,
+                    p.nombre,
+                    p.contenido_por_envase,
+                    p.unidad_medida,
+                    p.stock_minimo,
+                    p.imagen_url,
 
-                                    m.principio_activo,
-                                    m.concentracion,
-                                    m.requiere_control,
+                    m.forma_farmaceutica,
+                    m.principio_activo,
+                    m.concentracion,
+                    m.requiere_control,
 
-                                    i.material,
-                                    i.es_esteril,
+                    i.material,
+                    i.es_esteril,
 
-                                    CASE
-                                        WHEN m.id_producto IS NOT NULL THEN 'Medicamento'
-                                        WHEN i.id_producto IS NOT NULL THEN 'Insumo'
-                                    END AS tipo
+                    CASE
+                        WHEN m.id_producto IS NOT NULL THEN 'Medicamento'
+                        WHEN i.id_producto IS NOT NULL THEN 'Insumo'
+                    END AS tipo
 
-                                FROM producto p
+                FROM producto p
 
-                                LEFT JOIN medicamento m
-                                ON p.id_producto = m.id_producto
+                LEFT JOIN medicamento m
+                    ON p.id_producto = m.id_producto
 
-                                LEFT JOIN insumo i
-                                ON p.id_producto = i.id_producto
+                LEFT JOIN insumo i
+                    ON p.id_producto = i.id_producto
 
-                                ORDER BY tipo, p.nombre";
-
+                ORDER BY tipo, p.nombre";
 
             using MySqlCommand comando =
                 new MySqlCommand(consulta, conexion);
@@ -253,102 +372,61 @@ namespace LoginSARMedix.Repository
             using MySqlDataReader lector =
                 await comando.ExecuteReaderAsync();
 
-
             while (await lector.ReadAsync())
             {
-                productos.Add(new Producto()
-                {
-                    id_producto =
-                        Convert.ToInt32(lector["id_producto"]),
-
-                    codigo_interno =
-                        lector["codigo_interno"].ToString(),
-
-                    nombre =
-                        lector["nombre"].ToString(),
-
-                    stock_minimo =
-                        Convert.ToInt32(lector["stock_minimo"]),
-
-                    imagen_url =
-                        lector["imagen_url"] == DBNull.Value
-                        ? null
-                        : lector["imagen_url"].ToString(),
-
-                    tipo =
-                        lector["tipo"].ToString(),
-
-                    principio_activo =
-                        lector["principio_activo"] == DBNull.Value
-                        ? null
-                        : lector["principio_activo"].ToString(),
-
-                    concentracion =
-                        lector["concentracion"] == DBNull.Value
-                        ? null
-                        : lector["concentracion"].ToString(),
-
-                    requiere_control =
-                        lector["requiere_control"] != DBNull.Value &&
-                        Convert.ToBoolean(lector["requiere_control"]),
-
-                    material =
-                        lector["material"] == DBNull.Value
-                        ? null
-                        : lector["material"].ToString(),
-
-                    es_esteril =
-                        lector["es_esteril"] != DBNull.Value &&
-                        Convert.ToBoolean(lector["es_esteril"])
-                });
+                productos.Add(
+                    CrearProductoDesdeLector(lector)
+                );
             }
 
             return productos;
         }
 
 
-
-
-
-        //OBTENER PRODUCTO POR ID
-        public async Task<Producto?> ObtenerProductoPorId(int idProducto)
+        // =========================================================
+        // OBTENER PRODUCTO POR ID
+        // =========================================================
+        public async Task<Producto?> ObtenerProductoPorId(
+            int idProducto)
         {
-            Producto? producto = null;
-
             using MySqlConnection conexion =
                 new MySqlConnection(_conexion);
 
             await conexion.OpenAsync();
 
             string consulta = @"
-                                SELECT
-                                    p.id_producto,
-                                    p.codigo_interno,
-                                    p.nombre,
-                                    p.stock_minimo,
-                                    p.imagen_url,
+                SELECT
+                    p.id_producto,
+                    p.codigo_interno,
+                    p.codigo_barras,
+                    p.nombre,
+                    p.contenido_por_envase,
+                    p.unidad_medida,
+                    p.stock_minimo,
+                    p.imagen_url,
 
-                                    m.principio_activo,
-                                    m.concentracion,
-                                    m.requiere_control,
+                    m.forma_farmaceutica,
+                    m.principio_activo,
+                    m.concentracion,
+                    m.requiere_control,
 
-                                    i.material,
-                                    i.es_esteril,
+                    i.material,
+                    i.es_esteril,
 
-                                    CASE
-                                        WHEN m.id_producto IS NOT NULL THEN 'Medicamento'
-                                        WHEN i.id_producto IS NOT NULL THEN 'Insumo'
-                                    END AS tipo
+                    CASE
+                        WHEN m.id_producto IS NOT NULL THEN 'Medicamento'
+                        WHEN i.id_producto IS NOT NULL THEN 'Insumo'
+                    END AS tipo
 
-                                FROM producto p
+                FROM producto p
 
-                                LEFT JOIN medicamento m
-                                ON p.id_producto = m.id_producto
+                LEFT JOIN medicamento m
+                    ON p.id_producto = m.id_producto
 
-                                LEFT JOIN insumo i
-                                ON p.id_producto = i.id_producto
+                LEFT JOIN insumo i
+                    ON p.id_producto = i.id_producto
 
-                                WHERE p.id_producto = @idProducto";
+                WHERE p.id_producto = @idProducto";
 
             using MySqlCommand comando =
                 new MySqlCommand(consulta, conexion);
@@ -363,58 +441,83 @@ namespace LoginSARMedix.Repository
 
             if (await lector.ReadAsync())
             {
-                producto = new Producto()
-                {
-                    id_producto =
-                        Convert.ToInt32(lector["id_producto"]),
-
-                    codigo_interno =
-                        lector["codigo_interno"].ToString(),
-
-                    nombre =
-                        lector["nombre"].ToString(),
-
-                    stock_minimo =
-                        Convert.ToInt32(lector["stock_minimo"]),
-
-                    imagen_url =
-                        lector["imagen_url"] == DBNull.Value
-                        ? null
-                        : lector["imagen_url"].ToString(),
-
-                    tipo =
-                        lector["tipo"].ToString(),
-
-                    principio_activo =
-                        lector["principio_activo"] == DBNull.Value
-                        ? null
-                        : lector["principio_activo"].ToString(),
-
-                    concentracion =
-                        lector["concentracion"] == DBNull.Value
-                        ? null
-                        : lector["concentracion"].ToString(),
-
-                    requiere_control =
-                        lector["requiere_control"] != DBNull.Value &&
-                        Convert.ToBoolean(lector["requiere_control"]),
-
-                    material =
-                        lector["material"] == DBNull.Value
-                        ? null
-                        : lector["material"].ToString(),
-
-                    es_esteril =
-                        lector["es_esteril"] != DBNull.Value &&
-                        Convert.ToBoolean(lector["es_esteril"])
-                };
+                return CrearProductoDesdeLector(lector);
             }
 
-            return producto;
+            return null;
         }
 
 
-        //ACTUALIZAR PRODUCTO
+        // =========================================================
+        // BUSCAR PRODUCTO POR CODIGO DE BARRAS / GTIN
+        // =========================================================
+        public async Task<Producto?> ObtenerProductoPorCodigoBarras(
+            string codigoBarras)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+            await conexion.OpenAsync();
+
+            string consulta = @"
+                SELECT
+                    p.id_producto,
+                    p.codigo_interno,
+                    p.codigo_barras,
+                    p.nombre,
+                    p.contenido_por_envase,
+                    p.unidad_medida,
+                    p.stock_minimo,
+                    p.imagen_url,
+
+                    m.forma_farmaceutica,
+                    m.principio_activo,
+                    m.concentracion,
+                    m.requiere_control,
+
+                    i.material,
+                    i.es_esteril,
+
+                    CASE
+                        WHEN m.id_producto IS NOT NULL THEN 'Medicamento'
+                        WHEN i.id_producto IS NOT NULL THEN 'Insumo'
+                    END AS tipo
+
+                FROM producto p
+
+                LEFT JOIN medicamento m
+                    ON p.id_producto = m.id_producto
+
+                LEFT JOIN insumo i
+                    ON p.id_producto = i.id_producto
+
+                WHERE p.codigo_barras = @codigoBarras
+                LIMIT 1";
+
+            using MySqlCommand comando =
+                new MySqlCommand(consulta, conexion);
+
+            comando.Parameters.AddWithValue(
+                "@codigoBarras",
+                codigoBarras.Trim()
+            );
+
+            using MySqlDataReader lector =
+                await comando.ExecuteReaderAsync();
+
+            if (await lector.ReadAsync())
+            {
+                return CrearProductoDesdeLector(lector);
+            }
+
+            return null;
+        }
+
+
+        // =========================================================
+        // ACTUALIZAR PRODUCTO
+        // El código interno se mantiene estable.
+        // =========================================================
         public async Task<bool> ActualizarProducto(Producto reg)
         {
             using MySqlConnection conexion =
@@ -423,126 +526,299 @@ namespace LoginSARMedix.Repository
             await conexion.OpenAsync();
 
             using MySqlTransaction transaccion =
-                conexion.BeginTransaction();
+                await conexion.BeginTransactionAsync();
 
-
-            //ACTUALIZAR DATOS GENERALES
-            string consultaProducto = @"
-        UPDATE producto
-        SET codigo_interno = @codigoInterno,
-            nombre = @nombre,
-            stock_minimo = @stockMinimo
-        WHERE id_producto = @idProducto";
-
-            using MySqlCommand comandoProducto =
-                new MySqlCommand(
-                    consultaProducto,
-                    conexion,
-                    transaccion
-                );
-
-            comandoProducto.Parameters.AddWithValue(
-                "@codigoInterno",
-                reg.codigo_interno
-            );
-
-            comandoProducto.Parameters.AddWithValue(
-                "@nombre",
-                reg.nombre
-            );
-
-            comandoProducto.Parameters.AddWithValue(
-                "@stockMinimo",
-                reg.stock_minimo
-            );
-
-            comandoProducto.Parameters.AddWithValue(
-                "@idProducto",
-                reg.id_producto
-            );
-
-            await comandoProducto.ExecuteNonQueryAsync();
-
-
-            //SI ES MEDICAMENTO
-            if (reg.tipo == "Medicamento")
+            try
             {
-                string consultaMedicamento = @"
-            UPDATE medicamento
-            SET principio_activo = @principioActivo,
-                concentracion = @concentracion,
-                requiere_control = @requiereControl
-            WHERE id_producto = @idProducto";
+                string? codigoBarras =
+                    string.IsNullOrWhiteSpace(reg.codigo_barras)
+                        ? null
+                        : reg.codigo_barras.Trim();
 
-                using MySqlCommand comandoMedicamento =
+                string? unidadMedida =
+                    string.IsNullOrWhiteSpace(reg.unidad_medida)
+                        ? null
+                        : reg.unidad_medida.Trim();
+
+
+                if (codigoBarras != null)
+                {
+                    string consultaExiste = @"
+                        SELECT COUNT(*)
+                        FROM producto
+                        WHERE codigo_barras = @codigoBarras
+                          AND id_producto <> @idProducto";
+
+                    using MySqlCommand comandoExiste =
+                        new MySqlCommand(
+                            consultaExiste,
+                            conexion,
+                            transaccion
+                        );
+
+                    comandoExiste.Parameters.AddWithValue(
+                        "@codigoBarras",
+                        codigoBarras
+                    );
+
+                    comandoExiste.Parameters.AddWithValue(
+                        "@idProducto",
+                        reg.id_producto
+                    );
+
+                    int cantidad =
+                        Convert.ToInt32(
+                            await comandoExiste.ExecuteScalarAsync()
+                        );
+
+                    if (cantidad > 0)
+                    {
+                        await transaccion.RollbackAsync();
+                        return false;
+                    }
+                }
+
+
+                string consultaProducto = @"
+                    UPDATE producto
+                    SET
+                        codigo_barras = @codigoBarras,
+                        nombre = @nombre,
+                        contenido_por_envase = @contenidoPorEnvase,
+                        unidad_medida = @unidadMedida,
+                        stock_minimo = @stockMinimo
+                    WHERE id_producto = @idProducto";
+
+                using MySqlCommand comandoProducto =
                     new MySqlCommand(
-                        consultaMedicamento,
+                        consultaProducto,
                         conexion,
                         transaccion
                     );
 
-                comandoMedicamento.Parameters.AddWithValue(
-                    "@principioActivo",
-                    reg.principio_activo
+                comandoProducto.Parameters.AddWithValue(
+                    "@codigoBarras",
+                    codigoBarras == null
+                        ? DBNull.Value
+                        : codigoBarras
                 );
 
-                comandoMedicamento.Parameters.AddWithValue(
-                    "@concentracion",
-                    reg.concentracion
+                comandoProducto.Parameters.AddWithValue(
+                    "@nombre",
+                    reg.nombre
                 );
 
-                comandoMedicamento.Parameters.AddWithValue(
-                    "@requiereControl",
-                    reg.requiere_control
+                comandoProducto.Parameters.AddWithValue(
+                    "@contenidoPorEnvase",
+                    reg.contenido_por_envase <= 0
+                        ? 1
+                        : reg.contenido_por_envase
                 );
 
-                comandoMedicamento.Parameters.AddWithValue(
+                comandoProducto.Parameters.AddWithValue(
+                    "@unidadMedida",
+                    unidadMedida == null
+                        ? DBNull.Value
+                        : unidadMedida
+                );
+
+                comandoProducto.Parameters.AddWithValue(
+                    "@stockMinimo",
+                    reg.stock_minimo
+                );
+
+                comandoProducto.Parameters.AddWithValue(
                     "@idProducto",
                     reg.id_producto
                 );
 
-                await comandoMedicamento.ExecuteNonQueryAsync();
-            }
+                await comandoProducto.ExecuteNonQueryAsync();
 
 
-            //SI ES INSUMO
-            else if (reg.tipo == "Insumo")
-            {
-                string consultaInsumo = @"
-            UPDATE insumo
-            SET material = @material,
-                es_esteril = @esEsteril
-            WHERE id_producto = @idProducto";
+                if (reg.tipo == "Medicamento")
+                {
+                    string consultaMedicamento = @"
+                        UPDATE medicamento
+                        SET
+                            forma_farmaceutica = @formaFarmaceutica,
+                            principio_activo = @principioActivo,
+                            concentracion = @concentracion,
+                            requiere_control = @requiereControl
+                        WHERE id_producto = @idProducto";
 
-                using MySqlCommand comandoInsumo =
-                    new MySqlCommand(
-                        consultaInsumo,
-                        conexion,
-                        transaccion
+                    using MySqlCommand comandoMedicamento =
+                        new MySqlCommand(
+                            consultaMedicamento,
+                            conexion,
+                            transaccion
+                        );
+
+                    comandoMedicamento.Parameters.AddWithValue(
+                        "@formaFarmaceutica",
+                        string.IsNullOrWhiteSpace(reg.forma_farmaceutica)
+                            ? DBNull.Value
+                            : reg.forma_farmaceutica.Trim()
                     );
 
-                comandoInsumo.Parameters.AddWithValue(
-                    "@material",
-                    reg.material
-                );
+                    comandoMedicamento.Parameters.AddWithValue(
+                        "@principioActivo",
+                        reg.principio_activo
+                    );
 
-                comandoInsumo.Parameters.AddWithValue(
-                    "@esEsteril",
-                    reg.es_esteril
-                );
+                    comandoMedicamento.Parameters.AddWithValue(
+                        "@concentracion",
+                        reg.concentracion
+                    );
 
-                comandoInsumo.Parameters.AddWithValue(
-                    "@idProducto",
-                    reg.id_producto
-                );
+                    comandoMedicamento.Parameters.AddWithValue(
+                        "@requiereControl",
+                        reg.requiere_control
+                    );
 
-                await comandoInsumo.ExecuteNonQueryAsync();
+                    comandoMedicamento.Parameters.AddWithValue(
+                        "@idProducto",
+                        reg.id_producto
+                    );
+
+                    await comandoMedicamento.ExecuteNonQueryAsync();
+                }
+                else if (reg.tipo == "Insumo")
+                {
+                    string consultaInsumo = @"
+                        UPDATE insumo
+                        SET
+                            material = @material,
+                            es_esteril = @esEsteril
+                        WHERE id_producto = @idProducto";
+
+                    using MySqlCommand comandoInsumo =
+                        new MySqlCommand(
+                            consultaInsumo,
+                            conexion,
+                            transaccion
+                        );
+
+                    comandoInsumo.Parameters.AddWithValue(
+                        "@material",
+                        reg.material
+                    );
+
+                    comandoInsumo.Parameters.AddWithValue(
+                        "@esEsteril",
+                        reg.es_esteril
+                    );
+
+                    comandoInsumo.Parameters.AddWithValue(
+                        "@idProducto",
+                        reg.id_producto
+                    );
+
+                    await comandoInsumo.ExecuteNonQueryAsync();
+                }
+                else
+                {
+                    await transaccion.RollbackAsync();
+                    return false;
+                }
+
+
+                await transaccion.CommitAsync();
+
+                return true;
             }
+            catch
+            {
+                await transaccion.RollbackAsync();
+                return false;
+            }
+        }
 
 
-            transaccion.Commit();
+        // =========================================================
+        // CONVERTIR FILA MYSQL A PRODUCTO
+        // =========================================================
+        private Producto CrearProductoDesdeLector(
+            MySqlDataReader lector)
+        {
+            return new Producto()
+            {
+                id_producto =
+                    Convert.ToInt32(
+                        lector["id_producto"]
+                    ),
 
-            return true;
+                codigo_interno =
+                    lector["codigo_interno"]
+                        .ToString(),
+
+                codigo_barras =
+                    lector["codigo_barras"] == DBNull.Value
+                        ? null
+                        : lector["codigo_barras"].ToString(),
+
+                nombre =
+                    lector["nombre"]
+                        .ToString(),
+
+                contenido_por_envase =
+                    lector["contenido_por_envase"] == DBNull.Value
+                        ? 1
+                        : Convert.ToInt32(
+                            lector["contenido_por_envase"]
+                        ),
+
+                unidad_medida =
+                    lector["unidad_medida"] == DBNull.Value
+                        ? null
+                        : lector["unidad_medida"].ToString(),
+
+                stock_minimo =
+                    Convert.ToInt32(
+                        lector["stock_minimo"]
+                    ),
+
+                imagen_url =
+                    lector["imagen_url"] == DBNull.Value
+                        ? null
+                        : lector["imagen_url"].ToString(),
+
+                tipo =
+                    lector["tipo"] == DBNull.Value
+                        ? null
+                        : lector["tipo"].ToString(),
+
+                forma_farmaceutica =
+                    lector["forma_farmaceutica"] == DBNull.Value
+                        ? null
+                        : lector["forma_farmaceutica"].ToString(),
+
+                principio_activo =
+                    lector["principio_activo"] == DBNull.Value
+                        ? null
+                        : lector["principio_activo"].ToString(),
+
+                concentracion =
+                    lector["concentracion"] == DBNull.Value
+                        ? null
+                        : lector["concentracion"].ToString(),
+
+                requiere_control =
+                    lector["requiere_control"] != DBNull.Value
+                    && Convert.ToBoolean(
+                        lector["requiere_control"]
+                    ),
+
+                material =
+                    lector["material"] == DBNull.Value
+                        ? null
+                        : lector["material"].ToString(),
+
+                es_esteril =
+                    lector["es_esteril"] != DBNull.Value
+                    && Convert.ToBoolean(
+                        lector["es_esteril"]
+                    )
+            };
         }
     }
 }

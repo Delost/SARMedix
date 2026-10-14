@@ -3946,7 +3946,8 @@ namespace LoginSARMedix.Controllers
         // =========================================================
 
         [HttpGet]
-        public async Task<IActionResult> CrearProducto()
+        public async Task<IActionResult> CrearProducto(
+            string? codigoBarras)
         {
             if (!TienePermiso(
                     "Registrar productos"))
@@ -3955,14 +3956,27 @@ namespace LoginSARMedix.Controllers
             }
 
 
+            Producto producto =
+                new Producto();
+
+
+            if (!string.IsNullOrWhiteSpace(
+                    codigoBarras))
+            {
+                producto.codigo_barras =
+                    codigoBarras.Trim();
+            }
+
+
             await RegistrarAccionHistorial(
                 "Ingresó a Crear Producto"
             );
 
 
-            return View();
+            return View(
+                producto
+            );
         }
-
 
 
         // =========================================================
@@ -4112,6 +4126,82 @@ namespace LoginSARMedix.Controllers
             return View(
                 "CrearProducto",
                 reg
+            );
+        }
+
+
+        // =========================================================
+        // BUSCAR PRODUCTO POR CODIGO DE BARRAS
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult> BuscarProductoPorCodigoBarras(
+            string codigo)
+        {
+            if (!TienePermiso(
+                    "Registrar productos"))
+            {
+                return Unauthorized();
+            }
+
+
+            codigo =
+                (codigo ?? "")
+                    .Trim();
+
+
+            if (string.IsNullOrWhiteSpace(
+                    codigo))
+            {
+                return Json(
+                    new
+                    {
+                        existe = false
+                    }
+                );
+            }
+
+
+            var producto =
+                await _productoRepository
+                    .ObtenerProductoPorCodigoBarras(
+                        codigo
+                    );
+
+
+            if (producto == null)
+            {
+                return Json(
+                    new
+                    {
+                        existe = false,
+                        codigo
+                    }
+                );
+            }
+
+
+            return Json(
+                new
+                {
+                    existe = true,
+
+                    producto = new
+                    {
+                        producto.id_producto,
+                        producto.codigo_interno,
+                        producto.codigo_barras,
+                        producto.nombre,
+                        producto.stock_minimo,
+                        producto.imagen_url,
+                        producto.tipo,
+                        producto.principio_activo,
+                        producto.concentracion,
+                        producto.requiere_control,
+                        producto.material,
+                        producto.es_esteril
+                    }
+                }
             );
         }
 
@@ -4332,7 +4422,7 @@ namespace LoginSARMedix.Controllers
 
 
         // =========================================================
-        // NUEVO LOTE
+        // REGISTRAR ENTRADA DE INVENTARIO
         // =========================================================
 
         [HttpPost]
@@ -4346,18 +4436,185 @@ namespace LoginSARMedix.Controllers
             }
 
 
-            var resultado =
+            int? idUsuario =
+                HttpContext.Session.GetInt32(
+                    "IdUsuario"
+                );
+
+
+            if (!idUsuario.HasValue)
+            {
+                return RedirectToAction(
+                    "Index"
+                );
+            }
+
+
+
+            // =====================================================
+            // VALIDACIONES
+            // =====================================================
+
+            if (reg.id_producto <= 0)
+            {
+                ViewBag.Mensaje =
+                    "Debe seleccionar un producto.";
+
+
+                ViewBag.Productos =
+                    await _loteRepository
+                        .ListadoProductos();
+
+
+                ViewBag.Ubicaciones =
+                    await _loteRepository
+                        .ListadoUbicacionesActivas();
+
+
+                return View(
+                    "CrearLote",
+                    reg
+                );
+            }
+
+
+            if (string.IsNullOrWhiteSpace(
+                    reg.numero_lote))
+            {
+                ViewBag.Mensaje =
+                    "Debe ingresar el número de lote.";
+
+
+                ViewBag.Productos =
+                    await _loteRepository
+                        .ListadoProductos();
+
+
+                ViewBag.Ubicaciones =
+                    await _loteRepository
+                        .ListadoUbicacionesActivas();
+
+
+                return View(
+                    "CrearLote",
+                    reg
+                );
+            }
+
+
+            if (!reg.fecha_vencimiento.HasValue)
+            {
+                ViewBag.Mensaje =
+                    "Debe ingresar la fecha de vencimiento.";
+
+
+                ViewBag.Productos =
+                    await _loteRepository
+                        .ListadoProductos();
+
+
+                ViewBag.Ubicaciones =
+                    await _loteRepository
+                        .ListadoUbicacionesActivas();
+
+
+                return View(
+                    "CrearLote",
+                    reg
+                );
+            }
+
+
+            if (reg.cantidad_actual <= 0)
+            {
+                ViewBag.Mensaje =
+                    "La cantidad de entrada debe ser mayor a 0.";
+
+
+                ViewBag.Productos =
+                    await _loteRepository
+                        .ListadoProductos();
+
+
+                ViewBag.Ubicaciones =
+                    await _loteRepository
+                        .ListadoUbicacionesActivas();
+
+
+                return View(
+                    "CrearLote",
+                    reg
+                );
+            }
+
+
+
+            // GUARDAMOS LA CANTIDAD DE ENTRADA
+            // ANTES DE PREPARAR EL LOTE
+
+            int cantidadEntrada =
+                reg.cantidad_actual;
+
+
+
+            // =====================================================
+            // BUSCAR O CREAR EL LOTE
+            // =====================================================
+
+            var preparacion =
                 await _loteRepository
-                    .CrearLote(
+                    .PrepararLoteEntrada(
                         reg
                     );
 
 
-            if (resultado)
+            if (!preparacion.exito)
             {
-                await RegistrarAccionHistorial(
-                    $"Creó el lote {reg.numero_lote}"
+                ViewBag.Mensaje =
+                    preparacion.mensaje;
+
+
+                ViewBag.Productos =
+                    await _loteRepository
+                        .ListadoProductos();
+
+
+                ViewBag.Ubicaciones =
+                    await _loteRepository
+                        .ListadoUbicacionesActivas();
+
+
+                return View(
+                    "CrearLote",
+                    reg
                 );
+            }
+
+
+
+            // =====================================================
+            // REGISTRAR MOVIMIENTO REAL DE ENTRADA
+            // =====================================================
+
+            var resultado =
+                await _movimientoRepository
+                    .RegistrarEntradaInventario(
+                        preparacion.idLote,
+                        cantidadEntrada,
+                        "Entrada de inventario",
+                        idUsuario.Value
+                    );
+
+
+
+            if (!resultado.exito)
+            {
+                TempData["Mensaje"] =
+                    resultado.mensaje;
+
+
+                TempData["TipoMensaje"] =
+                    "error";
 
 
                 return RedirectToAction(
@@ -4366,26 +4623,29 @@ namespace LoginSARMedix.Controllers
             }
 
 
-            ViewBag.Mensaje =
-                "No se pudo registrar el lote";
+
+            // =====================================================
+            // REGISTRAR HISTORIAL GENERAL
+            // =====================================================
+
+            await RegistrarAccionHistorial(
+                $"Registró entrada de {cantidadEntrada} unidad(es) del producto {resultado.nombreProducto}, lote {resultado.numeroLote}. Stock: {resultado.stockAnterior} → {resultado.stockResultante}"
+            );
 
 
-            ViewBag.Productos =
-                await _loteRepository
-                    .ListadoProductos();
+
+            TempData["Mensaje"] =
+                resultado.mensaje;
 
 
-            ViewBag.Ubicaciones =
-    await _loteRepository
-        .ListadoUbicacionesActivas();
+            TempData["TipoMensaje"] =
+                "exito";
 
 
-            return View(
-                "CrearLote",
-                reg
+            return RedirectToAction(
+                "Lotes"
             );
         }
-
 
 
         // =========================================================

@@ -590,6 +590,388 @@ namespace LoginSARMedix.Repository
 
 
 
+
+        // =========================================================
+        // REGISTRAR ENTRADA NORMAL DE INVENTARIO
+        // =========================================================
+
+        public async Task<(
+            bool exito,
+            string mensaje,
+            string nombreProducto,
+            string numeroLote,
+            int stockAnterior,
+            int stockResultante)>
+            RegistrarEntradaInventario(
+                int idLote,
+                int cantidad,
+                string observacion,
+                int idUsuario)
+        {
+            if (idLote <= 0)
+            {
+                return (
+                    false,
+                    "Debe seleccionar un lote válido.",
+                    "",
+                    "",
+                    0,
+                    0
+                );
+            }
+
+            if (cantidad <= 0)
+            {
+                return (
+                    false,
+                    "La cantidad debe ser mayor a 0.",
+                    "",
+                    "",
+                    0,
+                    0
+                );
+            }
+
+            observacion =
+                (observacion ?? "")
+                    .Trim();
+
+            if (string.IsNullOrWhiteSpace(
+                    observacion))
+            {
+                observacion =
+                    "Entrada de inventario";
+            }
+
+            if (observacion.Length > 255)
+            {
+                return (
+                    false,
+                    "La observación no puede superar los 255 caracteres.",
+                    "",
+                    "",
+                    0,
+                    0
+                );
+            }
+
+            using MySqlConnection conexion =
+                new MySqlConnection(
+                    _conexion
+                );
+
+            await conexion.OpenAsync();
+
+            using MySqlTransaction transaccion =
+                conexion.BeginTransaction();
+
+            try
+            {
+                int stockAnterior = 0;
+                int stockResultante = 0;
+
+                string nombreProducto = "";
+                string numeroLote = "";
+
+                bool loteEncontrado = false;
+
+                string consultaLote = @"
+                    SELECT
+                        l.cantidad_actual,
+                        l.numero_lote,
+                        p.nombre
+
+                    FROM lote l
+
+                    INNER JOIN producto p
+                    ON l.id_producto = p.id_producto
+
+                    WHERE l.id_lote = @idLote
+
+                    FOR UPDATE";
+
+                using (
+                    MySqlCommand comandoLote =
+                        new MySqlCommand(
+                            consultaLote,
+                            conexion,
+                            transaccion
+                        )
+                )
+                {
+                    comandoLote.Parameters.AddWithValue(
+                        "@idLote",
+                        idLote
+                    );
+
+                    using MySqlDataReader lector =
+                        await comandoLote
+                            .ExecuteReaderAsync();
+
+                    if (await lector.ReadAsync())
+                    {
+                        loteEncontrado = true;
+
+                        stockAnterior =
+                            Convert.ToInt32(
+                                lector[
+                                    "cantidad_actual"
+                                ]
+                            );
+
+                        numeroLote =
+                            lector[
+                                "numero_lote"
+                            ]
+                                .ToString()
+                            ?? "";
+
+                        nombreProducto =
+                            lector[
+                                "nombre"
+                            ]
+                                .ToString()
+                            ?? "";
+                    }
+                }
+
+                if (!loteEncontrado)
+                {
+                    transaccion.Rollback();
+
+                    return (
+                        false,
+                        "No se encontró el lote seleccionado.",
+                        "",
+                        "",
+                        0,
+                        0
+                    );
+                }
+
+                if (
+                    cantidad
+                    >
+                    int.MaxValue
+                    -
+                    stockAnterior
+                )
+                {
+                    transaccion.Rollback();
+
+                    return (
+                        false,
+                        "La cantidad ingresada es demasiado alta.",
+                        nombreProducto,
+                        numeroLote,
+                        stockAnterior,
+                        stockAnterior
+                    );
+                }
+
+                stockResultante =
+                    stockAnterior
+                    +
+                    cantidad;
+
+                string consultaMovimiento = @"
+                    INSERT INTO movimiento
+                    (
+                        fecha_hora,
+                        tipo_movimiento,
+                        observacion,
+                        id_usuario
+                    )
+                    VALUES
+                    (
+                        NOW(),
+                        'Entrada',
+                        @observacion,
+                        @idUsuario
+                    )";
+
+                long idMovimiento;
+
+                using (
+                    MySqlCommand comandoMovimiento =
+                        new MySqlCommand(
+                            consultaMovimiento,
+                            conexion,
+                            transaccion
+                        )
+                )
+                {
+                    comandoMovimiento
+                        .Parameters
+                        .AddWithValue(
+                            "@observacion",
+                            observacion
+                        );
+
+                    comandoMovimiento
+                        .Parameters
+                        .AddWithValue(
+                            "@idUsuario",
+                            idUsuario
+                        );
+
+                    await comandoMovimiento
+                        .ExecuteNonQueryAsync();
+
+                    idMovimiento =
+                        comandoMovimiento
+                            .LastInsertedId;
+                }
+
+                string consultaDetalle = @"
+                    INSERT INTO detalle_movimiento
+                    (
+                        cantidad,
+                        stock_anterior,
+                        stock_resultante,
+                        id_movimiento,
+                        id_lote
+                    )
+                    VALUES
+                    (
+                        @cantidad,
+                        @stockAnterior,
+                        @stockResultante,
+                        @idMovimiento,
+                        @idLote
+                    )";
+
+                using (
+                    MySqlCommand comandoDetalle =
+                        new MySqlCommand(
+                            consultaDetalle,
+                            conexion,
+                            transaccion
+                        )
+                )
+                {
+                    comandoDetalle
+                        .Parameters
+                        .AddWithValue(
+                            "@cantidad",
+                            cantidad
+                        );
+
+                    comandoDetalle
+                        .Parameters
+                        .AddWithValue(
+                            "@stockAnterior",
+                            stockAnterior
+                        );
+
+                    comandoDetalle
+                        .Parameters
+                        .AddWithValue(
+                            "@stockResultante",
+                            stockResultante
+                        );
+
+                    comandoDetalle
+                        .Parameters
+                        .AddWithValue(
+                            "@idMovimiento",
+                            idMovimiento
+                        );
+
+                    comandoDetalle
+                        .Parameters
+                        .AddWithValue(
+                            "@idLote",
+                            idLote
+                        );
+
+                    await comandoDetalle
+                        .ExecuteNonQueryAsync();
+                }
+
+                string consultaActualizarStock = @"
+                    UPDATE lote
+
+                    SET cantidad_actual = @stockResultante
+
+                    WHERE id_lote = @idLote";
+
+                using (
+                    MySqlCommand comandoStock =
+                        new MySqlCommand(
+                            consultaActualizarStock,
+                            conexion,
+                            transaccion
+                        )
+                )
+                {
+                    comandoStock
+                        .Parameters
+                        .AddWithValue(
+                            "@stockResultante",
+                            stockResultante
+                        );
+
+                    comandoStock
+                        .Parameters
+                        .AddWithValue(
+                            "@idLote",
+                            idLote
+                        );
+
+                    int filasActualizadas =
+                        await comandoStock
+                            .ExecuteNonQueryAsync();
+
+                    if (filasActualizadas != 1)
+                    {
+                        transaccion.Rollback();
+
+                        return (
+                            false,
+                            "No se pudo actualizar el stock del lote.",
+                            nombreProducto,
+                            numeroLote,
+                            stockAnterior,
+                            stockAnterior
+                        );
+                    }
+                }
+
+                transaccion.Commit();
+
+                return (
+                    true,
+                    $"Entrada registrada correctamente. Stock del lote: {stockAnterior} → {stockResultante}.",
+                    nombreProducto,
+                    numeroLote,
+                    stockAnterior,
+                    stockResultante
+                );
+            }
+            catch
+            {
+                try
+                {
+                    transaccion.Rollback();
+                }
+                catch
+                {
+                }
+
+                return (
+                    false,
+                    "Ocurrió un error al registrar la entrada de inventario.",
+                    "",
+                    "",
+                    0,
+                    0
+                );
+            }
+        }
+
+
+
         // =========================================================
         // HISTORIAL DE MOVIMIENTOS DE MEDICAMENTOS CONTROLADOS
         // =========================================================

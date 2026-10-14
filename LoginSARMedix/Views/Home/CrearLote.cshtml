@@ -1,207 +1,579 @@
 ﻿@model LoginSARMedix.Models.Lote
 
 @{
-    ViewData["Title"] = "Registrar Lote";
-    ViewData["TituloBarra"] = "Registrar Lote";
+    ViewData["Title"] = "Registrar Entrada";
+    ViewData["TituloBarra"] = "Registrar Entrada";
 
     string mensaje =
         ViewBag.Mensaje as string ?? "";
 
     bool mensajeExito =
-        mensaje.Equals(
-            "Lote registrado correctamente",
+        mensaje.Contains(
+            "correctamente",
             StringComparison.OrdinalIgnoreCase
         );
 }
 
 
-<h2>Registrar lote</h2>
+<div class="entrada-pagina">
+
+    <div class="entrada-encabezado">
+
+        <div class="entrada-icono-principal">
+            ⇩
+        </div>
+
+        <div>
+            <h1>Registrar entrada</h1>
+
+            <p>
+                Recepción de medicamentos e insumos
+            </p>
+        </div>
+
+    </div>
 
 
-<form asp-controller="Home"
-      asp-action="NuevoLote"
-      method="post"
-      class="formulario-principal"
-      id="formCrearLote"
-      onsubmit="return validarYConfirmar()"
-      novalidate>
-
-
-    <!-- MENSAJE -->
+    <!-- ========================================= -->
+    <!-- MENSAJE GENERAL                           -->
+    <!-- ========================================= -->
 
     <div class="espacio-mensaje">
 
-        @if (!string.IsNullOrEmpty(mensaje))
+        @if (!string.IsNullOrWhiteSpace(mensaje))
         {
-            if (mensajeExito)
-            {
-                <div class="mensaje mensaje-exito"
-                     id="mensajeFormulario">
+            <div id="mensajeFormulario"
+                 class="mensaje @(mensajeExito ? "mensaje-exito" : "mensaje-error")">
 
-                    @mensaje
+                @mensaje
 
-                </div>
-            }
-            else
-            {
-                <div class="mensaje mensaje-error"
-                     id="mensajeFormulario">
-
-                    @mensaje
-
-                </div>
-            }
+            </div>
         }
         else
         {
-            <div class="mensaje mensaje-error mensaje-oculto"
-                 id="mensajeFormulario">
+            <div id="mensajeFormulario"
+                 class="mensaje mensaje-error mensaje-oculto">
             </div>
         }
 
     </div>
 
 
+    <form asp-controller="Home"
+          asp-action="NuevoLote"
+          method="post"
+          id="formCrearLote"
+          class="formulario-entrada"
+          onsubmit="return validarYConfirmar()"
+          novalidate>
 
-    <!-- PRODUCTO -->
 
-    <div>
+        <!-- ========================================= -->
+        <!-- PASO 1 - IDENTIFICAR PRODUCTO             -->
+        <!-- ========================================= -->
 
-        <label>Producto</label>
+        <section class="entrada-seccion">
 
-        <select asp-for="id_producto"
-                id="producto">
+            <div class="seccion-cabecera">
 
-            <option value="">
-                Seleccione un producto
-            </option>
+                <div class="numero-paso">
+                    1
+                </div>
 
-            @foreach (var producto in ViewBag.Productos)
-            {
-                <option value="@producto.id_producto">
+                <div>
+                    <h2>Identificar producto</h2>
 
-                    @producto.codigo_interno -
-                    @producto.nombre
+                    <p>
+                        Escanee la caja o busque el producto manualmente.
+                    </p>
+                </div>
 
-                </option>
-            }
+            </div>
 
-        </select>
+
+            <div class="selector-modo">
+
+                <button type="button"
+                        id="btnModoScanner"
+                        class="btn-modo activo"
+                        onclick="cambiarModo('scanner')">
+
+                    🔫 Escáner
+
+                </button>
+
+
+                <button type="button"
+                        id="btnModoManual"
+                        class="btn-modo"
+                        onclick="cambiarModo('manual')">
+
+                    ✋ Manual
+
+                </button>
+
+            </div>
+
+
+            <!-- ========================================= -->
+            <!-- MODO ESCANER                              -->
+            <!-- ========================================= -->
+
+            <div id="modoScanner"
+                 class="contenido-modo">
+
+                <div class="scanner-caja">
+
+                    <div class="scanner-icono">
+                        🔫
+                    </div>
+
+                    <div class="scanner-textos">
+
+                        <strong>
+                            Escanee el código de la caja
+                        </strong>
+
+                        <span>
+                            El sistema intentará reconocer producto, lote y vencimiento automáticamente.
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <label for="codigoScanner">
+                    Código de barras / GS1
+                </label>
+
+
+                <div class="scanner-input-contenedor">
+
+                    <input type="text"
+                           id="codigoScanner"
+                           autocomplete="off"
+                           placeholder="Esperando lectura del escáner..." />
+
+                    <button type="button"
+                            class="btn-buscar-codigo"
+                            onclick="buscarProductoEscaneado()">
+
+                        Buscar
+
+                    </button>
+
+                </div>
+
+
+                <div id="resultadoScanner"
+                     class="resultado-scanner resultado-oculto">
+                </div>
+
+            </div>
+
+
+            <!-- ========================================= -->
+            <!-- MODO MANUAL                               -->
+            <!-- ========================================= -->
+
+            <div id="modoManual"
+                 class="contenido-modo modo-oculto">
+
+                <label for="producto">
+                    Buscar producto
+                </label>
+
+                <select asp-for="id_producto"
+                        id="producto">
+
+                    <option value="">
+                        Seleccione un producto
+                    </option>
+
+                    @foreach (var producto in ViewBag.Productos)
+                    {
+                        <option value="@producto.id_producto"
+                                data-nombre="@producto.nombre"
+                                data-codigo="@producto.codigo_interno"
+                                data-tipo="@producto.tipo"
+                                data-contenido="@producto.contenido_por_envase"
+                                data-unidad="@producto.unidad_medida"
+                                data-forma="@producto.forma_farmaceutica">
+
+                            @producto.codigo_interno -
+                            @producto.nombre
+
+                        </option>
+                    }
+
+                </select>
+
+                <div class="ayuda-campo">
+                    Use esta opción cuando el código no esté disponible o no pueda leerse.
+                </div>
+
+            </div>
+
+
+            <!-- ========================================= -->
+            <!-- PRODUCTO IDENTIFICADO                     -->
+            <!-- ========================================= -->
+
+            <div id="productoIdentificado"
+                 class="producto-identificado producto-identificado-oculto">
+
+                <div class="producto-check">
+                    ✓
+                </div>
+
+                <div class="producto-identificado-info">
+
+                    <div class="producto-etiqueta">
+                        Producto identificado
+                    </div>
+
+                    <div id="productoIdentificadoNombre"
+                         class="producto-identificado-nombre">
+                    </div>
+
+                    <div id="productoIdentificadoDetalle"
+                         class="producto-identificado-detalle">
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ========================================= -->
+        <!-- RESTO DEL FORMULARIO                      -->
+        <!-- ========================================= -->
+
+        <div id="datosEntrada"
+             class="datos-entrada datos-entrada-ocultos">
+
+
+            <div class="entrada-columnas">
+
+
+                <!-- ========================================= -->
+                <!-- PASO 2 - DATOS DEL LOTE                   -->
+                <!-- ========================================= -->
+
+                <section class="entrada-seccion">
+
+                    <div class="seccion-cabecera">
+
+                        <div class="numero-paso">
+                            2
+                        </div>
+
+                        <div>
+                            <h2>Datos del lote</h2>
+
+                            <p>
+                                Revise los datos detectados o complételos manualmente.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="campo-grupo">
+
+                        <div class="label-con-estado">
+
+                            <label for="numeroLote">
+                                Número de lote
+                            </label>
+
+                            <span id="estadoLote"
+                                  class="estado-dato estado-manual">
+                                ✏️ Ingreso manual
+                            </span>
+
+                        </div>
+
+                        <input asp-for="numero_lote"
+                               id="numeroLote"
+                               autocomplete="off"
+                               placeholder="Ej: G010376" />
+
+                    </div>
+
+
+                    <div class="campo-grupo">
+
+                        <div class="label-con-estado">
+
+                            <label for="fechaVencimiento">
+                                Fecha de vencimiento
+                            </label>
+
+                            <span id="estadoFecha"
+                                  class="estado-dato estado-manual">
+                                ✏️ Ingreso manual
+                            </span>
+
+                        </div>
+
+                        <input asp-for="fecha_vencimiento"
+                               id="fechaVencimiento"
+                               type="date" />
+
+                        <div id="avisoVencimiento"
+                             class="aviso-vencimiento aviso-vencimiento-oculto">
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- ========================================= -->
+                <!-- PASO 3 - RECEPCION                        -->
+                <!-- ========================================= -->
+
+                <section class="entrada-seccion">
+
+                    <div class="seccion-cabecera">
+
+                        <div class="numero-paso">
+                            3
+                        </div>
+
+                        <div>
+                            <h2>Recepción</h2>
+
+                            <p>
+                                Indique cuánto llegó y dónde quedará almacenado.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="campo-grupo">
+
+                        <label for="cantidadEnvases">
+                            Cantidad de envases recibidos
+                        </label>
+
+                        <input id="cantidadEnvases"
+                               name="cantidadEnvases"
+                               type="number"
+                               min="1"
+                               step="1"
+                               placeholder="Ej: 10"
+                               autocomplete="off" />
+
+                        <!-- El usuario escribe envases. El sistema guarda stock real. -->
+                        <input asp-for="cantidad_actual"
+                               id="cantidadTotalStock"
+                               type="hidden" />
+
+                        <div id="calculoRecepcion"
+                             class="calculo-recepcion">
+
+                            <strong id="calculoContenido">
+                                Seleccione un producto para ver su contenido.
+                            </strong>
+
+                            <span id="calculoTotal">
+                                El total de stock se calculará automáticamente.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="campo-grupo">
+
+                        <label for="ubicacion">
+                            Ubicación destino
+                        </label>
+
+                        <select asp-for="id_ubicacion"
+                                id="ubicacion">
+
+                            <option value="">
+                                Seleccione una ubicación
+                            </option>
+
+                            @foreach (var ubicacion in ViewBag.Ubicaciones)
+                            {
+                                <option value="@ubicacion.id_ubicacion">
+                                    @ubicacion.nombre_sector
+                                </option>
+                            }
+
+                        </select>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+
+            <!-- ========================================= -->
+            <!-- PASO 4 - RESUMEN                          -->
+            <!-- ========================================= -->
+
+            <section class="entrada-seccion resumen-seccion">
+
+                <div class="seccion-cabecera">
+
+                    <div class="numero-paso">
+                        4
+                    </div>
+
+                    <div>
+                        <h2>Revisar entrada</h2>
+
+                        <p>
+                            Confirme los datos antes de guardarlos.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="resumen-grid">
+
+                    <div class="resumen-item resumen-producto">
+
+                        <span class="resumen-label">
+                            Producto
+                        </span>
+
+                        <strong id="resumenProducto">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="resumen-item">
+
+                        <span class="resumen-label">
+                            Lote
+                        </span>
+
+                        <strong id="resumenLote">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="resumen-item">
+
+                        <span class="resumen-label">
+                            Vencimiento
+                        </span>
+
+                        <strong id="resumenVencimiento">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="resumen-item">
+
+                        <span class="resumen-label">
+                            Recibido
+                        </span>
+
+                        <strong id="resumenEnvases">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="resumen-item">
+
+                        <span class="resumen-label">
+                            Stock a sumar
+                        </span>
+
+                        <strong id="resumenCantidad">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="resumen-item resumen-destino">
+
+                        <span class="resumen-label">
+                            Destino
+                        </span>
+
+                        <strong id="resumenUbicacion">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div id="resumenEstado"
+                     class="resumen-estado">
+
+                    Complete los datos requeridos para registrar la entrada.
+
+                </div>
+
+
+                <button type="submit"
+                        id="btnRegistrarEntrada"
+                        class="btn-registrar-entrada">
+
+                    ✓ Registrar entrada
+
+                </button>
+
+            </section>
+
+        </div>
+
+    </form>
+
+
+    <!-- ========================================= -->
+    <!-- NAVEGACION                                -->
+    <!-- ========================================= -->
+
+    <div class="entrada-navegacion">
+
+        <a asp-controller="Home"
+           asp-action="Lotes"
+           class="btn-volver-inventario">
+
+            ← Volver a Inventario
+
+        </a>
 
     </div>
-
-
-
-    <!-- NUMERO DE LOTE -->
-
-    <div>
-
-        <label>Número de lote</label>
-
-        <input asp-for="numero_lote"
-               id="numeroLote" />
-
-    </div>
-
-
-
-    <!-- FECHA DE VENCIMIENTO -->
-
-    <div>
-
-        <label>Fecha de vencimiento</label>
-
-        <input asp-for="fecha_vencimiento"
-               id="fechaVencimiento"
-               type="date" />
-
-    </div>
-
-
-
-    <!-- CANTIDAD INICIAL -->
-
-    <div>
-
-        <label>Cantidad inicial</label>
-
-        <input asp-for="cantidad_actual"
-               id="cantidadInicial"
-               type="number"
-               min="0" />
-
-    </div>
-
-
-
-    <!-- UBICACION -->
-
-    <div>
-
-        <label>Ubicación</label>
-
-        <select asp-for="id_ubicacion"
-                id="ubicacion">
-
-            <option value="">
-                Seleccione una ubicación
-            </option>
-
-            @foreach (var ubicacion in ViewBag.Ubicaciones)
-            {
-                <option value="@ubicacion.id_ubicacion">
-
-                    @ubicacion.nombre_sector
-
-                </option>
-            }
-
-        </select>
-
-    </div>
-
-
-
-    <br />
-
-
-    <button type="submit">
-
-        Registrar lote
-
-    </button>
-
-
-</form>
-
-
-
-<!-- BOTONES VOLVER -->
-
-<div class="contenedor-volver">
-
-    <a asp-controller="Home"
-       asp-action="Lotes"
-       class="btn-volver-listado">
-
-        ← Volver al listado de lotes
-
-    </a>
-
-
-    <a asp-controller="Home"
-       asp-action="Productos"
-       class="btn-volver-productos">
-
-        ← Volver a Productos
-
-    </a>
 
 </div>
 
 
 
-<!-- CONFIRMACION -->
+<!-- ========================================= -->
+<!-- MODAL DE CONFIRMACION                     -->
+<!-- ========================================= -->
 
 <div id="modalConfirmacion"
      class="modal-fondo">
@@ -209,24 +581,21 @@
     <div class="modal-contenido">
 
         <div class="modal-icono">
-
-            ?
-
+            ✓
         </div>
 
-
         <h2>
-
-            Confirmar acción
-
+            Confirmar entrada
         </h2>
 
-
         <p>
-
-            ¿Quieres registrar este lote?
-
+            Revise una última vez antes de registrar.
         </p>
+
+
+        <div id="modalResumen"
+             class="modal-resumen">
+        </div>
 
 
         <div class="modal-botones">
@@ -235,7 +604,7 @@
                     class="btn-modal-si"
                     onclick="registrarLote()">
 
-                Sí
+                Sí, registrar
 
             </button>
 
@@ -244,7 +613,7 @@
                     class="btn-modal-no"
                     onclick="cerrarConfirmacion()">
 
-                No
+                Volver
 
             </button>
 
@@ -253,7 +622,7 @@
                     class="btn-modal-cancelar"
                     onclick="cancelarRegistro()">
 
-                Cancelar
+                Limpiar
 
             </button>
 
@@ -267,228 +636,797 @@
 
 <style>
 
-    /* MENSAJES */
+    /* ========================================= */
+    /* CONTENEDOR GENERAL                        */
+    /* ========================================= */
+
+    .entrada-pagina {
+        width: min(1120px, calc(100% - 32px));
+        margin: 35px auto;
+        padding: 34px;
+        box-sizing: border-box;
+        background-color: rgba(255, 255, 255, 0.97);
+        border-radius: 20px;
+        box-shadow: 0 12px 34px rgba(16, 65, 95, 0.15);
+    }
+
+
+    .entrada-encabezado {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding-bottom: 24px;
+        margin-bottom: 22px;
+        border-bottom: 1px solid #e2ebf0;
+    }
+
+
+    .entrada-icono-principal {
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 16px;
+        background: linear-gradient( 135deg, #0d7898, #1198a5 );
+        color: white;
+        font-size: 31px;
+        font-weight: 800;
+        box-shadow: 0 7px 18px rgba(17, 152, 165, 0.22);
+    }
+
+
+    .entrada-encabezado h1 {
+        margin: 0;
+        color: #073b64;
+        font-size: 30px;
+        font-weight: 750;
+    }
+
+
+    .entrada-encabezado p {
+        margin: 5px 0 0 0;
+        color: #6a8191;
+        font-size: 15px;
+    }
+
+
+
+    /* ========================================= */
+    /* FORMULARIO                                 */
+    /* ========================================= */
+
+    #formCrearLote.formulario-entrada {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+
+    .entrada-seccion {
+        width: 100%;
+        padding: 24px;
+        box-sizing: border-box;
+        background-color: #ffffff;
+        border: 1px solid #dce8ee;
+        border-radius: 16px;
+        box-shadow: 0 5px 16px rgba(16, 65, 95, 0.06);
+    }
+
+
+    .seccion-cabecera {
+        display: flex;
+        align-items: flex-start;
+        gap: 13px;
+        margin-bottom: 22px;
+    }
+
+
+    .numero-paso {
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 10px;
+        background-color: #e8f5fa;
+        color: #087591;
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+
+    .seccion-cabecera h2 {
+        width: auto;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        border-radius: 0;
+        box-shadow: none;
+        color: #073b64;
+        font-size: 20px;
+        font-weight: 750;
+    }
+
+
+        .seccion-cabecera h2::before,
+        .seccion-cabecera h2::after {
+            display: none;
+        }
+
+
+    .seccion-cabecera p {
+        margin: 4px 0 0 0;
+        color: #718695;
+        font-size: 13px;
+        line-height: 1.45;
+    }
+
+
+
+    /* ========================================= */
+    /* MENSAJES                                  */
+    /* ========================================= */
 
     .espacio-mensaje {
-        min-height: 48px;
-        margin-bottom: 8px;
+        min-height: 0;
+        margin-bottom: 18px;
     }
 
 
     .mensaje {
         width: 100%;
-        padding: 12px 15px;
-
+        padding: 13px 16px;
         box-sizing: border-box;
-
-        border-radius: 7px;
-
+        border-radius: 10px;
         text-align: center;
-        font-weight: 600;
-
+        font-weight: 650;
         opacity: 1;
-
         transition: opacity 0.5s ease;
     }
 
 
     .mensaje-exito {
-        background-color: #d1e7dd;
-        color: #0f5132;
-
-        border: 1px solid #badbcc;
+        background-color: #dff3e7;
+        color: #12623d;
+        border: 1px solid #b8dfc8;
     }
 
 
     .mensaje-error {
-        background-color: #f8d7da;
-        color: #842029;
-
-        border: 1px solid #f5c2c7;
+        background-color: #fae1e3;
+        color: #8b2631;
+        border: 1px solid #f0bec3;
     }
 
 
     .mensaje-oculto {
-        visibility: hidden;
+        display: none;
     }
 
 
 
-    /* BOTONES VOLVER */
+    /* ========================================= */
+    /* SELECTOR MANUAL / ESCANER                 */
+    /* ========================================= */
 
-    .contenedor-volver {
+    .selector-modo {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+
+    .btn-modo {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #cfdde5;
+        border-radius: 10px;
+        background-color: #f8fafb;
+        color: #4f6270;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 750;
+        cursor: pointer;
+        transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+    }
+
+
+        .btn-modo:hover {
+            transform: translateY(-1px);
+            border-color: #1198a5;
+            background-color: #eef9fa;
+        }
+
+
+        .btn-modo.activo {
+            border-color: #1198a5;
+            background-color: #1198a5;
+            color: white;
+        }
+
+
+    .contenido-modo {
+        width: 100%;
+    }
+
+
+    .modo-oculto {
+        display: none;
+    }
+
+
+
+    /* ========================================= */
+    /* CONTROLES                                  */
+    /* ========================================= */
+
+    .formulario-entrada label {
+        display: block;
+        margin-bottom: 7px;
+        color: #173d5e;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+
+    .formulario-entrada input,
+    .formulario-entrada select {
+        width: 100%;
+        min-height: 48px;
+        padding: 11px 13px;
+        box-sizing: border-box;
+        border: 1px solid #bfd1dd;
+        border-radius: 10px;
+        background-color: #fbfdfe;
+        color: #20394d;
+        font-family: inherit;
+        font-size: 15px;
+        outline: none;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+    }
+
+
+        .formulario-entrada input:focus,
+        .formulario-entrada select:focus {
+            border-color: #1198a5;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(17, 152, 165, 0.12);
+        }
+
+
+    .campo-grupo + .campo-grupo {
+        margin-top: 22px;
+    }
+
+
+    .ayuda-campo {
+        margin-top: 7px;
+        color: #8193a0;
+        font-size: 12px;
+    }
+
+
+
+    /* ========================================= */
+    /* ESCANER                                   */
+    /* ========================================= */
+
+    .scanner-caja {
         display: flex;
-        justify-content: center;
-
+        align-items: center;
         gap: 15px;
-
-        margin-top: 30px;
-        margin-bottom: 30px;
-
-        flex-wrap: wrap;
+        padding: 16px;
+        margin-bottom: 17px;
+        background-color: #f0f9fb;
+        border: 1px solid #c4e4ea;
+        border-radius: 12px;
     }
 
 
-    .btn-volver-listado {
-        display: inline-block;
-
-        padding: 12px 22px;
-
-        background-color: #59636b;
-        color: white;
-
-        border-radius: 7px;
-
-        text-decoration: none;
-        font-weight: 600;
-    }
-
-
-    .btn-volver-listado:hover {
-        background-color: #474f55;
-        color: white;
-    }
-
-
-    .btn-volver-productos {
-        display: inline-block;
-
-        padding: 12px 22px;
-
+    .scanner-icono {
+        width: 52px;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 50%;
         background-color: #1198a5;
         color: white;
-
-        border-radius: 7px;
-
-        text-decoration: none;
-        font-weight: 600;
+        font-size: 24px;
     }
 
 
-    .btn-volver-productos:hover {
-        background-color: #0d8490;
+    .scanner-textos {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+
+        .scanner-textos strong {
+            color: #073b64;
+            font-size: 15px;
+        }
+
+
+        .scanner-textos span {
+            color: #6e8492;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+
+    .scanner-input-contenedor {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+    }
+
+
+    .btn-buscar-codigo {
+        min-width: 112px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 10px;
+        background-color: #1198a5;
         color: white;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+
+        .btn-buscar-codigo:hover {
+            background-color: #0d8490;
+        }
+
+
+
+    /* ========================================= */
+    /* RESULTADO DEL ESCANEO                     */
+    /* ========================================= */
+
+    .resultado-scanner {
+        margin-top: 15px;
+        padding: 15px 16px;
+        border-radius: 11px;
+        font-size: 13px;
+        line-height: 1.55;
+    }
+
+
+    .resultado-oculto {
+        display: none;
+    }
+
+
+    .resultado-encontrado {
+        display: block;
+        background-color: #e1f3e8;
+        color: #145b38;
+        border: 1px solid #bddfc9;
+    }
+
+
+    .resultado-no-encontrado {
+        display: block;
+        background-color: #fff3cd;
+        color: #694f00;
+        border: 1px solid #f2dd9c;
+    }
+
+
+    .resultado-error {
+        display: block;
+        background-color: #f8d7da;
+        color: #842029;
+        border: 1px solid #efb8be;
+    }
+
+
+    .producto-encontrado-titulo {
+        margin-bottom: 5px;
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+
+    .btn-registrar-producto {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 9px 14px;
+        border-radius: 8px;
+        background-color: #1198a5;
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+
+        .btn-registrar-producto:hover {
+            background-color: #0d8490;
+            color: white;
+        }
+
+
+
+    /* ========================================= */
+    /* PRODUCTO IDENTIFICADO                     */
+    /* ========================================= */
+
+    .producto-identificado {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        margin-top: 19px;
+        padding: 14px 16px;
+        border: 1px solid #b9dfc8;
+        border-radius: 12px;
+        background-color: #edf8f1;
+    }
+
+
+    .producto-identificado-oculto {
+        display: none;
+    }
+
+
+    .producto-check {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background-color: #198754;
+        color: white;
+        font-size: 20px;
+        font-weight: 800;
+    }
+
+
+    .producto-etiqueta {
+        color: #52705e;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+
+    .producto-identificado-nombre {
+        margin-top: 1px;
+        color: #0b4f31;
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+
+    .producto-identificado-detalle {
+        margin-top: 3px;
+        color: #4f715d;
+        font-size: 12px;
     }
 
 
 
-    /* CONFIRMACION */
+    /* ========================================= */
+    /* DATOS DE ENTRADA                          */
+    /* ========================================= */
+
+    .datos-entrada {
+        margin-top: 18px;
+    }
+
+
+    .datos-entrada-ocultos {
+        display: none;
+    }
+
+
+    .entrada-columnas {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+
+    .label-con-estado {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 7px;
+    }
+
+
+        .label-con-estado label {
+            margin-bottom: 0;
+        }
+
+
+    .estado-dato {
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+
+    .estado-manual {
+        background-color: #eef2f5;
+        color: #647582;
+    }
+
+
+    .estado-detectado {
+        background-color: #dff3e7;
+        color: #14613c;
+    }
+
+
+    .aviso-vencimiento {
+        margin-top: 8px;
+        padding: 9px 11px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 650;
+    }
+
+
+    .aviso-vencimiento-oculto {
+        display: none;
+    }
+
+
+    .aviso-vencido {
+        display: block;
+        background-color: #f8d7da;
+        color: #842029;
+        border: 1px solid #efb8be;
+    }
+
+
+    .aviso-vigente {
+        display: block;
+        background-color: #e3f4e9;
+        color: #155b39;
+        border: 1px solid #c0e0cb;
+    }
+
+
+
+    /* ========================================= */
+    /* RESUMEN                                   */
+    /* ========================================= */
+
+    .resumen-seccion {
+        margin-top: 18px;
+        background: linear-gradient( 180deg, #ffffff, #f8fbfd );
+    }
+
+
+    .resumen-grid {
+        display: grid;
+        grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)) 1.2fr;
+        gap: 10px;
+    }
+
+
+    .resumen-item {
+        min-width: 0;
+        padding: 13px;
+        border: 1px solid #dce8ee;
+        border-radius: 10px;
+        background-color: white;
+    }
+
+
+    .resumen-label {
+        display: block;
+        margin-bottom: 5px;
+        color: #8495a1;
+        font-size: 10px;
+        font-weight: 750;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+
+    .resumen-item strong {
+        display: block;
+        overflow-wrap: anywhere;
+        color: #173d5e;
+        font-size: 14px;
+    }
+
+
+    .resumen-estado {
+        margin-top: 14px;
+        padding: 11px 13px;
+        border-radius: 9px;
+        background-color: #eef5f9;
+        color: #587083;
+        font-size: 13px;
+        text-align: center;
+    }
+
+
+    .resumen-estado-listo {
+        background-color: #e1f3e8;
+        color: #145b38;
+    }
+
+
+    .resumen-estado-error {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+
+
+    .btn-registrar-entrada {
+        width: 100%;
+        margin-top: 14px;
+        padding: 14px 18px;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient( 90deg, #0d7898, #1198a5 );
+        color: white;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 6px 16px rgba(13, 120, 152, 0.17);
+    }
+
+
+        .btn-registrar-entrada:hover {
+            filter: brightness(0.96);
+        }
+
+
+
+    /* ========================================= */
+    /* NAVEGACION                                */
+    /* ========================================= */
+
+    .entrada-navegacion {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+
+    .btn-volver-inventario {
+        display: inline-block;
+        padding: 11px 20px;
+        border-radius: 9px;
+        background-color: #5b6872;
+        color: white;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+
+        .btn-volver-inventario:hover {
+            background-color: #48535c;
+            color: white;
+        }
+
+
+
+    /* ========================================= */
+    /* MODAL                                     */
+    /* ========================================= */
 
     .modal-fondo {
         display: none;
-
         position: fixed;
-
-        top: 0;
-        left: 0;
-
-        width: 100%;
-        height: 100%;
-
-        background-color: rgba(0, 0, 0, 0.45);
-
+        inset: 0;
+        z-index: 9999;
         align-items: center;
         justify-content: center;
-
-        z-index: 9999;
+        padding: 18px;
+        background-color: rgba(0, 0, 0, 0.46);
     }
 
 
     .modal-contenido {
-        width: 90%;
-        max-width: 430px;
-
+        width: min(440px, 100%);
+        padding: 28px;
+        box-sizing: border-box;
+        border-radius: 16px;
         background-color: white;
-
-        border-radius: 15px;
-
-        padding: 30px;
-
         text-align: center;
-
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.24);
     }
 
 
     .modal-icono {
-        width: 55px;
-        height: 55px;
-
-        margin: 0 auto 15px auto;
-
+        width: 54px;
+        height: 54px;
+        margin: 0 auto 14px auto;
         display: flex;
         align-items: center;
         justify-content: center;
-
-        background-color: #1198a5;
-        color: white;
-
         border-radius: 50%;
-
-        font-size: 30px;
-        font-weight: bold;
+        background-color: #198754;
+        color: white;
+        font-size: 25px;
+        font-weight: 800;
     }
 
 
     .modal-contenido h2 {
         width: auto;
         max-width: none;
-
         margin: 0;
         padding: 0;
-
         background: none;
-
-        border-radius: 0;
-
         box-shadow: none;
-
-        color: #003b64;
-
-        font-size: 25px;
+        color: #073b64;
+        font-size: 23px;
     }
 
 
-    .modal-contenido h2::before,
-    .modal-contenido h2::after {
-        display: none;
+        .modal-contenido h2::before,
+        .modal-contenido h2::after {
+            display: none;
+        }
+
+
+    .modal-contenido > p {
+        margin: 8px 0 18px 0;
+        color: #6d808d;
+        font-size: 14px;
     }
 
 
-    .modal-contenido p {
-        margin-top: 15px;
-        margin-bottom: 25px;
-
-        font-size: 17px;
-
-        color: #444;
+    .modal-resumen {
+        padding: 14px;
+        border-radius: 10px;
+        background-color: #f4f8fa;
+        color: #3f586a;
+        font-size: 13px;
+        line-height: 1.7;
+        text-align: left;
     }
 
 
     .modal-botones {
         display: flex;
         justify-content: center;
-
-        gap: 10px;
-
+        gap: 9px;
+        margin-top: 18px;
         flex-wrap: wrap;
     }
 
 
-    .modal-botones button {
-        min-width: 90px;
-
-        padding: 10px 18px;
-
-        border: none;
-        border-radius: 7px;
-
-        color: white;
-
-        font-weight: 600;
-
-        cursor: pointer;
-    }
+        .modal-botones button {
+            min-width: 105px;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
 
 
     .btn-modal-si {
@@ -496,64 +1434,1918 @@
     }
 
 
-    .btn-modal-si:hover {
-        background-color: #157347;
-    }
+        .btn-modal-si:hover {
+            background-color: #157347;
+        }
 
 
     .btn-modal-no {
-        background-color: #c82333;
+        background-color: #0d7898;
     }
 
 
-    .btn-modal-no:hover {
-        background-color: #a91d2a;
-    }
+        .btn-modal-no:hover {
+            background-color: #09637e;
+        }
 
 
     .btn-modal-cancelar {
-        background-color: #59636b;
+        background-color: #68747c;
     }
 
 
-    .btn-modal-cancelar:hover {
-        background-color: #474f55;
+        .btn-modal-cancelar:hover {
+            background-color: #555f66;
+        }
+
+
+
+    /* ========================================= */
+    /* RESPONSIVE                                */
+    /* ========================================= */
+
+    @@media (max-width: 900px) {
+
+        .entrada-columnas {
+            grid-template-columns: 1fr;
+        }
+
+
+        .resumen-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+
+        .resumen-producto,
+        .resumen-destino {
+            grid-column: span 2;
+        }
     }
 
 
+    @@media (max-width: 620px) {
 
-    /* CELULAR */
+        .entrada-pagina {
+            width: calc(100% - 20px);
+            margin: 18px auto;
+            padding: 20px 14px;
+        }
 
-    @@media (max-width: 600px) {
 
-        .contenedor-volver {
+        .entrada-encabezado {
+            align-items: flex-start;
+        }
+
+
+            .entrada-encabezado h1 {
+                font-size: 25px;
+            }
+
+
+        .entrada-seccion {
+            padding: 18px 15px;
+        }
+
+
+        .selector-modo {
+            grid-template-columns: 1fr;
+        }
+
+
+        .scanner-input-contenedor {
+            grid-template-columns: 1fr;
+        }
+
+
+        .btn-buscar-codigo {
+            width: 100%;
+        }
+
+
+        .label-con-estado {
+            align-items: flex-start;
             flex-direction: column;
-            align-items: center;
         }
 
 
-        .btn-volver-listado,
-        .btn-volver-productos {
-            width: 90%;
-
-            box-sizing: border-box;
-
-            text-align: center;
+        .resumen-grid {
+            grid-template-columns: 1fr;
         }
 
+
+        .resumen-producto,
+        .resumen-destino {
+            grid-column: auto;
+        }
+
+
+        .modal-botones {
+            flex-direction: column;
+        }
+
+
+            .modal-botones button {
+                width: 100%;
+            }
     }
 
+
+
+    /* CALCULO DE ENVASES A STOCK */
+
+    .calculo-recepcion {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 9px;
+        padding: 11px 13px;
+        border: 1px solid #c9e5ec;
+        border-radius: 9px;
+        background-color: #f3fafc;
+        color: #536c7b;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+        .calculo-recepcion strong {
+            color: #0b5f7b;
+            font-size: 13px;
+        }
+
+        .calculo-recepcion.calculo-listo {
+            border-color: #b8dec8;
+            background-color: #eef9f2;
+        }
+
+            .calculo-recepcion.calculo-listo strong {
+                color: #13734a;
+            }
 </style>
 
 
 
 <script>
 
-    let loteConfirmado = false;
+    let loteConfirmado =
+        false;
+
+
+    let modoSeleccion =
+        "scanner";
+
+
+    let productoActual = {
+        id: "",
+        nombre: "",
+        codigo: "",
+        tipo: "",
+        contenidoPorEnvase: 1,
+        unidadMedida: "Unidades",
+        formaFarmaceutica: ""
+    };
+
+
+    let valorAutoLote =
+        "";
+
+
+    let valorAutoFecha =
+        "";
 
 
 
+    // =========================================
+    // UTILIDADES DE TEXTO
+    // =========================================
+
+    function escaparHtml(valor) {
+
+        return String(valor ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+
+
+    // =========================================
+    // ENVASES -> STOCK REAL
+    // =========================================
+
+    function unidadProducto() {
+
+        const unidad =
+            String(
+                productoActual.unidadMedida
+                ||
+                "Unidades"
+            ).trim();
+
+        return unidad === ""
+            ? "Unidades"
+            : unidad;
+    }
+
+
+    function contenidoProducto() {
+
+        const contenido =
+            Number(
+                productoActual.contenidoPorEnvase
+            );
+
+        return Number.isFinite(contenido)
+            && contenido > 0
+                ? contenido
+                : 1;
+    }
+
+
+    function cantidadEnvasesIngresada() {
+
+        const campo =
+            document.getElementById(
+                "cantidadEnvases"
+            );
+
+        const valor =
+            Number(
+                campo?.value
+                ??
+                0
+            );
+
+        return Number.isFinite(valor)
+            && valor > 0
+                ? valor
+                : 0;
+    }
+
+
+    function calcularStockEntrada() {
+
+        return cantidadEnvasesIngresada()
+            *
+            contenidoProducto();
+    }
+
+
+    function actualizarCalculoRecepcion() {
+
+        const contenedor =
+            document.getElementById(
+                "calculoRecepcion"
+            );
+
+        const textoContenido =
+            document.getElementById(
+                "calculoContenido"
+            );
+
+        const textoTotal =
+            document.getElementById(
+                "calculoTotal"
+            );
+
+        const ocultoTotal =
+            document.getElementById(
+                "cantidadTotalStock"
+            );
+
+        if (
+            !contenedor
+            || !textoContenido
+            || !textoTotal
+            || !ocultoTotal
+        ) {
+            return;
+        }
+
+        if (productoActual.id === "") {
+
+            ocultoTotal.value = "";
+            contenedor.className = "calculo-recepcion";
+            textoContenido.textContent =
+                "Seleccione un producto para ver su contenido.";
+            textoTotal.textContent =
+                "El total de stock se calculará automáticamente.";
+            return;
+        }
+
+        const contenido = contenidoProducto();
+        const unidad = unidadProducto();
+        const envases = cantidadEnvasesIngresada();
+        const total = calcularStockEntrada();
+
+        textoContenido.textContent =
+            `Cada envase contiene ${contenido} ${unidad}.`;
+
+        if (envases > 0) {
+
+            ocultoTotal.value = String(total);
+            contenedor.className =
+                "calculo-recepcion calculo-listo";
+            textoTotal.textContent =
+                `${envases} envase(s) × ${contenido} ${unidad} = ${total} ${unidad} para el inventario.`;
+        }
+        else {
+
+            ocultoTotal.value = "";
+            contenedor.className = "calculo-recepcion";
+            textoTotal.textContent =
+                "Ingrese cuántos envases físicos llegaron.";
+        }
+    }
+
+
+    // =========================================
+    // CAMBIAR ENTRE MANUAL Y ESCANER
+    // =========================================
+
+    function cambiarModo(modo) {
+
+        modoSeleccion =
+            modo;
+
+
+        const manual =
+            document.getElementById(
+                "modoManual"
+            );
+
+
+        const scanner =
+            document.getElementById(
+                "modoScanner"
+            );
+
+
+        const btnManual =
+            document.getElementById(
+                "btnModoManual"
+            );
+
+
+        const btnScanner =
+            document.getElementById(
+                "btnModoScanner"
+            );
+
+
+        if (modo === "scanner") {
+
+            manual.classList.add(
+                "modo-oculto"
+            );
+
+
+            scanner.classList.remove(
+                "modo-oculto"
+            );
+
+
+            btnManual.classList.remove(
+                "activo"
+            );
+
+
+            btnScanner.classList.add(
+                "activo"
+            );
+
+
+            setTimeout(
+                function () {
+
+                    document.getElementById(
+                        "codigoScanner"
+                    ).focus();
+
+                },
+                100
+            );
+        }
+        else {
+
+            scanner.classList.add(
+                "modo-oculto"
+            );
+
+
+            manual.classList.remove(
+                "modo-oculto"
+            );
+
+
+            btnScanner.classList.remove(
+                "activo"
+            );
+
+
+            btnManual.classList.add(
+                "activo"
+            );
+
+
+            setTimeout(
+                function () {
+
+                    document.getElementById(
+                        "producto"
+                    ).focus();
+
+                },
+                100
+            );
+        }
+    }
+
+
+
+    // =========================================
+    // PRODUCTO IDENTIFICADO
+    // =========================================
+
+    function mostrarProductoIdentificado(
+        nombre,
+        codigo,
+        tipo
+    ) {
+
+        const tarjeta =
+            document.getElementById(
+                "productoIdentificado"
+            );
+
+
+        document.getElementById(
+            "productoIdentificadoNombre"
+        ).textContent =
+            nombre || "Producto";
+
+
+        let detalle =
+            "";
+
+
+        if (codigo) {
+            detalle +=
+                `Código: ${codigo}`;
+        }
+
+
+        if (tipo) {
+
+            if (detalle !== "") {
+                detalle +=
+                    " · ";
+            }
+
+            detalle +=
+                tipo;
+        }
+
+
+        if (productoActual.formaFarmaceutica) {
+
+            if (detalle !== "") {
+                detalle += " · ";
+            }
+
+            detalle += productoActual.formaFarmaceutica;
+        }
+
+        if (productoActual.id !== "") {
+
+            if (detalle !== "") {
+                detalle += " · ";
+            }
+
+            detalle +=
+                `${contenidoProducto()} ${unidadProducto()} por envase`;
+        }
+
+        document.getElementById(
+            "productoIdentificadoDetalle"
+        ).textContent =
+            detalle;
+
+
+        tarjeta.classList.remove(
+            "producto-identificado-oculto"
+        );
+
+
+        document.getElementById(
+            "datosEntrada"
+        ).classList.remove(
+            "datos-entrada-ocultos"
+        );
+
+
+        actualizarResumen();
+    }
+
+
+
+    function ocultarProductoIdentificado() {
+
+        document.getElementById(
+            "productoIdentificado"
+        ).classList.add(
+            "producto-identificado-oculto"
+        );
+
+
+        document.getElementById(
+            "datosEntrada"
+        ).classList.add(
+            "datos-entrada-ocultos"
+        );
+    }
+
+
+
+    // =========================================
+    // SELECCION MANUAL
+    // =========================================
+
+    function cargarProductoManual() {
+
+        const select =
+            document.getElementById(
+                "producto"
+            );
+
+
+        if (select.value === "") {
+
+            productoActual = {
+                id: "",
+                nombre: "",
+                codigo: "",
+                tipo: "",
+                contenidoPorEnvase: 1,
+                unidadMedida: "Unidades",
+                formaFarmaceutica: ""
+            };
+
+
+            ocultarProductoIdentificado();
+
+            actualizarResumen();
+
+            return;
+        }
+
+
+        const opcion =
+            select.options[
+                select.selectedIndex
+            ];
+
+
+        productoActual = {
+            id:
+                select.value,
+            nombre:
+                opcion.dataset.nombre
+                ??
+                opcion.textContent.trim(),
+            codigo:
+                opcion.dataset.codigo
+                ??
+                "",
+            tipo:
+                opcion.dataset.tipo
+                ??
+                "",
+            contenidoPorEnvase:
+                Number(opcion.dataset.contenido) > 0
+                    ? Number(opcion.dataset.contenido)
+                    : 1,
+            unidadMedida:
+                opcion.dataset.unidad
+                ||
+                "Unidades",
+            formaFarmaceutica:
+                opcion.dataset.forma
+                ||
+                ""
+        };
+
+
+        mostrarProductoIdentificado(
+            productoActual.nombre,
+            productoActual.codigo,
+            productoActual.tipo
+        );
+
+        actualizarCalculoRecepcion();
+    }
+
+
+
+    // =========================================
+    // DETECTAR ENTER DEL LECTOR
+    // =========================================
+
+    document
+        .getElementById(
+            "codigoScanner"
+        )
+        .addEventListener(
+            "keydown",
+            function (evento) {
+
+                if (evento.key === "Enter") {
+
+                    evento.preventDefault();
+
+                    buscarProductoEscaneado();
+                }
+            }
+        );
+
+
+
+    // =========================================
+    // FECHAS GS1
+    // =========================================
+
+    function convertirFechaGS1(fechaGS1) {
+
+        if (!/^\d{6}$/.test(fechaGS1)) {
+            return "";
+        }
+
+
+        const anio =
+            2000
+            +
+            Number(
+                fechaGS1.substring(
+                    0,
+                    2
+                )
+            );
+
+
+        const mes =
+            Number(
+                fechaGS1.substring(
+                    2,
+                    4
+                )
+            );
+
+
+        let dia =
+            Number(
+                fechaGS1.substring(
+                    4,
+                    6
+                )
+            );
+
+
+        if (mes < 1 || mes > 12) {
+            return "";
+        }
+
+
+        // GS1 permite día 00 para representar
+        // el último día del mes.
+        if (dia === 0) {
+
+            dia =
+                new Date(
+                    anio,
+                    mes,
+                    0
+                )
+                .getDate();
+        }
+
+
+        const fecha =
+            new Date(
+                anio,
+                mes - 1,
+                dia
+            );
+
+
+        if (
+            fecha.getFullYear()
+                !== anio
+            ||
+            fecha.getMonth()
+                !== mes - 1
+            ||
+            fecha.getDate()
+                !== dia
+        ) {
+            return "";
+        }
+
+
+        return (
+            `${anio}-`
+            +
+            `${String(mes).padStart(2, "0")}-`
+            +
+            `${String(dia).padStart(2, "0")}`
+        );
+    }
+
+
+
+    function esFechaVencida(fechaTexto) {
+
+        if (!fechaTexto) {
+            return false;
+        }
+
+
+        const partes =
+            fechaTexto.split("-");
+
+
+        if (partes.length !== 3) {
+            return false;
+        }
+
+
+        const fecha =
+            new Date(
+                Number(partes[0]),
+                Number(partes[1]) - 1,
+                Number(partes[2])
+            );
+
+
+        const hoy =
+            new Date();
+
+
+        hoy.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+
+        fecha.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+
+        return fecha < hoy;
+    }
+
+
+
+    function formatearFechaPantalla(fechaTexto) {
+
+        if (!fechaTexto) {
+            return "";
+        }
+
+
+        const partes =
+            fechaTexto.split("-");
+
+
+        if (partes.length !== 3) {
+            return fechaTexto;
+        }
+
+
+        return (
+            `${partes[2]}-`
+            +
+            `${partes[1]}-`
+            +
+            `${partes[0]}`
+        );
+    }
+
+
+
+    // =========================================
+    // ANALIZAR CODIGO GS1
+    // =========================================
+
+    function analizarCodigoEscaneado(
+        codigoCrudo
+    ) {
+
+        const separadorGS =
+            String.fromCharCode(
+                29
+            );
+
+
+        let codigo =
+            codigoCrudo.trim();
+
+
+        // Algunos lectores presentan los
+        // identificadores como (01), (17), etc.
+        codigo =
+            codigo.replace(
+                /\((\d{2})\)/g,
+                "$1"
+            );
+
+
+        const resultado = {
+            esGS1: false,
+            codigoBusqueda: codigo,
+            gtin: "",
+            lote: "",
+            fechaVencimiento: "",
+            serie: "",
+            separadorGSDetectado: false,
+            datosVariablesEstimados: false
+        };
+
+
+        // AI (01): GTIN de 14 dígitos.
+        const coincidenciaGTIN =
+            codigo.match(
+                /(?:^|\x1D)01(\d{14})/
+            );
+
+
+        if (!coincidenciaGTIN) {
+            return resultado;
+        }
+
+
+        resultado.esGS1 =
+            true;
+
+
+        resultado.gtin =
+            coincidenciaGTIN[1];
+
+
+        resultado.codigoBusqueda =
+            resultado.gtin;
+
+
+        // AI (17): vencimiento YYMMDD.
+        const coincidenciaFecha =
+            codigo.match(
+                /17(\d{6})/
+            );
+
+
+        if (coincidenciaFecha) {
+
+            resultado.fechaVencimiento =
+                convertirFechaGS1(
+                    coincidenciaFecha[1]
+                );
+        }
+
+
+        // AI (10): lote de longitud variable.
+        const indiceLote =
+            codigo.indexOf(
+                "10",
+                coincidenciaGTIN.index
+                +
+                coincidenciaGTIN[0].length
+            );
+
+
+        if (indiceLote !== -1) {
+
+            let resto =
+                codigo.substring(
+                    indiceLote + 2
+                );
+
+
+            const indiceSeparador =
+                resto.indexOf(
+                    separadorGS
+                );
+
+
+            if (indiceSeparador !== -1) {
+
+                resultado.separadorGSDetectado =
+                    true;
+
+
+                resultado.lote =
+                    resto.substring(
+                        0,
+                        indiceSeparador
+                    );
+
+
+                const despuesSeparador =
+                    resto.substring(
+                        indiceSeparador + 1
+                    );
+
+
+                if (
+                    despuesSeparador
+                        .startsWith("21")
+                ) {
+
+                    resultado.serie =
+                        despuesSeparador
+                            .substring(2);
+                }
+            }
+            else {
+
+                // Si el lector no entrega GS/FNC1,
+                // intentamos separar AI (21) de forma
+                // conservadora y avisamos al usuario.
+                const posiciones21 = [];
+
+
+                for (
+                    let i = 1;
+                    i < resto.length - 2;
+                    i++
+                ) {
+
+                    if (
+                        resto.substring(
+                            i,
+                            i + 2
+                        )
+                        === "21"
+                    ) {
+
+                        posiciones21.push(
+                            i
+                        );
+                    }
+                }
+
+
+                let separacionAplicada =
+                    false;
+
+
+                for (
+                    let i = posiciones21.length - 1;
+                    i >= 0;
+                    i--
+                ) {
+
+                    const posicion =
+                        posiciones21[i];
+
+
+                    const loteCandidato =
+                        resto.substring(
+                            0,
+                            posicion
+                        );
+
+
+                    const serieCandidata =
+                        resto.substring(
+                            posicion + 2
+                        );
+
+
+                    if (
+                        loteCandidato.length >= 1
+                        &&
+                        loteCandidato.length <= 20
+                        &&
+                        serieCandidata.length >= 4
+                        &&
+                        serieCandidata.length <= 20
+                    ) {
+
+                        resultado.lote =
+                            loteCandidato;
+
+
+                        resultado.serie =
+                            serieCandidata;
+
+
+                        resultado.datosVariablesEstimados =
+                            true;
+
+
+                        separacionAplicada =
+                            true;
+
+
+                        break;
+                    }
+                }
+
+
+                if (!separacionAplicada) {
+
+                    resultado.lote =
+                        resto.substring(
+                            0,
+                            20
+                        );
+
+
+                    if (resto.length > 20) {
+
+                        resultado.datosVariablesEstimados =
+                            true;
+                    }
+                }
+            }
+        }
+
+
+        return resultado;
+    }
+
+
+
+    // =========================================
+    // ESTADO DEL ORIGEN DE LOS DATOS
+    // =========================================
+
+    function marcarLoteDetectado(
+        valor
+    ) {
+
+        valorAutoLote =
+            valor;
+
+
+        const estado =
+            document.getElementById(
+                "estadoLote"
+            );
+
+
+        estado.textContent =
+            "✅ Detectado por escáner";
+
+
+        estado.className =
+            "estado-dato estado-detectado";
+    }
+
+
+
+    function marcarFechaDetectada(
+        valor
+    ) {
+
+        valorAutoFecha =
+            valor;
+
+
+        const estado =
+            document.getElementById(
+                "estadoFecha"
+            );
+
+
+        estado.textContent =
+            "✅ Detectado por escáner";
+
+
+        estado.className =
+            "estado-dato estado-detectado";
+    }
+
+
+
+    function marcarLoteManual() {
+
+        const estado =
+            document.getElementById(
+                "estadoLote"
+            );
+
+
+        estado.textContent =
+            "✏️ Ingreso manual";
+
+
+        estado.className =
+            "estado-dato estado-manual";
+    }
+
+
+
+    function marcarFechaManual() {
+
+        const estado =
+            document.getElementById(
+                "estadoFecha"
+            );
+
+
+        estado.textContent =
+            "✏️ Ingreso manual";
+
+
+        estado.className =
+            "estado-dato estado-manual";
+    }
+
+
+
+    // =========================================
+    // BUSCAR PRODUCTO ESCANEADO
+    // =========================================
+
+    async function buscarProductoEscaneado() {
+
+        const inputCodigo =
+            document.getElementById(
+                "codigoScanner"
+            );
+
+
+        const resultado =
+            document.getElementById(
+                "resultadoScanner"
+            );
+
+
+        const producto =
+            document.getElementById(
+                "producto"
+            );
+
+
+        const numeroLote =
+            document.getElementById(
+                "numeroLote"
+            );
+
+
+        const fechaVencimiento =
+            document.getElementById(
+                "fechaVencimiento"
+            );
+
+
+        const cantidad =
+            document.getElementById(
+                "cantidadEnvases"
+            );
+
+
+        const codigo =
+            inputCodigo.value.trim();
+
+
+        if (codigo === "") {
+
+            resultado.className =
+                "resultado-scanner resultado-error";
+
+
+            resultado.innerHTML =
+                "<strong>Debe escanear o ingresar un código.</strong>";
+
+
+            inputCodigo.focus();
+
+            return;
+        }
+
+
+        const analisis =
+            analizarCodigoEscaneado(
+                codigo
+            );
+
+
+        const fechaEscaneadaVencida =
+            analisis.fechaVencimiento !== ""
+            &&
+            esFechaVencida(
+                analisis.fechaVencimiento
+            );
+
+
+        if (analisis.esGS1) {
+
+            if (analisis.lote !== "") {
+
+                numeroLote.value =
+                    analisis.lote;
+
+
+                marcarLoteDetectado(
+                    analisis.lote
+                );
+            }
+
+
+            if (
+                analisis.fechaVencimiento
+                !== ""
+            ) {
+
+                fechaVencimiento.value =
+                    analisis.fechaVencimiento;
+
+
+                marcarFechaDetectada(
+                    analisis.fechaVencimiento
+                );
+            }
+        }
+
+
+        validarEstadoVencimiento();
+
+
+        resultado.className =
+            "resultado-scanner";
+
+
+        resultado.style.display =
+            "block";
+
+
+        resultado.innerHTML =
+            analisis.esGS1
+                ?
+                "Leyendo datos GS1 y buscando producto..."
+                :
+                "Buscando producto...";
+
+
+        try {
+
+            const url =
+                '@Url.Action(
+                                        "BuscarProductoPorCodigoBarras",
+                                        "Home"
+                                )'
+                +
+                "?codigo="
+                +
+                encodeURIComponent(
+                    analisis.codigoBusqueda
+                );
+
+
+            const respuesta =
+                await fetch(
+                    url
+                );
+
+
+            if (!respuesta.ok) {
+
+                resultado.className =
+                    "resultado-scanner resultado-error";
+
+
+                resultado.innerHTML =
+                    "<strong>No fue posible consultar el producto.</strong>";
+
+
+                return;
+            }
+
+
+            const datos =
+                await respuesta.json();
+
+
+
+            // =====================================
+            // PRODUCTO ENCONTRADO
+            // =====================================
+
+            if (
+                datos.existe
+                &&
+                datos.producto
+            ) {
+
+                producto.value =
+                    datos.producto.id_producto;
+
+
+                if (producto.value === "") {
+
+                    productoActual = {
+                        id: "",
+                        nombre: "",
+                        codigo: "",
+                        tipo: "",
+                        contenidoPorEnvase: 1,
+                        unidadMedida: "Unidades",
+                        formaFarmaceutica: ""
+                    };
+
+
+                    resultado.className =
+                        "resultado-scanner resultado-error";
+
+
+                    resultado.innerHTML =
+                        "<strong>El producto existe, pero no está disponible en el listado actual.</strong>";
+
+
+                    ocultarProductoIdentificado();
+
+                    return;
+                }
+
+
+                const opcionProducto =
+                    producto.options[
+                        producto.selectedIndex
+                    ];
+
+                productoActual = {
+                    id:
+                        datos.producto.id_producto,
+                    nombre:
+                        datos.producto.nombre
+                        ??
+                        "",
+                    codigo:
+                        datos.producto.codigo_interno
+                        ??
+                        "",
+                    tipo:
+                        datos.producto.tipo
+                        ??
+                        opcionProducto?.dataset.tipo
+                        ??
+                        "",
+                    contenidoPorEnvase:
+                        Number(opcionProducto?.dataset.contenido) > 0
+                            ? Number(opcionProducto.dataset.contenido)
+                            : 1,
+                    unidadMedida:
+                        opcionProducto?.dataset.unidad
+                        ||
+                        "Unidades",
+                    formaFarmaceutica:
+                        opcionProducto?.dataset.forma
+                        ||
+                        ""
+                };
+
+
+                mostrarProductoIdentificado(
+                    productoActual.nombre,
+                    productoActual.codigo,
+                    productoActual.tipo
+                );
+
+                actualizarCalculoRecepcion();
+
+
+                let detallesGS1 =
+                    "";
+
+
+                if (analisis.esGS1) {
+
+                    detallesGS1 +=
+                        `<br>GTIN: <strong>${escaparHtml(analisis.gtin)}</strong>`;
+
+
+                    if (analisis.lote !== "") {
+
+                        detallesGS1 +=
+                            `<br>✅ Lote: ${escaparHtml(analisis.lote)}`;
+                    }
+
+
+                    if (
+                        analisis.fechaVencimiento
+                        !== ""
+                    ) {
+
+                        detallesGS1 +=
+                            `<br>✅ Vencimiento: ${escaparHtml(formatearFechaPantalla(analisis.fechaVencimiento))}`;
+                    }
+
+
+                    if (analisis.serie !== "") {
+
+                        detallesGS1 +=
+                            `<br>Serie: ${escaparHtml(analisis.serie)}`;
+                    }
+
+
+                    if (
+                        analisis.datosVariablesEstimados
+                    ) {
+
+                        detallesGS1 +=
+                            "<br>⚠ El lector no entregó el separador GS/FNC1. Revise lote y serie.";
+                    }
+
+
+                    if (fechaEscaneadaVencida) {
+
+                        detallesGS1 +=
+                            `<br><strong>🚨 PRODUCTO VENCIDO: ${escaparHtml(formatearFechaPantalla(analisis.fechaVencimiento))}</strong>`;
+                    }
+                }
+
+
+                resultado.className =
+                    fechaEscaneadaVencida
+                        ?
+                        "resultado-scanner resultado-error"
+                        :
+                        "resultado-scanner resultado-encontrado";
+
+
+                resultado.innerHTML =
+                    `
+                        <div class="producto-encontrado-titulo">
+                            ${
+                                fechaEscaneadaVencida
+                                    ?
+                                    "🚨 Producto encontrado - VENCIDO"
+                                    :
+                                    "✅ Lectura completada"
+                            }
+                        </div>
+
+                        <div class="producto-encontrado-detalle">
+
+                            <strong>
+                                ${escaparHtml(productoActual.nombre)}
+                            </strong>
+
+                            <br>
+
+                            Código:
+                            ${escaparHtml(productoActual.codigo)}
+
+                            ${
+                                productoActual.tipo
+                                    ?
+                                    `<br>Tipo: ${escaparHtml(productoActual.tipo)}`
+                                    :
+                                    ""
+                            }
+
+                            ${detallesGS1}
+
+                        </div>
+                    `;
+
+
+                actualizarResumen();
+
+
+                setTimeout(
+                    function () {
+
+                        if (
+                            numeroLote.value.trim()
+                            === ""
+                        ) {
+
+                            numeroLote.focus();
+                        }
+                        else if (
+                            fechaVencimiento.value
+                            === ""
+                        ) {
+
+                            fechaVencimiento.focus();
+                        }
+                        else {
+
+                            cantidad.focus();
+                        }
+
+                    },
+                    150
+                );
+
+
+                return;
+            }
+
+
+
+            // =====================================
+            // PRODUCTO NO ENCONTRADO
+            // =====================================
+
+            producto.value =
+                "";
+
+
+            productoActual = {
+                id: "",
+                nombre: "",
+                codigo: "",
+                tipo: "",
+                contenidoPorEnvase: 1,
+                unidadMedida: "Unidades",
+                formaFarmaceutica: ""
+            };
+
+
+            ocultarProductoIdentificado();
+
+
+            const urlCrearProducto =
+                '@Url.Action(
+                                        "CrearProducto",
+                                        "Home"
+                                )'
+                +
+                "?codigoBarras="
+                +
+                encodeURIComponent(
+                    analisis.codigoBusqueda
+                );
+
+
+            let datosDetectados =
+                "";
+
+
+            if (analisis.esGS1) {
+
+                datosDetectados +=
+                    `<br>GTIN detectado: <strong>${escaparHtml(analisis.gtin)}</strong>`;
+
+
+                if (analisis.lote !== "") {
+
+                    datosDetectados +=
+                        `<br>✅ Lote: ${escaparHtml(analisis.lote)}`;
+                }
+
+
+                if (
+                    analisis.fechaVencimiento
+                    !== ""
+                ) {
+
+                    datosDetectados +=
+                        `<br>✅ Vencimiento: ${escaparHtml(formatearFechaPantalla(analisis.fechaVencimiento))}`;
+                }
+
+
+                if (analisis.serie !== "") {
+
+                    datosDetectados +=
+                        `<br>Serie: ${escaparHtml(analisis.serie)}`;
+                }
+
+
+                if (
+                    analisis.datosVariablesEstimados
+                ) {
+
+                    datosDetectados +=
+                        "<br>⚠ Revise lote y serie: el lector no entregó GS/FNC1.";
+                }
+
+
+                if (fechaEscaneadaVencida) {
+
+                    datosDetectados +=
+                        `<br><strong>🚨 VENCIDO: ${escaparHtml(formatearFechaPantalla(analisis.fechaVencimiento))}</strong>`;
+                }
+            }
+
+
+            resultado.className =
+                "resultado-scanner resultado-no-encontrado";
+
+
+            resultado.innerHTML =
+                `
+                    <div class="producto-encontrado-titulo">
+                        ⚠ Producto no registrado
+                    </div>
+
+                    <div class="producto-encontrado-detalle">
+
+                        Código para búsqueda:
+                        <strong>
+                            ${escaparHtml(analisis.codigoBusqueda)}
+                        </strong>
+
+                        ${datosDetectados}
+
+                    </div>
+
+                    <a href="${urlCrearProducto}"
+                       class="btn-registrar-producto">
+
+                        Registrar nuevo producto
+
+                    </a>
+                `;
+
+
+            actualizarResumen();
+        }
+        catch (error) {
+
+            producto.value =
+                "";
+
+
+            productoActual = {
+                id: "",
+                nombre: "",
+                codigo: "",
+                tipo: "",
+                contenidoPorEnvase: 1,
+                unidadMedida: "Unidades",
+                formaFarmaceutica: ""
+            };
+
+
+            ocultarProductoIdentificado();
+
+
+            resultado.className =
+                "resultado-scanner resultado-error";
+
+
+            resultado.innerHTML =
+                "<strong>Error al buscar el producto.</strong>";
+
+
+            actualizarResumen();
+        }
+    }
+
+
+
+    // =========================================
+    // VENCIMIENTO
+    // =========================================
+
+    function validarEstadoVencimiento() {
+
+        const fecha =
+            document.getElementById(
+                "fechaVencimiento"
+            )
+            .value;
+
+
+        const aviso =
+            document.getElementById(
+                "avisoVencimiento"
+            );
+
+
+        if (!fecha) {
+
+            aviso.className =
+                "aviso-vencimiento aviso-vencimiento-oculto";
+
+
+            aviso.textContent =
+                "";
+
+
+            return;
+        }
+
+
+        if (esFechaVencida(fecha)) {
+
+            aviso.className =
+                "aviso-vencimiento aviso-vencido";
+
+
+            aviso.textContent =
+                "🚨 Producto vencido. Esta entrada no puede registrarse.";
+        }
+        else {
+
+            aviso.className =
+                "aviso-vencimiento aviso-vigente";
+
+
+            aviso.textContent =
+                "✓ Fecha de vencimiento válida.";
+        }
+    }
+
+
+
+    // =========================================
+    // RESUMEN
+    // =========================================
+
+    function obtenerTextoUbicacion() {
+
+        const ubicacion =
+            document.getElementById(
+                "ubicacion"
+            );
+
+
+        if (ubicacion.value === "") {
+            return "—";
+        }
+
+
+        return ubicacion.options[
+            ubicacion.selectedIndex
+        ].textContent.trim();
+    }
+
+
+
+    function actualizarResumen() {
+
+        const numeroLote =
+            document.getElementById(
+                "numeroLote"
+            ).value.trim();
+
+
+        const fecha =
+            document.getElementById(
+                "fechaVencimiento"
+            ).value;
+
+
+        const envases =
+            document.getElementById(
+                "cantidadEnvases"
+            ).value;
+
+        actualizarCalculoRecepcion();
+
+        const cantidad =
+            calcularStockEntrada();
+
+        const unidad =
+            unidadProducto();
+
+
+        const ubicacion =
+            document.getElementById(
+                "ubicacion"
+            ).value;
+
+
+        document.getElementById(
+            "resumenProducto"
+        ).textContent =
+            productoActual.nombre || "—";
+
+
+        document.getElementById(
+            "resumenLote"
+        ).textContent =
+            numeroLote || "—";
+
+
+        document.getElementById(
+            "resumenVencimiento"
+        ).textContent =
+            fecha
+                ?
+                formatearFechaPantalla(
+                    fecha
+                )
+                :
+                "—";
+
+
+        document.getElementById(
+            "resumenEnvases"
+        ).textContent =
+            envases
+                && Number(envases) > 0
+                ? `${envases} envase(s)`
+                : "—";
+
+        document.getElementById(
+            "resumenCantidad"
+        ).textContent =
+            cantidad > 0
+                ? `${cantidad} ${unidad}`
+                : "—";
+
+
+        document.getElementById(
+            "resumenUbicacion"
+        ).textContent =
+            obtenerTextoUbicacion();
+
+
+        const estado =
+            document.getElementById(
+                "resumenEstado"
+            );
+
+
+        const productoOk =
+            productoActual.id !== "";
+
+
+        const loteOk =
+            numeroLote !== "";
+
+
+        const fechaOk =
+            fecha !== ""
+            &&
+            !esFechaVencida(
+                fecha
+            );
+
+
+        const cantidadOk =
+            envases !== ""
+            && Number(envases) > 0
+            && cantidad > 0;
+
+
+        const ubicacionOk =
+            ubicacion !== "";
+
+
+        if (
+            productoOk
+            &&
+            loteOk
+            &&
+            fechaOk
+            &&
+            cantidadOk
+            &&
+            ubicacionOk
+        ) {
+
+            estado.textContent =
+                "✓ Todo listo. Puede registrar la entrada.";
+
+
+            estado.className =
+                "resumen-estado resumen-estado-listo";
+        }
+        else if (
+            fecha !== ""
+            &&
+            esFechaVencida(
+                fecha
+            )
+        ) {
+
+            estado.textContent =
+                "🚨 La fecha está vencida. Corríjala antes de continuar.";
+
+
+            estado.className =
+                "resumen-estado resumen-estado-error";
+        }
+        else {
+
+            estado.textContent =
+                "Complete los datos requeridos para registrar la entrada.";
+
+
+            estado.className =
+                "resumen-estado";
+        }
+    }
+
+
+
+    // =========================================
     // MOSTRAR ERROR
+    // =========================================
 
     function mostrarError(
         texto,
@@ -574,25 +3366,35 @@
             "mensaje mensaje-error";
 
 
-        mensaje.style.visibility =
-            "visible";
+        mensaje.style.display =
+            "block";
 
 
         mensaje.style.opacity =
             "1";
 
 
-        campo.focus();
+        if (campo) {
+
+            campo.focus();
+        }
+
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
     }
 
 
 
+    // =========================================
     // VALIDAR Y CONFIRMAR
+    // =========================================
 
     function validarYConfirmar() {
 
         if (loteConfirmado) {
-
             return true;
         }
 
@@ -617,7 +3419,7 @@
 
         const cantidad =
             document.getElementById(
-                "cantidadInicial"
+                "cantidadEnvases"
             );
 
 
@@ -627,17 +3429,32 @@
             );
 
 
+        if (
+            producto.value === ""
+            ||
+            productoActual.id === ""
+        ) {
 
-        if (producto.value === "") {
+            if (modoSeleccion === "scanner") {
 
-            mostrarError(
-                "Debe seleccionar un producto.",
-                producto
-            );
+                mostrarError(
+                    "Debe escanear un producto válido.",
+                    document.getElementById(
+                        "codigoScanner"
+                    )
+                );
+            }
+            else {
+
+                mostrarError(
+                    "Debe seleccionar un producto.",
+                    producto
+                );
+            }
+
 
             return false;
         }
-
 
 
         if (
@@ -650,9 +3467,9 @@
                 numeroLote
             );
 
+
             return false;
         }
-
 
 
         if (
@@ -665,38 +3482,94 @@
                 fechaVencimiento
             );
 
+
             return false;
         }
 
+
+        if (
+            esFechaVencida(
+                fechaVencimiento.value
+            )
+        ) {
+
+            mostrarError(
+                "No se puede registrar la entrada: el producto está vencido.",
+                fechaVencimiento
+            );
+
+
+            return false;
+        }
 
 
         if (
             cantidad.value.trim()
             === ""
             ||
-            Number(cantidad.value) < 0
+            Number(cantidad.value) <= 0
         ) {
 
             mostrarError(
-                "Debe ingresar una cantidad inicial válida.",
+                "Debe ingresar una cantidad de envases mayor a 0.",
                 cantidad
             );
 
+
             return false;
         }
 
 
-
-        if (ubicacion.value === "") {
+        if (
+            ubicacion.value
+            === ""
+        ) {
 
             mostrarError(
-                "Debe seleccionar una ubicación.",
+                "Debe seleccionar una ubicación destino.",
                 ubicacion
             );
 
+
             return false;
         }
 
+
+        actualizarCalculoRecepcion();
+
+        const totalStock =
+            calcularStockEntrada();
+
+        actualizarResumen();
+
+
+        document.getElementById(
+            "modalResumen"
+        ).innerHTML =
+            `
+                <strong>Producto:</strong>
+                ${escaparHtml(productoActual.nombre)}
+                <br>
+
+                <strong>Lote:</strong>
+                ${escaparHtml(numeroLote.value.trim())}
+                <br>
+
+                <strong>Vencimiento:</strong>
+                ${escaparHtml(formatearFechaPantalla(fechaVencimiento.value))}
+                <br>
+
+                <strong>Envases recibidos:</strong>
+                ${escaparHtml(cantidad.value)} envase(s)
+                <br>
+
+                <strong>Stock a sumar:</strong>
+                ${escaparHtml(totalStock)} ${escaparHtml(unidadProducto())}
+                <br>
+
+                <strong>Destino:</strong>
+                ${escaparHtml(obtenerTextoUbicacion())}
+            `;
 
 
         document.getElementById(
@@ -710,7 +3583,9 @@
 
 
 
-    // BOTON SI
+    // =========================================
+    // CONFIRMAR
+    // =========================================
 
     function registrarLote() {
 
@@ -731,7 +3606,9 @@
 
 
 
-    // BOTON NO
+    // =========================================
+    // VOLVER DESDE MODAL
+    // =========================================
 
     function cerrarConfirmacion() {
 
@@ -747,7 +3624,9 @@
 
 
 
-    // BOTON CANCELAR
+    // =========================================
+    // LIMPIAR FORMULARIO
+    // =========================================
 
     function cancelarRegistro() {
 
@@ -768,6 +3647,12 @@
 
 
         document.getElementById(
+            "codigoScanner"
+        ).value =
+            "";
+
+
+        document.getElementById(
             "numeroLote"
         ).value =
             "";
@@ -780,15 +3665,64 @@
 
 
         document.getElementById(
-            "cantidadInicial"
+            "cantidadEnvases"
         ).value =
-            "0";
+            "";
+
+        document.getElementById(
+            "cantidadTotalStock"
+        ).value =
+            "";
 
 
         document.getElementById(
             "ubicacion"
         ).value =
             "";
+
+
+        productoActual = {
+            id: "",
+            nombre: "",
+            codigo: "",
+            tipo: "",
+            contenidoPorEnvase: 1,
+            unidadMedida: "Unidades",
+            formaFarmaceutica: ""
+        };
+
+
+        valorAutoLote =
+            "";
+
+
+        valorAutoFecha =
+            "";
+
+
+        marcarLoteManual();
+
+        marcarFechaManual();
+
+        validarEstadoVencimiento();
+
+        ocultarProductoIdentificado();
+
+        actualizarCalculoRecepcion();
+
+
+        const resultado =
+            document.getElementById(
+                "resultadoScanner"
+            );
+
+
+        resultado.innerHTML =
+            "";
+
+
+        resultado.className =
+            "resultado-scanner resultado-oculto";
 
 
         const mensaje =
@@ -805,22 +3739,184 @@
             "mensaje mensaje-error mensaje-oculto";
 
 
-        mensaje.style.visibility =
-            "hidden";
+        actualizarResumen();
 
 
-        mensaje.style.opacity =
-            "1";
+        if (
+            modoSeleccion
+            === "scanner"
+        ) {
 
+            document.getElementById(
+                "codigoScanner"
+            ).focus();
+        }
+        else {
 
-        document.getElementById(
-            "producto"
-        ).focus();
+            document.getElementById(
+                "producto"
+            ).focus();
+        }
     }
 
 
 
-    // OCULTAR MENSAJE
+    // =========================================
+    // EVENTOS EN TIEMPO REAL
+    // =========================================
+
+    document
+        .getElementById(
+            "producto"
+        )
+        .addEventListener(
+            "change",
+            function () {
+
+                if (
+                    modoSeleccion
+                    === "manual"
+                ) {
+
+                    cargarProductoManual();
+                }
+            }
+        );
+
+
+    document
+        .getElementById(
+            "numeroLote"
+        )
+        .addEventListener(
+            "input",
+            function () {
+
+                if (
+                    valorAutoLote === ""
+                    ||
+                    this.value
+                        !== valorAutoLote
+                ) {
+
+                    marcarLoteManual();
+                }
+                else {
+
+                    marcarLoteDetectado(
+                        valorAutoLote
+                    );
+                }
+
+
+                actualizarResumen();
+            }
+        );
+
+
+    document
+        .getElementById(
+            "fechaVencimiento"
+        )
+        .addEventListener(
+            "change",
+            function () {
+
+                if (
+                    valorAutoFecha === ""
+                    ||
+                    this.value
+                        !== valorAutoFecha
+                ) {
+
+                    marcarFechaManual();
+                }
+                else {
+
+                    marcarFechaDetectada(
+                        valorAutoFecha
+                    );
+                }
+
+
+                validarEstadoVencimiento();
+
+                actualizarResumen();
+            }
+        );
+
+
+    document
+        .getElementById(
+            "cantidadEnvases"
+        )
+        .addEventListener(
+            "input",
+            function () {
+                actualizarCalculoRecepcion();
+                actualizarResumen();
+            }
+        );
+
+
+    document
+        .getElementById(
+            "ubicacion"
+        )
+        .addEventListener(
+            "change",
+            actualizarResumen
+        );
+
+
+
+    // =========================================
+    // INICIO DE LA PANTALLA
+    // =========================================
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            const producto =
+                document.getElementById(
+                    "producto"
+                );
+
+
+            if (
+                producto.value
+                !== ""
+            ) {
+
+                cambiarModo(
+                    "manual"
+                );
+
+
+                cargarProductoManual();
+            }
+            else {
+
+                cambiarModo(
+                    "scanner"
+                );
+            }
+
+
+            validarEstadoVencimiento();
+
+            actualizarCalculoRecepcion();
+
+            actualizarResumen();
+        }
+    );
+
+
+
+    // =========================================
+    // OCULTAR MENSAJE GENERAL
+    // =========================================
 
     setTimeout(
         function () {
@@ -832,7 +3928,8 @@
 
 
             if (
-                mensaje &&
+                mensaje
+                &&
                 !mensaje.classList.contains(
                     "mensaje-oculto"
                 )
@@ -845,8 +3942,8 @@
                 setTimeout(
                     function () {
 
-                        mensaje.style.visibility =
-                            "hidden";
+                        mensaje.style.display =
+                            "none";
 
                     },
                     500
@@ -854,7 +3951,7 @@
             }
 
         },
-        3000
+        3500
     );
 
 </script>

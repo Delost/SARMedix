@@ -13,9 +13,7 @@
         );
 }
 
-
 <h2>Registrar producto</h2>
-
 
 <form asp-controller="Home"
       asp-action="NuevoProducto"
@@ -26,29 +24,20 @@
       onsubmit="return validarYConfirmar()"
       novalidate>
 
-
     <!-- MENSAJE -->
-
     <div class="espacio-mensaje">
-
         @if (!string.IsNullOrEmpty(mensaje))
         {
             if (mensajeExito)
             {
-                <div class="mensaje mensaje-exito"
-                     id="mensajeFormulario">
-
+                <div class="mensaje mensaje-exito" id="mensajeFormulario">
                     @mensaje
-
                 </div>
             }
             else
             {
-                <div class="mensaje mensaje-error"
-                     id="mensajeFormulario">
-
+                <div class="mensaje mensaje-error" id="mensajeFormulario">
                     @mensaje
-
                 </div>
             }
         }
@@ -58,84 +47,207 @@
                  id="mensajeFormulario">
             </div>
         }
-
     </div>
 
 
-
-    <!-- TIPO DE PRODUCTO -->
-
+    <!-- TIPO -->
     <div>
-
         <label>Tipo de producto</label>
 
         <select asp-for="tipo"
                 id="tipoProducto"
                 onchange="cambiarTipo()">
-
-            <option value="">
-                Seleccione
-            </option>
-
-            <option value="Medicamento">
-                Medicamento
-            </option>
-
-            <option value="Insumo">
-                Insumo
-            </option>
-
+            <option value="">Seleccione</option>
+            <option value="Medicamento">Medicamento</option>
+            <option value="Insumo">Insumo</option>
         </select>
-
     </div>
 
 
+    <!-- CODIGO INTERNO OCULTO -->
+    <!-- SARMedix lo genera automáticamente. El usuario no necesita verlo. -->
+    <input type="hidden"
+           name="codigo_interno"
+           id="codigoInterno"
+           value="AUTO" />
 
-    <!-- CODIGO INTERNO -->
 
-    <div>
+    <!-- CODIGO DE BARRAS -->
+    <div class="bloque-codigo-barras">
+        <div class="fila-codigo-barras">
+            <label for="codigoBarras">Código de barras / GTIN</label>
+            <span class="badge-codigo">ESCÁNER O MANUAL</span>
+        </div>
 
-        <label>Código interno</label>
+        <input asp-for="codigo_barras"
+               id="codigoBarras"
+               autocomplete="off"
+               placeholder="Escanee el código o escríbalo aquí" />
 
-        <input asp-for="codigo_interno"
-               id="codigoInterno" />
+        <div class="ayuda-codigo">
+            <span class="icono-codigo">▦</span>
+            <span>
+                <strong>Escanee con el lector</strong> o escriba el código manualmente.
+                Si el producto no tiene código, puede dejar este campo vacío.
+            </span>
+        </div>
 
+        <div id="estadoCodigoBarras"
+             class="estado-codigo estado-codigo-oculto"
+             aria-live="polite">
+        </div>
     </div>
-
 
 
     <!-- NOMBRE -->
-
     <div>
-
         <label>Nombre</label>
 
         <input asp-for="nombre"
-               id="nombreProducto" />
-
+               id="nombreProducto"
+               placeholder="Ej.: Tapsin" />
     </div>
 
 
+    <!-- CAMPOS MEDICAMENTO -->
+    <div id="camposMedicamento" style="display:none;">
 
-    <!-- STOCK MINIMO -->
+        <div>
+            <label>Forma farmacéutica</label>
 
-    <div>
+            <select asp-for="forma_farmaceutica"
+                    id="formaFarmaceutica">
+                <option value="">Seleccione</option>
+                <option value="Comprimido">Comprimido</option>
+                <option value="Cápsula">Cápsula</option>
+                <option value="Solución oral">Solución oral</option>
+                <option value="Jarabe">Jarabe</option>
+                <option value="Ampolla">Ampolla</option>
+                <option value="Gotas">Gotas</option>
+                <option value="Crema">Crema</option>
+                <option value="Inhalador">Inhalador</option>
+                <option value="Supositorio">Supositorio</option>
+                <option value="Sobre">Sobre</option>
+                <option value="Otro">Otro</option>
+            </select>
+        </div>
 
-        <label>Stock mínimo</label>
+        <div>
+            <label>Principio activo</label>
 
-        <input asp-for="stock_minimo"
-               id="stockMinimo"
-               type="number"
-               min="0" />
+            <input asp-for="principio_activo"
+                   id="principioActivo"
+                   placeholder="Ej.: Dipirona + cafeína" />
+        </div>
 
+        <div>
+            <label>Concentración</label>
+
+            <input asp-for="concentracion"
+                   id="concentracion"
+                   placeholder="Ej.: 500 mg + 50 mg" />
+        </div>
+
+        <div>
+            <label>¿Requiere control?</label>
+
+            <select asp-for="requiere_control"
+                    id="requiereControl">
+                <option value="false">No</option>
+                <option value="true">Sí</option>
+            </select>
+        </div>
     </div>
 
+
+    <!-- CAMPOS INSUMO -->
+    <div id="camposInsumo" style="display:none;">
+        <div>
+            <label>Material</label>
+
+            <input asp-for="material"
+                   id="material" />
+        </div>
+
+        <div>
+            <label>¿Es estéril?</label>
+
+            <select asp-for="es_esteril"
+                    id="esEsteril">
+                <option value="false">No</option>
+                <option value="true">Sí</option>
+            </select>
+        </div>
+    </div>
+
+
+    <!-- CONTENIDO / STOCK -->
+    <div class="seccion-inventario">
+        <div class="seccion-inventario-titulo">Control de contenido y stock</div>
+        <div class="seccion-inventario-subtitulo">
+            Indique cuánto contiene el producto y en qué unidad se controlará.
+        </div>
+
+        <div>
+            <label>Cantidad contenida</label>
+
+            <input asp-for="contenido_por_envase"
+                   id="contenidoPorEnvase"
+                   type="number"
+                   min="1"
+                   oninput="actualizarResumenStock()" />
+        </div>
+
+        <div>
+            <label>Unidad de medida</label>
+
+            <input asp-for="unidad_medida"
+                   id="unidadMedidaReal"
+                   type="hidden" />
+
+            <select id="unidadSelector"
+                    onchange="cambiarUnidad()">
+                <option value="">Seleccione</option>
+                <option value="Unidades">Unidades</option>
+                <option value="mg">mg</option>
+                <option value="g">g</option>
+                <option value="kg">kg</option>
+                <option value="mL">mL</option>
+                <option value="L">L</option>
+                <option value="Otro">Otro</option>
+                <option value="Omitir">Omitir</option>
+            </select>
+
+            <div id="unidadOtroContenedor"
+                 class="unidad-otro"
+                 style="display:none;">
+                <label>Especifique la unidad</label>
+
+                <input id="unidadOtro"
+                       type="text"
+                       placeholder="Ej.: comprimidos, ampollas, sobres"
+                       oninput="actualizarUnidadPersonalizada()" />
+            </div>
+        </div>
+
+        <div class="bloque-stock-alerta">
+            <label id="labelStockMinimo">Alerta de stock bajo</label>
+
+            <input asp-for="stock_minimo"
+                   id="stockMinimo"
+                   type="number"
+                   min="0"
+                   oninput="actualizarResumenStock()" />
+
+            <div class="ayuda-stock" id="ayudaStock">
+                Seleccione una unidad para ver cómo se interpretará la alerta.
+            </div>
+        </div>
+    </div>
 
 
     <!-- IMAGEN -->
-
     <div>
-
         <label>Imagen del producto</label>
 
         <input type="file"
@@ -143,942 +255,823 @@
                id="imagenProducto"
                accept="image/*" />
 
+        <small class="texto-ayuda">Opcional.</small>
     </div>
-
-
-
-    <!-- CAMPOS MEDICAMENTO -->
-
-    <div id="camposMedicamento"
-         style="display:none;">
-
-
-        <div>
-
-            <label>Principio activo</label>
-
-            <input asp-for="principio_activo"
-                   id="principioActivo" />
-
-        </div>
-
-
-        <div>
-
-            <label>Concentración</label>
-
-            <input asp-for="concentracion"
-                   id="concentracion" />
-
-        </div>
-
-
-        <div>
-
-            <label>¿Requiere control?</label>
-
-            <select asp-for="requiere_control"
-                    id="requiereControl">
-
-                <option value="false">
-                    No
-                </option>
-
-                <option value="true">
-                    Sí
-                </option>
-
-            </select>
-
-        </div>
-
-
-    </div>
-
-
-
-    <!-- CAMPOS INSUMO -->
-
-    <div id="camposInsumo"
-         style="display:none;">
-
-
-        <div>
-
-            <label>Material</label>
-
-            <input asp-for="material"
-                   id="material" />
-
-        </div>
-
-
-        <div>
-
-            <label>¿Es estéril?</label>
-
-            <select asp-for="es_esteril"
-                    id="esEsteril">
-
-                <option value="false">
-                    No
-                </option>
-
-                <option value="true">
-                    Sí
-                </option>
-
-            </select>
-
-        </div>
-
-
-    </div>
-
 
 
     <br />
 
-
-
-    <!-- BOTON REGISTRAR -->
-
-    <button type="submit">
-
+    <button type="submit"
+            id="btnRegistrarProducto">
         Registrar producto
-
     </button>
-
-
 </form>
 
 
-
-<!-- VOLVER -->
-
 <div class="contenedor-volver">
-
     <a asp-controller="Home"
        asp-action="Productos"
        class="btn-volver-productos">
-
         ← Volver a Productos
-
     </a>
-
 </div>
 
 
-
-<!-- VENTANA DE CONFIRMACION -->
-
-<div id="modalConfirmacion"
-     class="modal-fondo">
-
+<!-- CONFIRMACION -->
+<div id="modalConfirmacion" class="modal-fondo">
     <div class="modal-contenido">
+        <div class="modal-icono">?</div>
 
+        <h2>Confirmar acción</h2>
 
-        <div class="modal-icono">
-
-            ?
-
-        </div>
-
-
-        <h2>
-
-            Confirmar acción
-
-        </h2>
-
-
-        <p>
-
-            ¿Quieres registrar este producto?
-
-        </p>
-
+        <p>¿Quieres registrar este producto?</p>
 
         <div class="modal-botones">
-
-
             <button type="button"
                     class="btn-modal-si"
                     onclick="registrarProducto()">
-
                 Sí
-
             </button>
-
 
             <button type="button"
                     class="btn-modal-no"
                     onclick="cerrarConfirmacion()">
-
                 No
-
             </button>
-
 
             <button type="button"
                     class="btn-modal-cancelar"
                     onclick="cancelarRegistro()">
-
                 Cancelar
-
             </button>
-
-
         </div>
-
-
     </div>
-
 </div>
 
 
-
 <style>
-
-    /* MENSAJES */
-
     .espacio-mensaje {
         min-height: 48px;
-
         margin-bottom: 8px;
     }
 
-
     .mensaje {
         width: 100%;
-
         padding: 12px 15px;
-
         border-radius: 7px;
-
         text-align: center;
-
         font-weight: 600;
-
         opacity: 1;
-
-        transition:
-            opacity 0.5s ease;
+        transition: opacity 0.5s ease;
     }
-
 
     .mensaje-exito {
         background-color: #d1e7dd;
-
         color: #0f5132;
-
-        border:
-            1px solid #badbcc;
+        border: 1px solid #badbcc;
     }
-
 
     .mensaje-error {
         background-color: #f8d7da;
-
         color: #842029;
-
-        border:
-            1px solid #f5c2c7;
+        border: 1px solid #f5c2c7;
     }
-
 
     .mensaje-oculto {
         visibility: hidden;
     }
 
+    .texto-ayuda {
+        display: block;
+        margin-top: 6px;
+        color: #718592;
+        font-size: 12px;
+    }
 
 
-    /* BOTON VOLVER */
+    /* CODIGO DE BARRAS */
+    .bloque-codigo-barras {
+        padding: 14px;
+        margin: 4px 0 16px 0;
+        border: 1px solid #b8dbe4;
+        border-radius: 10px;
+        background-color: #f4fbfc;
+    }
 
-    .contenedor-volver {
+    .fila-codigo-barras {
         display: flex;
-
-        justify-content: center;
-
-        margin-top: 30px;
-
-        margin-bottom: 30px;
-    }
-
-
-    .btn-volver-productos {
-        display: inline-block;
-
-        padding: 12px 22px;
-
-        background-color: #1198a5;
-
-        color: white;
-
-        border-radius: 7px;
-
-        text-decoration: none;
-
-        font-weight: 600;
-
-        transition:
-            background-color 0.2s ease;
-    }
-
-
-    .btn-volver-productos:hover {
-        background-color: #0d8490;
-
-        color: white;
-    }
-
-
-
-    /* VENTANA DE CONFIRMACION */
-
-    .modal-fondo {
-        display: none;
-
-        position: fixed;
-
-        top: 0;
-
-        left: 0;
-
-        width: 100%;
-
-        height: 100%;
-
-        background-color:
-            rgba(0, 0, 0, 0.45);
-
         align-items: center;
-
-        justify-content: center;
-
-        z-index: 9999;
-    }
-
-
-    .modal-contenido {
-        width: 90%;
-
-        max-width: 430px;
-
-        background-color: white;
-
-        border-radius: 15px;
-
-        padding: 30px;
-
-        text-align: center;
-
-        box-shadow:
-            0 12px 35px
-            rgba(0, 0, 0, 0.25);
-    }
-
-
-    .modal-icono {
-        width: 55px;
-
-        height: 55px;
-
-        margin:
-            0 auto 15px auto;
-
-        display: flex;
-
-        align-items: center;
-
-        justify-content: center;
-
-        background-color: #1198a5;
-
-        color: white;
-
-        border-radius: 50%;
-
-        font-size: 30px;
-
-        font-weight: bold;
-    }
-
-
-    .modal-contenido h2 {
-        margin-top: 0;
-
-        color: #003b64;
-    }
-
-
-    .modal-contenido p {
-        margin-top: 15px;
-
-        margin-bottom: 25px;
-
-        font-size: 17px;
-
-        color: #444;
-    }
-
-
-    .modal-botones {
-        display: flex;
-
-        justify-content: center;
-
+        justify-content: space-between;
         gap: 10px;
-
         flex-wrap: wrap;
     }
 
+    .badge-codigo {
+        padding: 4px 8px;
+        border-radius: 999px;
+        background-color: #d9f1f4;
+        color: #0b6670;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .04em;
+    }
+
+    .bloque-codigo-barras input {
+        margin-top: 5px;
+    }
+
+    .ayuda-codigo {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 8px;
+        color: #526d7c;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+    .ayuda-codigo strong {
+        color: #075f6b;
+    }
+
+    .estado-codigo {
+        margin-top: 10px;
+        padding: 11px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+    .estado-codigo-oculto {
+        display: none;
+    }
+
+    .estado-codigo-verificando {
+        display: block;
+        background-color: #eef7fb;
+        border: 1px solid #c5dfea;
+        color: #315f75;
+    }
+
+    .estado-codigo-disponible {
+        display: block;
+        background-color: #e7f6ed;
+        border: 1px solid #b8dec6;
+        color: #17633a;
+    }
+
+    .estado-codigo-duplicado {
+        display: block;
+        background-color: #fff4df;
+        border: 1px solid #efd09a;
+        color: #7a5110;
+    }
+
+    .estado-codigo-titulo {
+        display: block;
+        margin-bottom: 2px;
+        font-weight: 800;
+    }
+
+    .estado-codigo-accion {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 7px 11px;
+        border-radius: 7px;
+        background-color: #1198a5;
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .estado-codigo-accion:hover {
+        background-color: #0d8490;
+        color: white;
+    }
+
+    #btnRegistrarProducto:disabled {
+        opacity: .55;
+        cursor: not-allowed;
+    }
+
+    .icono-codigo {
+        color: #1198a5;
+        font-size: 18px;
+        line-height: 1;
+    }
+
+
+    /* CONTENIDO / STOCK */
+    .seccion-inventario {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid #dbe5ea;
+    }
+
+    .seccion-inventario-titulo {
+        color: #003b64;
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    .seccion-inventario-subtitulo {
+        margin: 3px 0 14px 0;
+        color: #718592;
+        font-size: 12px;
+    }
+
+    .unidad-otro {
+        margin-top: 10px;
+    }
+
+    .ayuda-stock {
+        margin-top: 8px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background-color: #f3fafc;
+        border: 1px solid #c9e5ec;
+        color: #536c7b;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+    .ayuda-stock strong {
+        color: #0b5f7b;
+    }
+
+
+    /* VOLVER */
+    .contenedor-volver {
+        display: flex;
+        justify-content: center;
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+
+    .btn-volver-productos {
+        display: inline-block;
+        padding: 12px 22px;
+        background-color: #1198a5;
+        color: white;
+        border-radius: 7px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background-color 0.2s ease;
+    }
+
+    .btn-volver-productos:hover {
+        background-color: #0d8490;
+        color: white;
+    }
+
+
+    /* MODAL */
+    .modal-fondo {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.45);
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .modal-contenido {
+        width: 90%;
+        max-width: 430px;
+        background-color: white;
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+    }
+
+    .modal-icono {
+        width: 55px;
+        height: 55px;
+        margin: 0 auto 15px auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #1198a5;
+        color: white;
+        border-radius: 50%;
+        font-size: 30px;
+        font-weight: bold;
+    }
+
+    .modal-contenido h2 {
+        margin-top: 0;
+        color: #003b64;
+    }
+
+    .modal-contenido p {
+        margin-top: 15px;
+        margin-bottom: 25px;
+        font-size: 17px;
+        color: #444;
+    }
+
+    .modal-botones {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
 
     .modal-botones button {
         min-width: 90px;
-
         padding: 10px 18px;
-
         border: none;
-
         border-radius: 7px;
-
         color: white;
-
         font-weight: 600;
-
         cursor: pointer;
     }
 
-
-    .btn-modal-si {
-        background-color: #198754;
-    }
-
-
-    .btn-modal-si:hover {
-        background-color: #157347;
-    }
-
-
-    .btn-modal-no {
-        background-color: #c82333;
-    }
-
-
-    .btn-modal-no:hover {
-        background-color: #a91d2a;
-    }
-
-
-    .btn-modal-cancelar {
-        background-color: #59636b;
-    }
-
-
-    .btn-modal-cancelar:hover {
-        background-color: #474f55;
-    }
-
+    .btn-modal-si { background-color: #198754; }
+    .btn-modal-si:hover { background-color: #157347; }
+    .btn-modal-no { background-color: #c82333; }
+    .btn-modal-no:hover { background-color: #a91d2a; }
+    .btn-modal-cancelar { background-color: #59636b; }
+    .btn-modal-cancelar:hover { background-color: #474f55; }
 </style>
 
 
-
 <script>
-
     let productoConfirmado = false;
+    let codigoDuplicado = false;
+    let temporizadorCodigo = null;
 
 
+    function mostrarEstadoCodigo(clase, contenido) {
+        const estado = document.getElementById("estadoCodigoBarras");
 
-    // MOSTRAR CAMPOS SEGUN TIPO
+        estado.className = `estado-codigo ${clase}`;
+        estado.innerHTML = contenido;
+    }
+
+
+    function limpiarEstadoCodigo() {
+        const estado = document.getElementById("estadoCodigoBarras");
+
+        estado.className = "estado-codigo estado-codigo-oculto";
+        estado.innerHTML = "";
+
+        codigoDuplicado = false;
+
+        const boton = document.getElementById("btnRegistrarProducto");
+        if (boton) {
+            boton.disabled = false;
+        }
+    }
+
+
+    async function verificarCodigoBarrasExistente() {
+        const campo = document.getElementById("codigoBarras");
+        const codigo = campo.value.trim();
+        const boton = document.getElementById("btnRegistrarProducto");
+
+        if (codigo === "") {
+            limpiarEstadoCodigo();
+            return false;
+        }
+
+        mostrarEstadoCodigo(
+            "estado-codigo-verificando",
+            "<strong>Verificando código...</strong>"
+        );
+
+        try {
+            const url =
+                '@Url.Action("BuscarProductoPorCodigoBarras", "Home")'
+                + "?codigo="
+                + encodeURIComponent(codigo);
+
+            const respuesta = await fetch(url);
+
+            if (!respuesta.ok) {
+                limpiarEstadoCodigo();
+                return false;
+            }
+
+            const datos = await respuesta.json();
+
+            // El usuario puede haber cambiado el código mientras esperaba la respuesta.
+            if (document.getElementById("codigoBarras").value.trim() !== codigo) {
+                return false;
+            }
+
+            if (datos.existe && datos.producto) {
+                codigoDuplicado = true;
+
+                if (boton) {
+                    boton.disabled = true;
+                }
+
+                const nombre = datos.producto.nombre ?? "Producto registrado";
+                const principio = datos.producto.principio_activo ?? "";
+                const concentracion = datos.producto.concentracion ?? "";
+
+                let detalle = "";
+
+                if (principio) {
+                    detalle += `<br>${escaparHtmlCodigo(principio)}`;
+                }
+
+                if (concentracion) {
+                    detalle += ` ${escaparHtmlCodigo(concentracion)}`;
+                }
+
+                mostrarEstadoCodigo(
+                    "estado-codigo-duplicado",
+                    `
+                        <span class="estado-codigo-titulo">
+                            ⚠ Este código ya está registrado
+                        </span>
+                        Ya pertenece a <strong>${escaparHtmlCodigo(nombre)}</strong>${detalle}.
+                        <br>No es necesario crear otro producto con el mismo código.
+                        <br>
+                        <a class="estado-codigo-accion"
+                           href="@Url.Action("CrearLote", "Home")">
+                            Ir a Registrar entrada
+                        </a>
+                    `
+                );
+
+                return true;
+            }
+
+            codigoDuplicado = false;
+
+            if (boton) {
+                boton.disabled = false;
+            }
+
+            mostrarEstadoCodigo(
+                "estado-codigo-disponible",
+                `
+                    <span class="estado-codigo-titulo">
+                        ✓ Código disponible
+                    </span>
+                    Este código no está asociado a otro producto.
+                `
+            );
+
+            return false;
+        }
+        catch {
+            // Si la consulta falla, no bloqueamos el formulario.
+            // El repositorio seguirá validando duplicados al guardar.
+            limpiarEstadoCodigo();
+            return false;
+        }
+    }
+
+
+    function programarVerificacionCodigo() {
+        clearTimeout(temporizadorCodigo);
+
+        temporizadorCodigo = setTimeout(
+            verificarCodigoBarrasExistente,
+            350
+        );
+    }
+
+
+    function escaparHtmlCodigo(valor) {
+        return String(valor ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
 
     function cambiarTipo() {
+        const tipo = document.getElementById("tipoProducto").value;
+        const medicamento = document.getElementById("camposMedicamento");
+        const insumo = document.getElementById("camposInsumo");
 
-        const tipo =
-            document.getElementById(
-                "tipoProducto"
-            ).value;
+        medicamento.style.display =
+            tipo === "Medicamento" ? "block" : "none";
 
-
-        const medicamento =
-            document.getElementById(
-                "camposMedicamento"
-            );
-
-
-        const insumo =
-            document.getElementById(
-                "camposInsumo"
-            );
-
-
-        if (tipo === "Medicamento") {
-
-            medicamento.style.display =
-                "block";
-
-            insumo.style.display =
-                "none";
-
-        }
-
-        else if (tipo === "Insumo") {
-
-            medicamento.style.display =
-                "none";
-
-            insumo.style.display =
-                "block";
-
-        }
-
-        else {
-
-            medicamento.style.display =
-                "none";
-
-            insumo.style.display =
-                "none";
-
-        }
-
+        insumo.style.display =
+            tipo === "Insumo" ? "block" : "none";
     }
 
 
+    function cambiarUnidad() {
+        const selector = document.getElementById("unidadSelector");
+        const real = document.getElementById("unidadMedidaReal");
+        const contenedorOtro = document.getElementById("unidadOtroContenedor");
+        const otro = document.getElementById("unidadOtro");
 
-    // MOSTRAR ERROR
+        if (selector.value === "Otro") {
+            contenedorOtro.style.display = "block";
+            real.value = otro.value.trim();
+        }
+        else if (selector.value === "Omitir") {
+            contenedorOtro.style.display = "none";
+            otro.value = "";
+            real.value = "";
+        }
+        else {
+            contenedorOtro.style.display = "none";
+            otro.value = "";
+            real.value = selector.value;
+        }
 
-    function mostrarError(
-        texto,
-        campo
-    ) {
-
-        const mensaje =
-            document.getElementById(
-                "mensajeFormulario"
-            );
-
-
-        mensaje.innerText =
-            texto;
-
-
-        mensaje.className =
-            "mensaje mensaje-error";
+        actualizarResumenStock();
+    }
 
 
-        mensaje.style.visibility =
-            "visible";
+    function actualizarUnidadPersonalizada() {
+        const selector = document.getElementById("unidadSelector");
+        const real = document.getElementById("unidadMedidaReal");
+        const otro = document.getElementById("unidadOtro");
+
+        if (selector.value === "Otro") {
+            real.value = otro.value.trim();
+        }
+
+        actualizarResumenStock();
+    }
 
 
-        mensaje.style.opacity =
-            "1";
+    function actualizarResumenStock() {
+        const selector = document.getElementById("unidadSelector");
+        const real = document.getElementById("unidadMedidaReal");
+        const stock = document.getElementById("stockMinimo");
+        const label = document.getElementById("labelStockMinimo");
+        const ayuda = document.getElementById("ayudaStock");
 
+        const unidad = real.value.trim();
+        const minimo = stock.value.trim();
+
+        if (selector.value === "Omitir") {
+            label.innerText = "Alerta de stock bajo";
+
+            ayuda.innerHTML =
+                minimo !== ""
+                    ? `SARMedix avisará cuando el stock llegue a <strong>${minimo}</strong> o menos.`
+                    : "Indique desde qué cantidad desea recibir una alerta de stock bajo.";
+
+            return;
+        }
+
+        if (unidad === "") {
+            label.innerText = "Alerta de stock bajo";
+            ayuda.innerText =
+                "Seleccione una unidad para ver cómo se interpretará la alerta.";
+            return;
+        }
+
+        label.innerText = `Alerta de stock bajo (${unidad})`;
+
+        ayuda.innerHTML =
+            minimo !== ""
+                ? `SARMedix avisará cuando queden <strong>${minimo} ${unidad}</strong> o menos.`
+                : `La alerta se medirá en <strong>${unidad}</strong>.`;
+    }
+
+
+    function mostrarError(texto, campo) {
+        const mensaje = document.getElementById("mensajeFormulario");
+
+        mensaje.innerText = texto;
+        mensaje.className = "mensaje mensaje-error";
+        mensaje.style.visibility = "visible";
+        mensaje.style.opacity = "1";
 
         campo.focus();
-
     }
 
-
-
-    // VALIDAR Y MOSTRAR CONFIRMACION
 
     function validarYConfirmar() {
-
         if (productoConfirmado) {
-
             return true;
-
         }
 
+        const tipo = document.getElementById("tipoProducto");
+        const nombre = document.getElementById("nombreProducto");
+        const contenido = document.getElementById("contenidoPorEnvase");
+        const unidadSelector = document.getElementById("unidadSelector");
+        const unidadOtro = document.getElementById("unidadOtro");
+        const stock = document.getElementById("stockMinimo");
+        const codigoBarras = document.getElementById("codigoBarras");
 
-        const tipo =
-            document.getElementById(
-                "tipoProducto"
+        if (codigoDuplicado) {
+            mostrarError(
+                "Este código de barras ya pertenece a un producto registrado.",
+                codigoBarras
             );
-
-
-        const codigo =
-            document.getElementById(
-                "codigoInterno"
-            );
-
-
-        const nombre =
-            document.getElementById(
-                "nombreProducto"
-            );
-
-
-        const stock =
-            document.getElementById(
-                "stockMinimo"
-            );
-
-
-        const principioActivo =
-            document.getElementById(
-                "principioActivo"
-            );
-
-
-        const concentracion =
-            document.getElementById(
-                "concentracion"
-            );
-
-
-        const material =
-            document.getElementById(
-                "material"
-            );
-
-
+            return false;
+        }
 
         if (tipo.value === "") {
-
-            mostrarError(
-                "Debe seleccionar el tipo de producto.",
-                tipo
-            );
-
+            mostrarError("Debe seleccionar el tipo de producto.", tipo);
             return false;
-
         }
-
-
-
-        if (codigo.value.trim() === "") {
-
-            mostrarError(
-                "Debe ingresar el código interno.",
-                codigo
-            );
-
-            return false;
-
-        }
-
-
 
         if (nombre.value.trim() === "") {
-
-            mostrarError(
-                "Debe ingresar el nombre del producto.",
-                nombre
-            );
-
+            mostrarError("Debe ingresar el nombre del producto.", nombre);
             return false;
-
         }
 
+        if (tipo.value === "Medicamento") {
+            const forma = document.getElementById("formaFarmaceutica");
+            const principio = document.getElementById("principioActivo");
+            const concentracion = document.getElementById("concentracion");
 
+            if (forma.value === "") {
+                mostrarError("Debe seleccionar la forma farmacéutica.", forma);
+                return false;
+            }
+
+            if (principio.value.trim() === "") {
+                mostrarError("Debe ingresar el principio activo.", principio);
+                return false;
+            }
+
+            if (concentracion.value.trim() === "") {
+                mostrarError("Debe ingresar la concentración.", concentracion);
+                return false;
+            }
+        }
+
+        if (tipo.value === "Insumo") {
+            const material = document.getElementById("material");
+
+            if (material.value.trim() === "") {
+                mostrarError("Debe ingresar el material.", material);
+                return false;
+            }
+        }
 
         if (
-            stock.value.trim() === "" ||
-            Number(stock.value) < 0
+            contenido.value.trim() === ""
+            || Number(contenido.value) <= 0
         ) {
-
             mostrarError(
-                "Debe ingresar un stock mínimo válido.",
+                "La cantidad contenida debe ser mayor a 0.",
+                contenido
+            );
+            return false;
+        }
+
+        if (unidadSelector.value === "") {
+            mostrarError(
+                "Seleccione una unidad de medida o elija Omitir.",
+                unidadSelector
+            );
+            return false;
+        }
+
+        if (
+            unidadSelector.value === "Otro"
+            && unidadOtro.value.trim() === ""
+        ) {
+            mostrarError(
+                "Especifique la unidad de medida.",
+                unidadOtro
+            );
+            return false;
+        }
+
+        if (
+            stock.value.trim() === ""
+            || Number(stock.value) < 0
+        ) {
+            mostrarError(
+                "Debe ingresar una cantidad válida para la alerta de stock bajo.",
                 stock
             );
-
             return false;
-
         }
 
-
-
-        // VALIDACIONES MEDICAMENTO
-
-        if (
-            tipo.value === "Medicamento"
-        ) {
-
-            if (
-                principioActivo.value.trim()
-                === ""
-            ) {
-
-                mostrarError(
-                    "Debe ingresar el principio activo.",
-                    principioActivo
-                );
-
-                return false;
-
-            }
-
-
-            if (
-                concentracion.value.trim()
-                === ""
-            ) {
-
-                mostrarError(
-                    "Debe ingresar la concentración.",
-                    concentracion
-                );
-
-                return false;
-
-            }
-
-        }
-
-
-
-        // VALIDACIONES INSUMO
-
-        if (
-            tipo.value === "Insumo"
-        ) {
-
-            if (
-                material.value.trim()
-                === ""
-            ) {
-
-                mostrarError(
-                    "Debe ingresar el material.",
-                    material
-                );
-
-                return false;
-
-            }
-
-        }
-
-
-
-        document.getElementById(
-            "modalConfirmacion"
-        ).style.display =
-            "flex";
-
-
+        document.getElementById("modalConfirmacion").style.display = "flex";
         return false;
-
     }
 
-
-
-    // BOTON SI
 
     function registrarProducto() {
-
-        productoConfirmado =
-            true;
-
-
-        document.getElementById(
-            "modalConfirmacion"
-        ).style.display =
-            "none";
-
-
-        document.getElementById(
-            "formCrearProducto"
-        ).requestSubmit();
-
+        productoConfirmado = true;
+        document.getElementById("modalConfirmacion").style.display = "none";
+        document.getElementById("formCrearProducto").requestSubmit();
     }
 
-
-
-    // BOTON NO
 
     function cerrarConfirmacion() {
-
-        productoConfirmado =
-            false;
-
-
-        document.getElementById(
-            "modalConfirmacion"
-        ).style.display =
-            "none";
-
+        productoConfirmado = false;
+        document.getElementById("modalConfirmacion").style.display = "none";
     }
 
-
-
-    // BOTON CANCELAR
 
     function cancelarRegistro() {
+        productoConfirmado = false;
+        document.getElementById("modalConfirmacion").style.display = "none";
+        document.getElementById("formCrearProducto").reset();
+        document.getElementById("codigoInterno").value = "AUTO";
+        document.getElementById("unidadMedidaReal").value = "";
+        document.getElementById("unidadOtroContenedor").style.display = "none";
+        limpiarEstadoCodigo();
+        cambiarTipo();
+        actualizarResumenStock();
 
-        productoConfirmado =
-            false;
+        const mensaje = document.getElementById("mensajeFormulario");
+        mensaje.innerText = "";
+        mensaje.className = "mensaje mensaje-error mensaje-oculto";
+        mensaje.style.visibility = "hidden";
+        mensaje.style.opacity = "1";
 
-
-        document.getElementById(
-            "modalConfirmacion"
-        ).style.display =
-            "none";
-
-
-        document.getElementById(
-            "tipoProducto"
-        ).value =
-            "";
-
-
-        document.getElementById(
-            "codigoInterno"
-        ).value =
-            "";
-
-
-        document.getElementById(
-            "nombreProducto"
-        ).value =
-            "";
-
-
-        document.getElementById(
-            "stockMinimo"
-        ).value =
-            "0";
-
-
-        document.getElementById(
-            "imagenProducto"
-        ).value =
-            "";
-
-
-        document.getElementById(
-            "principioActivo"
-        ).value =
-            "";
-
-
-        document.getElementById(
-            "concentracion"
-        ).value =
-            "";
-
-
-        document.getElementById(
-            "requiereControl"
-        ).value =
-            "false";
-
-
-        document.getElementById(
-            "material"
-        ).value =
-            "";
-
-
-        document.getElementById(
-            "esEsteril"
-        ).value =
-            "false";
-
-
-        document.getElementById(
-            "camposMedicamento"
-        ).style.display =
-            "none";
-
-
-        document.getElementById(
-            "camposInsumo"
-        ).style.display =
-            "none";
-
-
-        const mensaje =
-            document.getElementById(
-                "mensajeFormulario"
-            );
-
-
-        mensaje.innerText =
-            "";
-
-
-        mensaje.className =
-            "mensaje mensaje-error mensaje-oculto";
-
-
-        mensaje.style.visibility =
-            "hidden";
-
-
-        mensaje.style.opacity =
-            "1";
-
-
-        document.getElementById(
-            "tipoProducto"
-        ).focus();
-
+        document.getElementById("tipoProducto").focus();
     }
 
 
+    document.addEventListener("DOMContentLoaded", function () {
+        cambiarTipo();
 
-    // MOSTRAR CAMPOS AL RECARGAR
+        const selector = document.getElementById("unidadSelector");
+        const real = document.getElementById("unidadMedidaReal");
+        const otro = document.getElementById("unidadOtro");
+        const contenedorOtro = document.getElementById("unidadOtroContenedor");
+        const valorGuardado = real.value.trim();
 
-    document.addEventListener(
-        "DOMContentLoaded",
-        function () {
+        const opciones = ["Unidades", "mg", "g", "kg", "mL", "L"];
 
-            cambiarTipo();
-
+        if (valorGuardado === "") {
+            selector.value = "";
         }
-    );
+        else if (opciones.includes(valorGuardado)) {
+            selector.value = valorGuardado;
+        }
+        else {
+            selector.value = "Otro";
+            otro.value = valorGuardado;
+            contenedorOtro.style.display = "block";
+        }
 
+        actualizarResumenStock();
 
+        const codigo = document.getElementById("codigoBarras");
 
-    // OCULTAR MENSAJE DESPUES DE 3 SEGUNDOS
+        if (codigo) {
+            codigo.addEventListener("input", function () {
+                codigoDuplicado = false;
 
-    setTimeout(
-        function () {
+                const boton = document.getElementById("btnRegistrarProducto");
+                if (boton) {
+                    boton.disabled = false;
+                }
 
-            const mensaje =
-                document.getElementById(
-                    "mensajeFormulario"
-                );
+                if (codigo.value.trim() === "") {
+                    limpiarEstadoCodigo();
+                    return;
+                }
 
+                programarVerificacionCodigo();
+            });
 
-            if (
-                mensaje &&
-                (
-                    mensaje.classList.contains(
-                        "mensaje-exito"
-                    )
-                    ||
-                    mensaje.classList.contains(
-                        "mensaje-error"
-                    )
-                )
-                &&
-                !mensaje.classList.contains(
-                    "mensaje-oculto"
-                )
-            ) {
+            codigo.addEventListener("blur", function () {
+                verificarCodigoBarrasExistente();
+            });
 
-                mensaje.style.opacity =
-                    "0";
+            codigo.addEventListener("keydown", function (evento) {
+                if (evento.key === "Enter") {
+                    evento.preventDefault();
+                    verificarCodigoBarrasExistente();
+                }
+            });
 
-
-                setTimeout(
-                    function () {
-
-                        mensaje.style.visibility =
-                            "hidden";
-
-                    },
-                    500
-                );
-
+            if (codigo.value.trim() !== "") {
+                verificarCodigoBarrasExistente();
+                codigo.focus();
+                codigo.select();
             }
+            else {
+                codigo.focus();
+            }
+        }
+    });
 
-        },
-        3000
-    );
 
+    setTimeout(function () {
+        const mensaje = document.getElementById("mensajeFormulario");
+
+        if (
+            mensaje
+            && !mensaje.classList.contains("mensaje-oculto")
+        ) {
+            mensaje.style.opacity = "0";
+
+            setTimeout(function () {
+                mensaje.style.visibility = "hidden";
+            }, 500);
+        }
+    }, 3000);
 </script>

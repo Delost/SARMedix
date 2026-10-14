@@ -14,9 +14,7 @@
         ?? (ViewBag.Mensaje != null ? "error" : "");
 }
 
-
 <h2>Editar producto</h2>
-
 
 <form asp-controller="Home"
       asp-action="ActualizarProducto"
@@ -26,39 +24,24 @@
       onsubmit="return validarYConfirmar()"
       novalidate>
 
+    <input asp-for="id_producto" type="hidden" />
+    <input asp-for="tipo" type="hidden" />
+    <input asp-for="codigo_interno" id="codigoInterno" type="hidden" />
 
-    <!-- DATOS OCULTOS -->
-
-    <input asp-for="id_producto"
-           type="hidden" />
-
-    <input asp-for="tipo"
-           type="hidden" />
-
-
-
-    <!-- MENSAJE -->
 
     <div class="espacio-mensaje">
-
         @if (!string.IsNullOrEmpty(mensaje))
         {
             if (tipoMensaje == "exito")
             {
-                <div class="mensaje mensaje-exito"
-                     id="mensajeFormulario">
-
+                <div class="mensaje mensaje-exito" id="mensajeFormulario">
                     @mensaje
-
                 </div>
             }
             else
             {
-                <div class="mensaje mensaje-error"
-                     id="mensajeFormulario">
-
+                <div class="mensaje mensaje-error" id="mensajeFormulario">
                     @mensaje
-
                 </div>
             }
         }
@@ -68,856 +51,624 @@
                  id="mensajeFormulario">
             </div>
         }
-
     </div>
 
 
-
-    <!-- TIPO DE PRODUCTO -->
-
     <div>
-
         <label>Tipo de producto</label>
-
-        <input value="@Model.tipo"
-               disabled />
-
+        <input value="@Model.tipo" disabled />
     </div>
 
 
+    <div class="bloque-codigo-barras">
+        <div class="fila-codigo-barras">
+            <label for="codigoBarras">Código de barras / GTIN</label>
+            <span class="badge-codigo">ESCÁNER O MANUAL</span>
+        </div>
 
-    <!-- CODIGO INTERNO -->
+        <input asp-for="codigo_barras"
+               id="codigoBarras"
+               autocomplete="off"
+               placeholder="Escanee el código o escríbalo aquí" />
 
-    <div>
-
-        <label>Código interno</label>
-
-        <input asp-for="codigo_interno"
-               id="codigoInterno" />
-
+        <div class="ayuda-codigo">
+            <span class="icono-codigo">▦</span>
+            <span>
+                <strong>Escanee con el lector</strong> o escriba el código manualmente.
+                Si el producto no tiene código, puede dejar este campo vacío.
+            </span>
+        </div>
     </div>
 
 
-
-    <!-- NOMBRE -->
-
     <div>
-
         <label>Nombre</label>
-
-        <input asp-for="nombre"
-               id="nombreProducto" />
-
+        <input asp-for="nombre" id="nombreProducto" />
     </div>
 
-
-
-    <!-- STOCK MINIMO -->
-
-    <div>
-
-        <label>Stock mínimo</label>
-
-        <input asp-for="stock_minimo"
-               id="stockMinimo"
-               type="number"
-               min="0" />
-
-    </div>
-
-
-
-    <!-- MEDICAMENTO -->
 
     @if (Model.tipo == "Medicamento")
     {
         <div>
+            <label>Forma farmacéutica</label>
 
+            <select asp-for="forma_farmaceutica"
+                    id="formaFarmaceutica">
+                <option value="">Seleccione</option>
+                <option value="Comprimido">Comprimido</option>
+                <option value="Cápsula">Cápsula</option>
+                <option value="Solución oral">Solución oral</option>
+                <option value="Jarabe">Jarabe</option>
+                <option value="Ampolla">Ampolla</option>
+                <option value="Gotas">Gotas</option>
+                <option value="Crema">Crema</option>
+                <option value="Inhalador">Inhalador</option>
+                <option value="Supositorio">Supositorio</option>
+                <option value="Sobre">Sobre</option>
+                <option value="Otro">Otro</option>
+            </select>
+        </div>
+
+        <div>
             <label>Principio activo</label>
-
-            <input asp-for="principio_activo"
-                   id="principioActivo" />
-
+            <input asp-for="principio_activo" id="principioActivo" />
         </div>
 
-
         <div>
-
             <label>Concentración</label>
-
-            <input asp-for="concentracion"
-                   id="concentracion" />
-
+            <input asp-for="concentracion" id="concentracion" />
         </div>
 
-
         <div>
-
             <label>¿Requiere control?</label>
 
             <select asp-for="requiere_control"
                     id="requiereControl">
-
-                <option value="false">
-                    No
-                </option>
-
-                <option value="true">
-                    Sí
-                </option>
-
+                <option value="false">No</option>
+                <option value="true">Sí</option>
             </select>
-
         </div>
     }
 
-
-
-    <!-- INSUMO -->
 
     @if (Model.tipo == "Insumo")
     {
         <div>
-
             <label>Material</label>
-
-            <input asp-for="material"
-                   id="material" />
-
+            <input asp-for="material" id="material" />
         </div>
 
-
         <div>
-
             <label>¿Es estéril?</label>
 
             <select asp-for="es_esteril"
                     id="esEsteril">
-
-                <option value="false">
-                    No
-                </option>
-
-                <option value="true">
-                    Sí
-                </option>
-
+                <option value="false">No</option>
+                <option value="true">Sí</option>
             </select>
-
         </div>
     }
 
+
+    <div class="seccion-inventario">
+        <div class="seccion-inventario-titulo">Control de contenido y stock</div>
+        <div class="seccion-inventario-subtitulo">
+            Indique cuánto contiene el producto y en qué unidad se controlará.
+        </div>
+
+        <div>
+            <label>Cantidad contenida</label>
+
+            <input asp-for="contenido_por_envase"
+                   id="contenidoPorEnvase"
+                   type="number"
+                   min="1"
+                   oninput="actualizarResumenStock()" />
+        </div>
+
+        <div>
+            <label>Unidad de medida</label>
+
+            <input asp-for="unidad_medida"
+                   id="unidadMedidaReal"
+                   type="hidden" />
+
+            <select id="unidadSelector"
+                    onchange="cambiarUnidad()">
+                <option value="">Seleccione</option>
+                <option value="Unidades">Unidades</option>
+                <option value="mg">mg</option>
+                <option value="g">g</option>
+                <option value="kg">kg</option>
+                <option value="mL">mL</option>
+                <option value="L">L</option>
+                <option value="Otro">Otro</option>
+                <option value="Omitir">Omitir</option>
+            </select>
+
+            <div id="unidadOtroContenedor"
+                 class="unidad-otro"
+                 style="display:none;">
+                <label>Especifique la unidad</label>
+
+                <input id="unidadOtro"
+                       type="text"
+                       placeholder="Ej.: comprimidos, ampollas, sobres"
+                       oninput="actualizarUnidadPersonalizada()" />
+            </div>
+        </div>
+
+        <div>
+            <label id="labelStockMinimo">Alerta de stock bajo</label>
+
+            <input asp-for="stock_minimo"
+                   id="stockMinimo"
+                   type="number"
+                   min="0"
+                   oninput="actualizarResumenStock()" />
+
+            <div class="ayuda-stock" id="ayudaStock"></div>
+        </div>
+    </div>
 
 
     <br />
 
-
-
-    <!-- BOTON ACTUALIZAR -->
-
-    <button type="submit">
-
-        Actualizar producto
-
-    </button>
-
-
+    <button type="submit">Actualizar producto</button>
 </form>
 
 
-
-<!-- BOTONES VOLVER -->
-
 <div class="contenedor-volver">
-
-
     <a asp-controller="Home"
        asp-action="ListadoProductos2"
        class="btn-volver-listado">
-
         ← Volver al listado de productos
-
     </a>
-
 
     <a asp-controller="Home"
        asp-action="Productos"
        class="btn-volver-productos">
-
         ← Volver a Productos
-
     </a>
-
-
 </div>
 
 
-
-<!-- VENTANA DE CONFIRMACION -->
-
-<div id="modalConfirmacion"
-     class="modal-fondo">
-
+<div id="modalConfirmacion" class="modal-fondo">
     <div class="modal-contenido">
-
-
-        <div class="modal-icono">
-
-            ?
-
-        </div>
-
-
-        <h2>
-
-            Confirmar acción
-
-        </h2>
-
-
-        <p>
-
-            ¿Quieres actualizar este producto?
-
-        </p>
-
+        <div class="modal-icono">?</div>
+        <h2>Confirmar acción</h2>
+        <p>¿Quieres actualizar este producto?</p>
 
         <div class="modal-botones">
-
-
             <button type="button"
                     class="btn-modal-si"
                     onclick="actualizarProducto()">
-
                 Sí
-
             </button>
-
 
             <button type="button"
                     class="btn-modal-no"
                     onclick="cerrarConfirmacion()">
-
                 No
-
             </button>
-
 
             <button type="button"
                     class="btn-modal-cancelar"
                     onclick="cancelarEdicion()">
-
                 Cancelar
-
             </button>
-
-
         </div>
-
-
     </div>
-
 </div>
 
 
-
 <style>
-
-    /* MENSAJES */
-
     .espacio-mensaje {
         min-height: 48px;
-
         margin-bottom: 8px;
     }
 
-
     .mensaje {
         width: 100%;
-
         padding: 12px 15px;
-
         border-radius: 7px;
-
         text-align: center;
-
         font-weight: 600;
-
         opacity: 1;
-
-        transition:
-            opacity 0.5s ease;
+        transition: opacity 0.5s ease;
     }
-
 
     .mensaje-exito {
         background-color: #d1e7dd;
-
         color: #0f5132;
-
-        border:
-            1px solid #badbcc;
+        border: 1px solid #badbcc;
     }
-
 
     .mensaje-error {
         background-color: #f8d7da;
-
         color: #842029;
-
-        border:
-            1px solid #f5c2c7;
+        border: 1px solid #f5c2c7;
     }
-
 
     .mensaje-oculto {
         visibility: hidden;
     }
 
+    .bloque-codigo-barras {
+        padding: 14px;
+        margin: 4px 0 16px 0;
+        border: 1px solid #b8dbe4;
+        border-radius: 10px;
+        background-color: #f4fbfc;
+    }
 
+    .fila-codigo-barras {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
 
-    /* BOTONES VOLVER */
+    .badge-codigo {
+        padding: 4px 8px;
+        border-radius: 999px;
+        background-color: #d9f1f4;
+        color: #0b6670;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .04em;
+    }
+
+    .bloque-codigo-barras input {
+        margin-top: 5px;
+    }
+
+    .ayuda-codigo {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 8px;
+        color: #526d7c;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+    .ayuda-codigo strong { color: #075f6b; }
+    .icono-codigo { color: #1198a5; font-size: 18px; line-height: 1; }
+
+    .seccion-inventario {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid #dbe5ea;
+    }
+
+    .seccion-inventario-titulo {
+        color: #003b64;
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    .seccion-inventario-subtitulo {
+        margin: 3px 0 14px 0;
+        color: #718592;
+        font-size: 12px;
+    }
+
+    .unidad-otro { margin-top: 10px; }
+
+    .ayuda-stock {
+        margin-top: 8px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background-color: #f3fafc;
+        border: 1px solid #c9e5ec;
+        color: #536c7b;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+    .ayuda-stock strong { color: #0b5f7b; }
 
     .contenedor-volver {
         display: flex;
-
         justify-content: center;
-
         gap: 15px;
-
         flex-wrap: wrap;
-
         margin-top: 30px;
-
         margin-bottom: 30px;
     }
 
-
-    .btn-volver-listado {
-        display: inline-block;
-
-        padding: 12px 22px;
-
-        background-color: #59636b;
-
-        color: white;
-
-        border-radius: 7px;
-
-        text-decoration: none;
-
-        font-weight: 600;
-
-        transition:
-            background-color 0.2s ease;
-    }
-
-
-    .btn-volver-listado:hover {
-        background-color: #474f55;
-
-        color: white;
-    }
-
-
+    .btn-volver-listado,
     .btn-volver-productos {
         display: inline-block;
-
         padding: 12px 22px;
-
-        background-color: #1198a5;
-
         color: white;
-
         border-radius: 7px;
-
         text-decoration: none;
-
         font-weight: 600;
-
-        transition:
-            background-color 0.2s ease;
     }
 
-
-    .btn-volver-productos:hover {
-        background-color: #0d8490;
-
-        color: white;
-    }
-
-
-
-    /* VENTANA DE CONFIRMACION */
+    .btn-volver-listado { background-color: #59636b; }
+    .btn-volver-listado:hover { background-color: #474f55; color: white; }
+    .btn-volver-productos { background-color: #1198a5; }
+    .btn-volver-productos:hover { background-color: #0d8490; color: white; }
 
     .modal-fondo {
         display: none;
-
         position: fixed;
-
         top: 0;
-
         left: 0;
-
         width: 100%;
-
         height: 100%;
-
-        background-color:
-            rgba(0, 0, 0, 0.45);
-
+        background-color: rgba(0, 0, 0, 0.45);
         align-items: center;
-
         justify-content: center;
-
         z-index: 9999;
     }
 
-
     .modal-contenido {
         width: 90%;
-
         max-width: 430px;
-
         background-color: white;
-
         border-radius: 15px;
-
         padding: 30px;
-
         text-align: center;
-
-        box-shadow:
-            0 12px 35px
-            rgba(0, 0, 0, 0.25);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
     }
-
 
     .modal-icono {
         width: 55px;
-
         height: 55px;
-
-        margin:
-            0 auto 15px auto;
-
+        margin: 0 auto 15px auto;
         display: flex;
-
         align-items: center;
-
         justify-content: center;
-
         background-color: #1198a5;
-
         color: white;
-
         border-radius: 50%;
-
         font-size: 30px;
-
         font-weight: bold;
     }
 
-
-    .modal-contenido h2 {
-        margin-top: 0;
-
-        color: #003b64;
-    }
-
-
-    .modal-contenido p {
-        margin-top: 15px;
-
-        margin-bottom: 25px;
-
-        font-size: 17px;
-
-        color: #444;
-    }
-
+    .modal-contenido h2 { margin-top: 0; color: #003b64; }
+    .modal-contenido p { margin-top: 15px; margin-bottom: 25px; font-size: 17px; color: #444; }
 
     .modal-botones {
         display: flex;
-
         justify-content: center;
-
         gap: 10px;
-
         flex-wrap: wrap;
     }
 
-
     .modal-botones button {
         min-width: 90px;
-
         padding: 10px 18px;
-
         border: none;
-
         border-radius: 7px;
-
         color: white;
-
         font-weight: 600;
-
         cursor: pointer;
     }
 
-
-    .btn-modal-si {
-        background-color: #198754;
-    }
-
-
-    .btn-modal-si:hover {
-        background-color: #157347;
-    }
-
-
-    .btn-modal-no {
-        background-color: #c82333;
-    }
-
-
-    .btn-modal-no:hover {
-        background-color: #a91d2a;
-    }
-
-
-    .btn-modal-cancelar {
-        background-color: #59636b;
-    }
-
-
-    .btn-modal-cancelar:hover {
-        background-color: #474f55;
-    }
-
+    .btn-modal-si { background-color: #198754; }
+    .btn-modal-no { background-color: #c82333; }
+    .btn-modal-cancelar { background-color: #59636b; }
 </style>
 
 
-
 <script>
-
     let productoConfirmado = false;
 
+    function cambiarUnidad() {
+        const selector = document.getElementById("unidadSelector");
+        const real = document.getElementById("unidadMedidaReal");
+        const contenedorOtro = document.getElementById("unidadOtroContenedor");
+        const otro = document.getElementById("unidadOtro");
 
+        if (selector.value === "Otro") {
+            contenedorOtro.style.display = "block";
+            real.value = otro.value.trim();
+        }
+        else if (selector.value === "Omitir") {
+            contenedorOtro.style.display = "none";
+            otro.value = "";
+            real.value = "";
+        }
+        else {
+            contenedorOtro.style.display = "none";
+            otro.value = "";
+            real.value = selector.value;
+        }
 
-    // MOSTRAR ERROR
+        actualizarResumenStock();
+    }
 
-    function mostrarError(
-        texto,
-        campo
-    ) {
+    function actualizarUnidadPersonalizada() {
+        const selector = document.getElementById("unidadSelector");
+        const real = document.getElementById("unidadMedidaReal");
+        const otro = document.getElementById("unidadOtro");
 
-        const mensaje =
-            document.getElementById(
-                "mensajeFormulario"
-            );
+        if (selector.value === "Otro") {
+            real.value = otro.value.trim();
+        }
 
+        actualizarResumenStock();
+    }
 
-        mensaje.innerText =
-            texto;
+    function actualizarResumenStock() {
+        const selector = document.getElementById("unidadSelector");
+        const real = document.getElementById("unidadMedidaReal");
+        const stock = document.getElementById("stockMinimo");
+        const label = document.getElementById("labelStockMinimo");
+        const ayuda = document.getElementById("ayudaStock");
 
+        const unidad = real.value.trim();
+        const minimo = stock.value.trim();
 
-        mensaje.className =
-            "mensaje mensaje-error";
+        if (selector.value === "Omitir") {
+            label.innerText = "Alerta de stock bajo";
+            ayuda.innerHTML =
+                minimo !== ""
+                    ? `SARMedix avisará cuando el stock llegue a <strong>${minimo}</strong> o menos.`
+                    : "Indique desde qué cantidad desea recibir una alerta de stock bajo.";
+            return;
+        }
 
+        if (unidad === "") {
+            label.innerText = "Alerta de stock bajo";
+            ayuda.innerText = "Seleccione una unidad para ver cómo se interpretará la alerta.";
+            return;
+        }
 
-        mensaje.style.visibility =
-            "visible";
+        label.innerText = `Alerta de stock bajo (${unidad})`;
+        ayuda.innerHTML =
+            minimo !== ""
+                ? `SARMedix avisará cuando queden <strong>${minimo} ${unidad}</strong> o menos.`
+                : `La alerta se medirá en <strong>${unidad}</strong>.`;
+    }
 
-
-        mensaje.style.opacity =
-            "1";
-
-
+    function mostrarError(texto, campo) {
+        const mensaje = document.getElementById("mensajeFormulario");
+        mensaje.innerText = texto;
+        mensaje.className = "mensaje mensaje-error";
+        mensaje.style.visibility = "visible";
+        mensaje.style.opacity = "1";
         campo.focus();
     }
 
-
-
-    // VALIDAR Y CONFIRMAR
-
     function validarYConfirmar() {
-
         if (productoConfirmado) {
-
             return true;
         }
 
-
-        const codigo =
-            document.getElementById(
-                "codigoInterno"
-            );
-
-
-        const nombre =
-            document.getElementById(
-                "nombreProducto"
-            );
-
-
-        const stock =
-            document.getElementById(
-                "stockMinimo"
-            );
-
-
-
-        if (codigo.value.trim() === "") {
-
-            mostrarError(
-                "Debe ingresar el código interno.",
-                codigo
-            );
-
-            return false;
-        }
-
-
+        const nombre = document.getElementById("nombreProducto");
+        const contenido = document.getElementById("contenidoPorEnvase");
+        const unidadSelector = document.getElementById("unidadSelector");
+        const unidadOtro = document.getElementById("unidadOtro");
+        const stock = document.getElementById("stockMinimo");
 
         if (nombre.value.trim() === "") {
-
-            mostrarError(
-                "Debe ingresar el nombre del producto.",
-                nombre
-            );
-
+            mostrarError("Debe ingresar el nombre del producto.", nombre);
             return false;
         }
-
-
-
-        if (
-            stock.value.trim() === ""
-            ||
-            Number(stock.value) < 0
-        ) {
-
-            mostrarError(
-                "Debe ingresar un stock mínimo válido.",
-                stock
-            );
-
-            return false;
-        }
-
-
-
-        // VALIDACIONES MEDICAMENTO
 
         @if (Model.tipo == "Medicamento")
         {
             <text>
+                const forma = document.getElementById("formaFarmaceutica");
+                const principio = document.getElementById("principioActivo");
+                const concentracion = document.getElementById("concentracion");
 
-                const principioActivo =
-                    document.getElementById(
-                        "principioActivo"
-                    );
-
-
-                const concentracion =
-                    document.getElementById(
-                        "concentracion"
-                    );
-
-
-                if (
-                    principioActivo.value.trim()
-                    === ""
-                ) {
-
-                    mostrarError(
-                        "Debe ingresar el principio activo.",
-                        principioActivo
-                    );
-
+                if (forma.value === "") {
+                    mostrarError("Debe seleccionar la forma farmacéutica.", forma);
                     return false;
                 }
 
-
-                if (
-                    concentracion.value.trim()
-                    === ""
-                ) {
-
-                    mostrarError(
-                        "Debe ingresar la concentración.",
-                        concentracion
-                    );
-
+                if (principio.value.trim() === "") {
+                    mostrarError("Debe ingresar el principio activo.", principio);
                     return false;
                 }
 
+                if (concentracion.value.trim() === "") {
+                    mostrarError("Debe ingresar la concentración.", concentracion);
+                    return false;
+                }
             </text>
         }
-
-
-
-        // VALIDACIONES INSUMO
 
         @if (Model.tipo == "Insumo")
         {
             <text>
+                const material = document.getElementById("material");
 
-                const material =
-                    document.getElementById(
-                        "material"
-                    );
-
-
-                if (
-                    material.value.trim()
-                    === ""
-                ) {
-
-                    mostrarError(
-                        "Debe ingresar el material.",
-                        material
-                    );
-
+                if (material.value.trim() === "") {
+                    mostrarError("Debe ingresar el material.", material);
                     return false;
                 }
-
             </text>
         }
 
+        if (contenido.value.trim() === "" || Number(contenido.value) <= 0) {
+            mostrarError("La cantidad contenida debe ser mayor a 0.", contenido);
+            return false;
+        }
 
+        if (unidadSelector.value === "") {
+            mostrarError("Seleccione una unidad de medida o elija Omitir.", unidadSelector);
+            return false;
+        }
 
-        document.getElementById(
-            "modalConfirmacion"
-        ).style.display =
-            "flex";
+        if (unidadSelector.value === "Otro" && unidadOtro.value.trim() === "") {
+            mostrarError("Especifique la unidad de medida.", unidadOtro);
+            return false;
+        }
 
+        if (stock.value.trim() === "" || Number(stock.value) < 0) {
+            mostrarError("Debe ingresar una cantidad válida para la alerta de stock bajo.", stock);
+            return false;
+        }
 
+        document.getElementById("modalConfirmacion").style.display = "flex";
         return false;
     }
 
-
-
-    // BOTON SI
-
     function actualizarProducto() {
-
-        productoConfirmado =
-            true;
-
-
-        document.getElementById(
-            "modalConfirmacion"
-        ).style.display =
-            "none";
-
-
-        document.getElementById(
-            "formEditarProducto"
-        ).requestSubmit();
+        productoConfirmado = true;
+        document.getElementById("modalConfirmacion").style.display = "none";
+        document.getElementById("formEditarProducto").requestSubmit();
     }
-
-
-
-    // BOTON NO
 
     function cerrarConfirmacion() {
-
-        productoConfirmado =
-            false;
-
-
-        document.getElementById(
-            "modalConfirmacion"
-        ).style.display =
-            "none";
+        productoConfirmado = false;
+        document.getElementById("modalConfirmacion").style.display = "none";
     }
-
-
-
-    // BOTON CANCELAR
 
     function cancelarEdicion() {
-
-        productoConfirmado =
-            false;
-
-
-        document.getElementById(
-            "modalConfirmacion"
-        ).style.display =
-            "none";
-
-
-        document.getElementById(
-            "formEditarProducto"
-        ).reset();
-
-
-        const mensaje =
-            document.getElementById(
-                "mensajeFormulario"
-            );
-
-
-        mensaje.innerText =
-            "";
-
-
-        mensaje.className =
-            "mensaje mensaje-error mensaje-oculto";
-
-
-        mensaje.style.visibility =
-            "hidden";
-
-
-        mensaje.style.opacity =
-            "1";
-
-
-        document.getElementById(
-            "codigoInterno"
-        ).focus();
+        productoConfirmado = false;
+        document.getElementById("modalConfirmacion").style.display = "none";
+        document.getElementById("formEditarProducto").reset();
+        inicializarUnidad();
+        actualizarResumenStock();
     }
 
+    function inicializarUnidad() {
+        const selector = document.getElementById("unidadSelector");
+        const real = document.getElementById("unidadMedidaReal");
+        const otro = document.getElementById("unidadOtro");
+        const contenedorOtro = document.getElementById("unidadOtroContenedor");
+        const valorGuardado = real.value.trim();
+        const opciones = ["Unidades", "mg", "g", "kg", "mL", "L"];
 
+        if (valorGuardado === "") {
+            selector.value = "Omitir";
+            contenedorOtro.style.display = "none";
+        }
+        else if (opciones.includes(valorGuardado)) {
+            selector.value = valorGuardado;
+            contenedorOtro.style.display = "none";
+        }
+        else {
+            selector.value = "Otro";
+            otro.value = valorGuardado;
+            contenedorOtro.style.display = "block";
+        }
+    }
 
-    // OCULTAR MENSAJE
+    document.addEventListener("DOMContentLoaded", function () {
+        inicializarUnidad();
+        actualizarResumenStock();
+    });
 
-    setTimeout(
-        function () {
+    setTimeout(function () {
+        const mensaje = document.getElementById("mensajeFormulario");
 
-            const mensaje =
-                document.getElementById(
-                    "mensajeFormulario"
-                );
+        if (mensaje && !mensaje.classList.contains("mensaje-oculto")) {
+            mensaje.style.opacity = "0";
 
-
-            if (
-                mensaje &&
-                !mensaje.classList.contains(
-                    "mensaje-oculto"
-                )
-            ) {
-
-                mensaje.style.opacity =
-                    "0";
-
-
-                setTimeout(
-                    function () {
-
-                        mensaje.style.visibility =
-                            "hidden";
-
-                    },
-                    500
-                );
-            }
-
-        },
-        3000
-    );
-
+            setTimeout(function () {
+                mensaje.style.visibility = "hidden";
+            }, 500);
+        }
+    }, 3000);
 </script>

@@ -14,7 +14,10 @@ namespace LoginSARMedix.Repository
         }
 
 
-        //LISTADO DE PRODUCTOS
+        // =========================================================
+        // LISTADO DE PRODUCTOS PARA REGISTRAR ENTRADAS
+        // Incluye contenido y unidad para convertir envases a stock real.
+        // =========================================================
         public async Task<List<Producto>> ListadoProductos()
         {
             List<Producto> productos =
@@ -25,13 +28,26 @@ namespace LoginSARMedix.Repository
 
             await conexion.OpenAsync();
 
-            string consulta =
-                @"SELECT id_producto,
-                         codigo_interno,
-                         nombre,
-                         stock_minimo
-                  FROM producto
-                  ORDER BY nombre";
+            string consulta = @"
+                SELECT
+                    p.id_producto,
+                    p.codigo_interno,
+                    p.nombre,
+                    p.contenido_por_envase,
+                    p.unidad_medida,
+                    p.stock_minimo,
+                    m.forma_farmaceutica,
+                    CASE
+                        WHEN m.id_producto IS NOT NULL THEN 'Medicamento'
+                        WHEN i.id_producto IS NOT NULL THEN 'Insumo'
+                        ELSE ''
+                    END AS tipo
+                FROM producto p
+                LEFT JOIN medicamento m
+                    ON p.id_producto = m.id_producto
+                LEFT JOIN insumo i
+                    ON p.id_producto = i.id_producto
+                ORDER BY p.nombre";
 
             using MySqlCommand comando =
                 new MySqlCommand(consulta, conexion);
@@ -44,8 +60,7 @@ namespace LoginSARMedix.Repository
                 productos.Add(new Producto()
                 {
                     id_producto =
-                        Convert.ToInt32(
-                            lector["id_producto"]),
+                        Convert.ToInt32(lector["id_producto"]),
 
                     codigo_interno =
                         lector["codigo_interno"].ToString(),
@@ -53,9 +68,28 @@ namespace LoginSARMedix.Repository
                     nombre =
                         lector["nombre"].ToString(),
 
+                    contenido_por_envase =
+                        lector["contenido_por_envase"] == DBNull.Value
+                            ? 1
+                            : Convert.ToInt32(
+                                lector["contenido_por_envase"]
+                            ),
+
+                    unidad_medida =
+                        lector["unidad_medida"] == DBNull.Value
+                            ? null
+                            : lector["unidad_medida"].ToString(),
+
                     stock_minimo =
-                        Convert.ToInt32(
-                            lector["stock_minimo"])
+                        Convert.ToInt32(lector["stock_minimo"]),
+
+                    forma_farmaceutica =
+                        lector["forma_farmaceutica"] == DBNull.Value
+                            ? null
+                            : lector["forma_farmaceutica"].ToString(),
+
+                    tipo =
+                        lector["tipo"].ToString()
                 });
             }
 
@@ -637,8 +671,252 @@ namespace LoginSARMedix.Repository
             return resultado > 0;
         }
 
+        // =========================================================
+        // PREPARAR LOTE PARA UNA ENTRADA
+        //
+        // SI YA EXISTE:
+        // DEVUELVE SU ID SIN MODIFICAR EL STOCK.
+        //
+        // SI NO EXISTE:
+        // CREA EL LOTE CON STOCK 0 Y DEVUELVE SU ID.
+        //
+        // EL STOCK LO MODIFICA MOVIMIENTO REPOSITORY.
+        // =========================================================
+
+        public async Task<(
+            bool exito,
+            string mensaje,
+            int idLote,
+            bool loteExistente)>
+            PrepararLoteEntrada(
+                Lote reg)
+        {
+            using MySqlConnection conexion =
+                new MySqlConnection(
+                    _conexion
+                );
 
 
+            await conexion.OpenAsync();
+
+
+            using MySqlTransaction transaccion =
+                conexion.BeginTransaction();
+
+
+            try
+            {
+                int idLoteExistente = 0;
+
+                DateTime? fechaVencimientoExistente =
+                    null;
+
+
+
+                // =====================================================
+                // BUSCAR MISMO PRODUCTO + LOTE + UBICACION
+                // =====================================================
+
+                string consultaBuscar =
+                    @"SELECT
+                  id_lote,
+                  fecha_vencimiento
+
+              FROM lote
+
+              WHERE id_producto = @idProducto
+                AND numero_lote = @numeroLote
+                AND id_ubicacion = @idUbicacion
+
+              LIMIT 1
+
+              FOR UPDATE";
+
+
+                using (
+                    MySqlCommand comandoBuscar =
+                        new MySqlCommand(
+                            consultaBuscar,
+                            conexion,
+                            transaccion
+                        )
+                )
+                {
+                    comandoBuscar.Parameters.AddWithValue(
+                        "@idProducto",
+                        reg.id_producto
+                    );
+
+
+                    comandoBuscar.Parameters.AddWithValue(
+                        "@numeroLote",
+                        reg.numero_lote
+                    );
+
+
+                    comandoBuscar.Parameters.AddWithValue(
+                        "@idUbicacion",
+                        reg.id_ubicacion
+                    );
+
+
+                    using MySqlDataReader lector =
+                        await comandoBuscar
+                            .ExecuteReaderAsync();
+
+
+                    if (await lector.ReadAsync())
+                    {
+                        idLoteExistente =
+                            Convert.ToInt32(
+                                lector["id_lote"]
+                            );
+
+
+                        fechaVencimientoExistente =
+                            Convert.ToDateTime(
+                                lector["fecha_vencimiento"]
+                            );
+                    }
+                }
+
+
+
+                // =====================================================
+                // SI YA EXISTE
+                // =====================================================
+
+                if (idLoteExistente > 0)
+                {
+                    if (
+                        fechaVencimientoExistente.HasValue
+                        &&
+                        reg.fecha_vencimiento.HasValue
+                        &&
+                        fechaVencimientoExistente.Value.Date
+                        !=
+                        reg.fecha_vencimiento.Value.Date
+                    )
+                    {
+                        transaccion.Rollback();
+
+
+                        return (
+                            false,
+                            "El lote ya existe, pero la fecha de vencimiento no coincide.",
+                            0,
+                            true
+                        );
+                    }
+
+
+                    transaccion.Commit();
+
+
+                    return (
+                        true,
+                        "Lote existente.",
+                        idLoteExistente,
+                        true
+                    );
+                }
+
+
+
+                // =====================================================
+                // SI NO EXISTE, CREARLO CON STOCK 0
+                // =====================================================
+
+                string consultaCrear =
+                    @"INSERT INTO lote
+              (
+                  numero_lote,
+                  fecha_vencimiento,
+                  cantidad_actual,
+                  id_producto,
+                  id_ubicacion
+              )
+              VALUES
+              (
+                  @numeroLote,
+                  @fechaVencimiento,
+                  0,
+                  @idProducto,
+                  @idUbicacion
+              )";
+
+
+                using MySqlCommand comandoCrear =
+                    new MySqlCommand(
+                        consultaCrear,
+                        conexion,
+                        transaccion
+                    );
+
+
+                comandoCrear.Parameters.AddWithValue(
+                    "@numeroLote",
+                    reg.numero_lote
+                );
+
+
+                comandoCrear.Parameters.AddWithValue(
+                    "@fechaVencimiento",
+                    reg.fecha_vencimiento
+                );
+
+
+                comandoCrear.Parameters.AddWithValue(
+                    "@idProducto",
+                    reg.id_producto
+                );
+
+
+                comandoCrear.Parameters.AddWithValue(
+                    "@idUbicacion",
+                    reg.id_ubicacion
+                );
+
+
+                await comandoCrear
+                    .ExecuteNonQueryAsync();
+
+
+                int idNuevoLote =
+                    Convert.ToInt32(
+                        comandoCrear.LastInsertedId
+                    );
+
+
+                transaccion.Commit();
+
+
+                return (
+                    true,
+                    "Nuevo lote preparado.",
+                    idNuevoLote,
+                    false
+                );
+            }
+            catch
+            {
+                try
+                {
+                    transaccion.Rollback();
+                }
+                catch
+                {
+                }
+
+
+                return (
+                    false,
+                    "Ocurrió un error al preparar el lote.",
+                    0,
+                    false
+                );
+            }
+        }
 
 
 
