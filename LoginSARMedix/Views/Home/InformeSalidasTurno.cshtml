@@ -1,0 +1,712 @@
+﻿@using LoginSARMedix.Models
+@model HistorialSalidasTurnoViewModel
+
+@{
+    Layout = null;
+
+    string generadoPor =
+        ViewBag.GeneradoPor?.ToString()
+        ?? "";
+
+    string rolGenerador =
+        ViewBag.RolGenerador?.ToString()
+        ?? "";
+
+    DateTime fechaGeneracion =
+        ViewBag.FechaGeneracion is DateTime
+            ? (DateTime)ViewBag.FechaGeneracion
+            : DateTime.Now;
+
+    var detalles =
+        Model.resumen
+            .SelectMany(r => r.detalles)
+            .OrderBy(d => d.fecha_hora)
+            .ThenBy(d => d.nombre_producto)
+            .ToList();
+
+    int totalMovimientos =
+        detalles
+            .Select(d => d.id_movimiento)
+            .Distinct()
+            .Count();
+}
+
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1" />
+
+    <title>
+        Informe de salidas por turno
+    </title>
+
+
+    <style id="estilosInforme">
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 28px;
+            background: #eef3f6;
+            color: #20384a;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+        }
+
+        .acciones-informe {
+            width: min(1050px, 100%);
+            margin: 0 auto 14px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 9px;
+        }
+
+        .acciones-informe button,
+        .acciones-informe a {
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn-volver {
+            border: 1px solid #c6d5de;
+            background: white;
+            color: #456175;
+        }
+
+        .btn-descargar {
+            border: 0;
+            background: #1b8755;
+            color: white;
+        }
+
+        .btn-imprimir {
+            border: 0;
+            background: #087bc2;
+            color: white;
+        }
+
+        .documento {
+            width: min(1050px, 100%);
+            margin: 0 auto;
+            padding: 38px 42px;
+            background: white;
+            box-shadow:
+                0 12px 32px
+                rgba(36, 69, 91, .13);
+        }
+
+        .cabecera {
+            display: flex;
+            justify-content: space-between;
+            gap: 25px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #0c7898;
+        }
+
+        .marca {
+            color: #087bc2;
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: .5px;
+        }
+
+        h1 {
+            margin: 7px 0 4px;
+            color: #17324d;
+            font-size: 28px;
+        }
+
+        .subtitulo {
+            margin: 0;
+            color: #667d8d;
+            font-size: 13px;
+        }
+
+        .folio {
+            min-width: 210px;
+            text-align: right;
+            color: #5e7484;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .datos-corte {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    4,
+                    minmax(0, 1fr)
+                );
+            gap: 10px;
+            margin: 22px 0;
+        }
+
+        .dato {
+            padding: 12px 13px;
+            border: 1px solid #d9e5ec;
+            border-radius: 9px;
+            background: #f8fbfd;
+        }
+
+        .dato small {
+            display: block;
+            color: #738897;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .dato strong {
+            display: block;
+            margin-top: 4px;
+            color: #17324d;
+            font-size: 13px;
+        }
+
+        .seccion {
+            margin-top: 28px;
+        }
+
+        .seccion-titulo {
+            margin-bottom: 10px;
+        }
+
+        .seccion-titulo h2 {
+            margin: 0 0 3px;
+            color: #17324d;
+            font-size: 19px;
+        }
+
+        .seccion-titulo p {
+            margin: 0;
+            color: #718493;
+            font-size: 11px;
+        }
+
+        .tabla-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 10px 9px;
+            background: #0d6d8e;
+            color: white;
+            text-align: left;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: .35px;
+        }
+
+        td {
+            padding: 10px 9px;
+            border-bottom: 1px solid #e4ebef;
+            color: #314c5f;
+            font-size: 11px;
+            vertical-align: top;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8fbfc;
+        }
+
+        .nombre-med {
+            color: #17324d;
+            font-weight: 900;
+        }
+
+        .conc {
+            display: block;
+            margin-top: 2px;
+            color: #788d9a;
+            font-size: 10px;
+        }
+
+        .total {
+            font-size: 15px;
+            font-weight: 900;
+            color: #0d7189;
+        }
+
+        .controlado {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 999px;
+            background: #fff0f2;
+            color: #ae3a49;
+            font-size: 9px;
+            font-weight: 800;
+        }
+
+        .normal {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 999px;
+            background: #edf7ef;
+            color: #3c714a;
+            font-size: 9px;
+            font-weight: 800;
+        }
+
+        .resumen-nota {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-left: 4px solid #0b8098;
+            background: #eff8fb;
+            color: #4d6879;
+            font-size: 10px;
+            line-height: 1.45;
+        }
+
+        .pie {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 34px;
+            padding-top: 15px;
+            border-top: 1px solid #dce6eb;
+            color: #71828e;
+            font-size: 9px;
+        }
+
+        .sin-datos {
+            padding: 25px;
+            border: 1px dashed #bfd1dc;
+            background: #f9fcfd;
+            color: #728795;
+            text-align: center;
+        }
+
+        @@media print {
+
+            body {
+                padding: 0;
+                background: white;
+            }
+
+            .acciones-informe {
+                display: none !important;
+            }
+
+            .documento {
+                width: 100%;
+                max-width: none;
+                padding: 20px;
+                box-shadow: none;
+            }
+
+            .seccion {
+                break-inside: avoid;
+            }
+
+            table {
+                page-break-inside: auto;
+            }
+
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+
+        }
+
+        @@media (max-width: 800px) {
+
+            body {
+                padding: 12px;
+            }
+
+            .documento {
+                padding: 22px;
+            }
+
+            .cabecera {
+                flex-direction: column;
+            }
+
+            .folio {
+                text-align: left;
+            }
+
+            .datos-corte {
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(0, 1fr)
+                    );
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <div class="acciones-informe">
+
+        <a href="javascript:history.back();"
+           class="btn-volver">
+            ← Volver
+        </a>
+
+        <a asp-controller="Home"
+           asp-action="DescargarInformeSalidasTurno"
+           asp-route-fecha="@Model.fecha.ToString("yyyy-MM-dd")"
+           asp-route-horaInicio="@Model.hora_inicio"
+           asp-route-horaFin="@Model.hora_fin"
+           class="btn-descargar">
+            ⬇ Descargar informe
+        </a>
+
+        <button type="button"
+                class="btn-imprimir"
+                onclick="window.print()">
+            🖨 Imprimir / Guardar PDF
+        </button>
+
+    </div>
+
+
+
+    <main id="informeDocumento"
+          class="documento">
+
+
+        <header class="cabecera">
+
+            <div>
+
+                <div class="marca">
+                    SARMedix · SAR de Chiguay
+                </div>
+
+                <h1>
+                    Informe de salidas por turno
+                </h1>
+
+                <p class="subtitulo">
+                    Consolidado de medicamentos entregados durante el periodo seleccionado.
+                </p>
+
+            </div>
+
+
+            <div class="folio">
+
+                <div>
+                    <strong>Generado:</strong>
+                    @fechaGeneracion.ToString("dd/MM/yyyy HH:mm")
+                </div>
+
+                <div>
+                    <strong>Responsable:</strong>
+                    @(string.IsNullOrWhiteSpace(generadoPor) ? "-" : generadoPor)
+                </div>
+
+                <div>
+                    <strong>Perfil:</strong>
+                    @(string.IsNullOrWhiteSpace(rolGenerador) ? "-" : rolGenerador)
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <section class="datos-corte">
+
+            <div class="dato">
+                <small>Inicio del corte</small>
+                <strong>
+                    @Model.inicio_real.ToString("dd/MM/yyyy HH:mm")
+                </strong>
+            </div>
+
+            <div class="dato">
+                <small>Fin del corte</small>
+                <strong>
+                    @Model.fin_real.ToString("dd/MM/yyyy HH:mm")
+                </strong>
+            </div>
+
+            <div class="dato">
+                <small>Medicamentos distintos</small>
+                <strong>
+                    @Model.resumen.Count
+                </strong>
+            </div>
+
+            <div class="dato">
+                <small>Registros de salida</small>
+                <strong>
+                    @totalMovimientos
+                </strong>
+            </div>
+
+        </section>
+
+
+
+        <section class="seccion">
+
+            <div class="seccion-titulo">
+
+                <h2>
+                    1. Resumen total de salidas
+                </h2>
+
+                <p>
+                    Totales consolidados por medicamento.
+                </p>
+
+            </div>
+
+
+            @if (Model.resumen.Count == 0)
+            {
+                <div class="sin-datos">
+                    No existen salidas para el periodo consultado.
+                </div>
+            }
+            else
+            {
+                <div class="tabla-wrap">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>#</th>
+                                <th>Medicamento</th>
+                                <th>Total</th>
+                                <th>Unidad</th>
+                                <th>Tipo</th>
+                                <th>Registros</th>
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            @{
+                                int numero = 1;
+                            }
+
+                            @foreach (var item in Model.resumen)
+                            {
+                                <tr>
+
+                                    <td>
+                                        @numero
+                                    </td>
+
+                                    <td>
+                                        <span class="nombre-med">
+                                            @item.nombre_producto
+                                        </span>
+
+                                        @if (!string.IsNullOrWhiteSpace(item.concentracion))
+                                        {
+                                            <span class="conc">
+                                                @item.concentracion
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <span class="total">
+                                            @item.cantidad_total
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @item.unidad_medida
+                                    </td>
+
+                                    <td>
+                                        @if (item.es_controlado)
+                                        {
+                                            <span class="controlado">
+                                                Controlado
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="normal">
+                                                Salida clínica
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @item.detalles.Count
+                                    </td>
+
+                                </tr>
+
+                                numero++;
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            }
+
+
+            <div class="resumen-nota">
+                Los totales representan la suma de las cantidades entregadas dentro del horario seleccionado.
+                Los medicamentos controlados se incluyen únicamente cuando el perfil que genera el informe tiene autorización.
+            </div>
+
+        </section>
+
+
+
+        <section class="seccion">
+
+            <div class="seccion-titulo">
+
+                <h2>
+                    2. Detalle cronológico por hora
+                </h2>
+
+                <p>
+                    Respaldo de cada salida registrada durante el corte.
+                </p>
+
+            </div>
+
+
+            @if (detalles.Count == 0)
+            {
+                <div class="sin-datos">
+                    No existen movimientos para mostrar.
+                </div>
+            }
+            else
+            {
+                <div class="tabla-wrap">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Hora</th>
+                                <th>Medicamento</th>
+                                <th>Cantidad</th>
+                                <th>Tipo</th>
+                                <th>Sector</th>
+                                <th>Responsable</th>
+                                <th>Lote(s)</th>
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            @foreach (var detalle in detalles)
+                            {
+                                <tr>
+
+                                    <td>
+                                        @detalle.fecha_hora.ToString("dd/MM HH:mm")
+                                    </td>
+
+                                    <td>
+                                        <span class="nombre-med">
+                                            @detalle.nombre_producto
+                                        </span>
+
+                                        @if (!string.IsNullOrWhiteSpace(detalle.concentracion))
+                                        {
+                                            <span class="conc">
+                                                @detalle.concentracion
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @detalle.cantidad
+                                        @detalle.unidad_medida
+                                    </td>
+
+                                    <td>
+                                        @detalle.tipo_salida
+                                    </td>
+
+                                    <td>
+                                        @detalle.sector
+                                    </td>
+
+                                    <td>
+                                        @detalle.responsable
+                                    </td>
+
+                                    <td>
+                                        @detalle.lotes
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            }
+
+        </section>
+
+
+
+        <footer class="pie">
+
+            <span>
+                Informe generado automáticamente por SARMedix.
+            </span>
+
+            <span>
+                Periodo:
+                @Model.inicio_real.ToString("dd/MM/yyyy HH:mm")
+                →
+                @Model.fin_real.ToString("dd/MM/yyyy HH:mm")
+            </span>
+
+        </footer>
+
+
+    </main>
+</body>
+
+</html>

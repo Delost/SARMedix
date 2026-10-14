@@ -1,0 +1,135 @@
+﻿@using LoginSARMedix.Models
+@model List<MovimientoSectorHistorial>
+
+@{
+    ViewData["Title"] = "Historial por sector";
+    ViewData["TituloBarra"] = "Historial por sector";
+
+    var ubicaciones =
+        ViewBag.Ubicaciones as List<Ubicacion>
+        ?? new List<Ubicacion>();
+
+    int? idSeleccionado =
+        ViewBag.IdUbicacion as int?;
+}
+
+<style>
+    .hist-pagina{width:min(1240px,95%);margin:32px auto 50px}
+    .hist-titulo h1{margin:0 0 6px;color:#123451;font-size:30px;font-weight:850}
+    .hist-titulo p{margin:0;color:#5f788c}
+    .filtro{margin:18px 0;padding:16px;background:rgba(255,255,255,.95);border-radius:13px;box-shadow:0 8px 22px rgba(30,72,103,.1);display:flex;gap:10px}
+    .filtro select{flex:1;padding:11px 12px;border:1px solid #c7d8e4;border-radius:9px;background:white}
+    .filtro button{padding:10px 18px;border:0;border-radius:9px;background:#087bc2;color:white;font-weight:800;cursor:pointer}
+    .tabla-wrap{background:rgba(255,255,255,.97);border-radius:15px;overflow:auto;box-shadow:0 12px 28px rgba(30,72,103,.13)}
+    table{width:100%;border-collapse:collapse;min-width:980px}
+    th{padding:13px 12px;background:#0f5f85;color:white;text-align:left;font-size:13px}
+    td{padding:12px;border-bottom:1px solid #e0eaf0;color:#29465d;font-size:13px;vertical-align:top}
+    .tipo{display:inline-block;padding:5px 8px;border-radius:999px;background:#e9f4fa;color:#12638a;font-weight:750;white-space:nowrap}
+    .stock{font-weight:800;color:#17324d}
+    .vacio{padding:38px;text-align:center;color:#738899}
+</style>
+
+<section class="hist-pagina">
+
+    <div class="hist-titulo">
+        <h1>Historial por sector</h1>
+        <p>Trazabilidad operacional de cada Bodega o Clínica.</p>
+    </div>
+
+    <form asp-controller="Home"
+          asp-action="HistorialSectores"
+          method="get"
+          class="filtro">
+
+        <select name="idUbicacion" required>
+            <option value="">Seleccione un sector...</option>
+
+            @foreach (var ubicacion in ubicaciones)
+            {
+                <option value="@ubicacion.id_ubicacion"
+                        selected="@(idSeleccionado == ubicacion.id_ubicacion ? "selected" : null)">
+                    @ubicacion.nombre_sector — @(ubicacion.tipo_sector ?? "Sin tipo")
+                </option>
+            }
+        </select>
+
+        <button type="submit">
+            Ver historial
+        </button>
+    </form>
+
+    <div class="tabla-wrap">
+
+        @if (!idSeleccionado.HasValue)
+        {
+            <div class="vacio">
+                Seleccione un sector para revisar sus movimientos.
+            </div>
+        }
+        else if (Model == null || Model.Count == 0)
+        {
+            <div class="vacio">
+                Este sector todavía no registra movimientos.
+            </div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Movimiento</th>
+                        <th>Producto</th>
+                        <th>Lote</th>
+                        <th>Cantidad</th>
+                        <th>Stock</th>
+                        <th>Responsable</th>
+                        <th>Detalle</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var mov in Model)
+                    {
+                        <tr>
+                            <td>
+                                @mov.fecha_hora.ToString("dd/MM/yyyy HH:mm")
+                            </td>
+
+                            <td>
+                                <span class="tipo">
+                                    @mov.tipo_movimiento
+                                </span>
+                            </td>
+
+                            <td>
+                                @mov.producto
+                            </td>
+
+                            <td>
+                                @mov.lote
+                            </td>
+
+                            <td>
+                                @mov.cantidad @mov.unidad_medida
+                            </td>
+
+                            <td class="stock">
+                                @mov.stock_anterior → @mov.stock_resultante
+                            </td>
+
+                            <td>
+                                @mov.responsable
+                            </td>
+
+                            <td>
+                                @mov.observacion
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+    </div>
+</section>

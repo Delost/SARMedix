@@ -19,6 +19,11 @@ builder.Services.AddScoped<HistorialRepository>();
 
 builder.Services.AddScoped<MovimientoRepository>();
 
+// =========================================================
+// DOSIFICACIONES
+// =========================================================
+builder.Services.AddScoped<DosificacionRepository>();
+
 builder.Services.AddSession();
 
 var app = builder.Build();

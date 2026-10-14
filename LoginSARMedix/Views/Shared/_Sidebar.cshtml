@@ -84,6 +84,41 @@
         );
 
 
+    bool puedeRegistrarEntradas =
+        TienePermiso(
+            "Registrar entradas de inventario"
+        );
+
+
+    bool puedeTrasladarStock =
+        TienePermiso(
+            "Trasladar stock"
+        );
+
+
+    bool puedePrepararDosificaciones =
+        TienePermiso(
+            "Preparar dosificaciones"
+        );
+
+
+    bool puedeEntregarDosificaciones =
+        TienePermiso(
+            "Entregar dosificaciones"
+        );
+
+
+    bool puedeRegistrarBajas =
+        TienePermiso(
+            "Registrar bajas de inventario"
+        );
+
+
+    bool puedeRegistrarSalidasExtraordinarias =
+        TienePermiso(
+            "Registrar salidas extraordinarias"
+        );
+
 
 
     /* =========================================================
@@ -110,7 +145,17 @@ UBICACIONES - SOLO ADMINISTRADOR
 
 
     bool mostrarModuloMovimientos =
-        puedeRegistrarProductos
+        puedeRegistrarEntradas
+        ||
+        puedeTrasladarStock
+        ||
+        puedePrepararDosificaciones
+        ||
+        puedeEntregarDosificaciones
+        ||
+        puedeRegistrarBajas
+        ||
+        puedeRegistrarSalidasExtraordinarias
         ||
         puedeConsultarHistorial;
 
@@ -124,6 +169,14 @@ UBICACIONES - SOLO ADMINISTRADOR
         TienePermiso(
             "Gestionar medicamentos controlados"
         );
+
+
+    bool puedeVerSalidasTurno =
+        puedeEntregarDosificaciones
+        ||
+        puedeGestionarControlados
+        ||
+        puedeRegistrarSalidasExtraordinarias;
 
 
 
@@ -188,6 +241,34 @@ UBICACIONES - SOLO ADMINISTRADOR
 
     bool movimientosActivo =
         accionActual == "CrearLote"
+        ||
+        accionActual == "TrasladarStock"
+        ||
+        accionActual == "RegistrarTraslado"
+        ||
+        accionActual == "Dosificaciones"
+        ||
+        accionActual == "GuardarDosificacionProgramada"
+        ||
+        accionActual == "ImprimirDosificacion"
+        ||
+        accionActual == "EntregaDosificacion"
+        ||
+        accionActual == "ProcesarEntregaDosificacion"
+        ||
+        accionActual == "BajaInventario"
+        ||
+        accionActual == "RegistrarBajaInventario"
+        ||
+        accionActual == "SalidaExtraordinaria"
+        ||
+        accionActual == "RegistrarSalidaExtraordinaria"
+        ||
+        accionActual == "HistorialSectores"
+        ||
+        accionActual == "HistorialSalidasTurno"
+        ||
+        accionActual == "InformeSalidasTurno"
         ||
         accionActual == "MovimientoHistorial"
         ||
@@ -586,7 +667,7 @@ UBICACIONES - SOLO ADMINISTRADOR
 
                 <div class="sidebar-submenu">
 
-                    @if (puedeRegistrarProductos)
+                    @if (puedeRegistrarEntradas)
                     {
                         <a asp-controller="Home"
                            asp-action="CrearLote"
@@ -595,6 +676,90 @@ UBICACIONES - SOLO ADMINISTRADOR
                             <span class="sidebar-subicono">⇩</span>
 
                             <span>Registrar entrada</span>
+
+                        </a>
+                    }
+
+
+                    @if (puedeTrasladarStock)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="TrasladarStock"
+                           class="sidebar-subopcion @(accionActual == "TrasladarStock" || accionActual == "RegistrarTraslado" ? "activo" : "")">
+
+                            <span class="sidebar-subicono">⇄</span>
+
+                            <span>Trasladar stock</span>
+
+                        </a>
+                    }
+
+
+                    @if (puedePrepararDosificaciones)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="Dosificaciones"
+                           class="sidebar-subopcion @(accionActual == "Dosificaciones" || accionActual == "GuardarDosificacionProgramada" || accionActual == "ImprimirDosificacion" ? "activo" : "")">
+
+                            <span class="sidebar-subicono">🖨</span>
+
+                            <span>Dosificaciones</span>
+
+                        </a>
+                    }
+
+
+                    @if (puedeEntregarDosificaciones)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="EntregaDosificacion"
+                           class="sidebar-subopcion @(accionActual == "EntregaDosificacion" || accionActual == "ProcesarEntregaDosificacion" ? "activo" : "")">
+
+                            <span class="sidebar-subicono">▥</span>
+
+                            <span>Entrega por escáner</span>
+
+                        </a>
+                    }
+
+
+                    @if (puedeRegistrarBajas)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="BajaInventario"
+                           class="sidebar-subopcion @(accionActual == "BajaInventario" || accionActual == "RegistrarBajaInventario" ? "activo" : "")">
+
+                            <span class="sidebar-subicono">🗑</span>
+
+                            <span>Baja / merma</span>
+
+                        </a>
+                    }
+
+
+                    @if (puedeRegistrarSalidasExtraordinarias)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="SalidaExtraordinaria"
+                           class="sidebar-subopcion @(accionActual == "SalidaExtraordinaria" || accionActual == "RegistrarSalidaExtraordinaria" ? "activo" : "")">
+
+                            <span class="sidebar-subicono">↗</span>
+
+                            <span>Salida extraordinaria</span>
+
+                        </a>
+                    }
+
+
+                    @if (puedeVerSalidasTurno)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="HistorialSalidasTurno"
+                           class="sidebar-subopcion @(accionActual == "HistorialSalidasTurno" || accionActual == "InformeSalidasTurno" ? "activo" : "")">
+
+                            <span class="sidebar-subicono">📊</span>
+
+                            <span>Salidas del turno</span>
 
                         </a>
                     }
@@ -625,6 +790,8 @@ UBICACIONES - SOLO ADMINISTRADOR
 
 
 
+                    @if (puedeGestionarUsuarios)
+                    {
                     <a asp-controller="Home"
                        asp-action="HistorialUsuarios"
                        class="sidebar-subopcion @(accionActual == "HistorialUsuarios" ? "activo" : "")">
@@ -645,6 +812,7 @@ UBICACIONES - SOLO ADMINISTRADOR
 
 
                     </a>
+                    }
 
 
 
@@ -666,6 +834,21 @@ UBICACIONES - SOLO ADMINISTRADOR
 
                         </span>
 
+
+                    </a>
+
+
+                    <a asp-controller="Home"
+                       asp-action="HistorialSectores"
+                       class="sidebar-subopcion @(accionActual == "HistorialSectores" ? "activo" : "")">
+
+                        <span class="sidebar-subicono">
+                            🏥
+                        </span>
+
+                        <span>
+                            Historial por sector
+                        </span>
 
                     </a>
                     }

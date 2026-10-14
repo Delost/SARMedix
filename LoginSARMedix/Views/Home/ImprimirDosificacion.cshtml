@@ -1,0 +1,463 @@
+﻿@model LoginSARMedix.Models.DosificacionProgramada
+
+@{
+    ViewData["Title"] = "Imprimir dosificación";
+    ViewData["TituloBarra"] = "Imprimir dosificación";
+
+    int copias =
+        ViewBag.Copias is int valor
+            ? valor
+            : 1;
+
+    string responsable =
+        ViewBag.Responsable?.ToString()
+        ?? "";
+}
+
+<style>
+    .print-pagina {
+        width: min(1150px, 94%);
+        margin: 26px auto 50px;
+    }
+
+    .print-controles {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 18px;
+        padding: 15px;
+        border-radius: 12px;
+        background: rgba(255,255,255,.96);
+        box-shadow: 0 8px 20px rgba(36,76,105,.12);
+    }
+
+    .print-controles h1 {
+        margin: 0 0 4px;
+        color: #17324d;
+        font-size: 24px;
+    }
+
+    .print-controles p {
+        margin: 0;
+        color: #607487;
+    }
+
+    .print-botones {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-print,
+    .btn-volver {
+        min-height: 42px;
+        padding: 10px 15px;
+        border-radius: 9px;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .btn-print {
+        border: 0;
+        background: #17885b;
+        color: white;
+    }
+
+    .btn-volver {
+        border: 1px solid #cbd9e4;
+        background: white;
+        color: #496273;
+    }
+
+    .etiquetas {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .etiqueta {
+        min-height: 255px;
+        padding: 16px;
+        border: 1.5px solid #111;
+        background: white;
+        color: #111;
+        break-inside: avoid;
+    }
+
+    .marca {
+        padding-bottom: 7px;
+        border-bottom: 1px solid #222;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .producto {
+        margin-top: 10px;
+        text-align: center;
+        font-size: 21px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+    .cantidad {
+        margin-top: 6px;
+        text-align: center;
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .indicacion {
+        margin-top: 14px;
+        padding: 10px 0;
+        border-top: 1px solid #777;
+        border-bottom: 1px solid #777;
+        font-size: 15px;
+        line-height: 1.9;
+        text-align: center;
+    }
+
+    .responsable {
+        margin-top: 9px;
+        font-size: 11px;
+    }
+
+    .codigo {
+        margin-top: 8px;
+        text-align: center;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .barcode {
+        display: block;
+        width: 100%;
+        height: 46px;
+        margin-top: 5px;
+    }
+
+    .nota {
+        margin-top: 14px;
+        padding: 11px 13px;
+        border-radius: 9px;
+        background: #eef8fc;
+        color: #245777;
+        font-size: 13px;
+    }
+
+    @@media print {
+        @@page {
+            size: A4;
+            margin: 8mm;
+        }
+
+        body * {
+            visibility: hidden !important;
+        }
+
+        .etiquetas,
+        .etiquetas * {
+            visibility: visible !important;
+        }
+
+        .etiquetas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6mm;
+        }
+
+        .etiqueta {
+            min-height: 62mm;
+            padding: 4mm;
+        }
+
+        .print-controles,
+        .nota {
+            display: none !important;
+        }
+    }
+
+    @@media (max-width: 760px) {
+        .etiquetas {
+            grid-template-columns: 1fr;
+        }
+
+        .print-controles {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+</style>
+
+
+<section class="print-pagina">
+
+    <div class="print-controles">
+
+        <div>
+            <h1>
+                @Model.nombre_producto
+                @if (!string.IsNullOrWhiteSpace(Model.concentracion))
+                {
+                    <text> @Model.concentracion</text>
+                }
+            </h1>
+
+            <p>
+                @copias etiqueta(s) ·
+                @Model.cantidad @Model.unidad_medida por paquete ·
+                @Model.codigo
+            </p>
+        </div>
+
+
+        <div class="print-botones">
+            <a asp-controller="Home"
+               asp-action="Dosificaciones"
+               class="btn-volver">
+                Volver
+            </a>
+
+            <button type="button"
+                    class="btn-print"
+                    onclick="window.print()">
+                🖨 Imprimir @copias
+            </button>
+        </div>
+
+    </div>
+
+
+    <div class="nota">
+        <strong>Importante:</strong>
+        imprimir o reimprimir estas etiquetas
+        <strong>NO modifica el stock</strong>.
+        El descuento se realizará cuando se escanee
+        @Model.codigo en la entrega.
+    </div>
+
+
+    <div class="etiquetas">
+
+        @for (int i = 0; i < copias; i++)
+        {
+            <div class="etiqueta">
+
+                <div class="marca">
+                    SARMedix | SAR de Chiguay
+                </div>
+
+
+                <div class="producto">
+                    @Model.nombre_producto
+
+                    @if (!string.IsNullOrWhiteSpace(Model.concentracion))
+                    {
+                        <text> @Model.concentracion</text>
+                    }
+                </div>
+
+
+                <div class="cantidad">
+                    @Model.cantidad @Model.unidad_medida
+                </div>
+
+
+                <div class="indicacion">
+                    @Model.indicacion_base
+                </div>
+
+
+                <div class="responsable">
+                    Preparado por:
+                    <strong>@responsable</strong>
+                </div>
+
+
+                <svg class="barcode"
+                     data-code="@Model.codigo"
+                     role="img"
+                     aria-label="Código @Model.codigo"></svg>
+
+
+                <div class="codigo">
+                    @Model.codigo
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</section>
+
+
+<script>
+    // =============================================================
+    // CODE 39 LOCAL
+    // No depende de Internet ni de librerías externas.
+    // Los códigos SARMedix usan solamente DOS- y números.
+    // =============================================================
+
+    const patronesCode39 = {
+        "0": "nnnwwnwnn",
+        "1": "wnnwnnnnw",
+        "2": "nnwwnnnnw",
+        "3": "wnwwnnnnn",
+        "4": "nnnwwnnnw",
+        "5": "wnnwwnnnn",
+        "6": "nnwwwnnnn",
+        "7": "nnnwnnwnw",
+        "8": "wnnwnnwnn",
+        "9": "nnwwnnwnn",
+        "D": "nnnnwwnnw",
+        "O": "wnnnwnnwn",
+        "S": "nnwnnnwwn",
+        "-": "nwnnnnwnw",
+        "*": "nwnnwnwnn"
+    };
+
+
+    function dibujarCode39(svg, codigo) {
+
+        const texto =
+            ("*" + codigo.toUpperCase() + "*");
+
+
+        const narrow = 2;
+        const wide = 5;
+        const gap = 2;
+        const quiet = 18;
+        const alto = 44;
+
+
+        let x =
+            quiet;
+
+
+        const barras = [];
+
+
+        for (const caracter of texto) {
+
+            const patron =
+                patronesCode39[caracter];
+
+
+            if (!patron) {
+                continue;
+            }
+
+
+            for (
+                let i = 0;
+                i < patron.length;
+                i++
+            ) {
+                const ancho =
+                    patron[i] === "w"
+                        ? wide
+                        : narrow;
+
+
+                const esBarra =
+                    i % 2 === 0;
+
+
+                if (esBarra) {
+                    barras.push({
+                        x,
+                        ancho
+                    });
+                }
+
+
+                x += ancho;
+            }
+
+
+            x += gap;
+        }
+
+
+        const anchoTotal =
+            x + quiet;
+
+
+        svg.setAttribute(
+            "viewBox",
+            `0 0 ${anchoTotal} ${alto}`
+        );
+
+
+        svg.setAttribute(
+            "preserveAspectRatio",
+            "none"
+        );
+
+
+        for (const barra of barras) {
+
+            const rect =
+                document.createElementNS(
+                    "http://www.w3.org/2000/svg",
+                    "rect"
+                );
+
+
+            rect.setAttribute(
+                "x",
+                barra.x
+            );
+
+
+            rect.setAttribute(
+                "y",
+                "0"
+            );
+
+
+            rect.setAttribute(
+                "width",
+                barra.ancho
+            );
+
+
+            rect.setAttribute(
+                "height",
+                alto
+            );
+
+
+            rect.setAttribute(
+                "fill",
+                "#000"
+            );
+
+
+            svg.appendChild(
+                rect
+            );
+        }
+    }
+
+
+    document
+        .querySelectorAll(
+            ".barcode"
+        )
+        .forEach(
+            function (svg) {
+
+                dibujarCode39(
+                    svg,
+                    svg.dataset.code
+                );
+            }
+        );
+</script>

@@ -1,0 +1,651 @@
+﻿@using LoginSARMedix.Models
+
+@{
+    ViewData["Title"] = "Dosificaciones";
+    ViewData["TituloBarra"] = "Dosificaciones";
+
+    var clinicas =
+        ViewBag.Clinicas as List<Ubicacion>
+        ?? new List<Ubicacion>();
+
+    var programaciones =
+        ViewBag.Programaciones as List<DosificacionProgramada>
+        ?? new List<DosificacionProgramada>();
+
+    string mensaje =
+        TempData["Mensaje"]?.ToString()
+        ?? "";
+
+    string tipoMensaje =
+        TempData["TipoMensaje"]?.ToString()
+        ?? "";
+}
+
+<style>
+    .dosif-pagina {
+        width: min(1180px, 94%);
+        margin: 28px auto 50px;
+    }
+
+    .dosif-encabezado h1 {
+        margin: 0 0 6px;
+        color: #17324d;
+        font-size: 31px;
+        font-weight: 800;
+    }
+
+    .dosif-encabezado p {
+        margin: 0;
+        color: #607487;
+    }
+
+    .dosif-aviso {
+        margin: 18px 0;
+        padding: 13px 15px;
+        border: 1px solid #b9d9ee;
+        border-radius: 10px;
+        background: rgba(235, 247, 255, .94);
+        color: #245777;
+        font-size: 14px;
+    }
+
+    .dosif-mensaje {
+        margin-bottom: 18px;
+        padding: 13px 16px;
+        border-radius: 10px;
+        font-weight: 700;
+    }
+
+    .dosif-mensaje.error {
+        background: #fff0f0;
+        border: 1px solid #efc1c1;
+        color: #9d2f2f;
+    }
+
+    .dosif-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.15fr;
+        gap: 22px;
+    }
+
+    .dosif-panel {
+        padding: 22px;
+        border-radius: 16px;
+        background: rgba(255,255,255,.96);
+        box-shadow: 0 12px 28px rgba(36,76,105,.14);
+    }
+
+    .dosif-panel h2 {
+        margin: 0 0 18px;
+        color: #0b76b7;
+        font-size: 20px;
+    }
+
+    .campo {
+        margin-bottom: 16px;
+    }
+
+    .campo label {
+        display: block;
+        margin-bottom: 6px;
+        color: #314c63;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .campo select,
+    .campo input {
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 12px;
+        border: 1px solid #c9d9e5;
+        border-radius: 9px;
+        background: white;
+        color: #17324d;
+    }
+
+    .campo small {
+        display: block;
+        margin-top: 6px;
+        color: #7890a1;
+    }
+
+    .resumen {
+        margin-top: 16px;
+        padding: 15px;
+        border-radius: 11px;
+        background: #eef8fc;
+        color: #245777;
+    }
+
+    .btn-principal {
+        width: 100%;
+        min-height: 46px;
+        border: 0;
+        border-radius: 9px;
+        background: #087bc2;
+        color: white;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .btn-principal:disabled {
+        opacity: .45;
+        cursor: not-allowed;
+    }
+
+    .programacion {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 14px;
+        padding: 15px;
+        border: 1px solid #dce8f1;
+        border-radius: 11px;
+        background: #fbfdff;
+        margin-bottom: 12px;
+    }
+
+    .programacion:last-child {
+        margin-bottom: 0;
+    }
+
+    .programacion-codigo {
+        display: inline-block;
+        margin-top: 7px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: #e8f3fa;
+        color: #075b88;
+        font-weight: 800;
+        letter-spacing: .6px;
+    }
+
+    .programacion-meta {
+        margin-top: 5px;
+        color: #668094;
+        font-size: 13px;
+    }
+
+    .reimpresion {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .reimpresion input {
+        width: 78px;
+        height: 38px;
+        padding: 7px;
+        border: 1px solid #c9d9e5;
+        border-radius: 8px;
+    }
+
+    .btn-reimprimir,
+    .btn-scan {
+        min-height: 38px;
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 8px;
+        background: #17885b;
+        color: white;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .sin-programaciones {
+        padding: 28px 15px;
+        text-align: center;
+        color: #7890a1;
+    }
+
+    @@media (max-width: 900px) {
+        .dosif-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .programacion {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+
+<section class="dosif-pagina">
+
+    <div class="dosif-encabezado">
+        <h1>Dosificaciones preparadas</h1>
+
+        <p>
+            Crea códigos reutilizables para los paquetes que se
+            preparan con anticipación.
+        </p>
+    </div>
+
+
+    <div class="dosif-aviso">
+        🖨 <strong>Imprimir NO descuenta stock.</strong>
+        El descuento se realiza únicamente cuando el código
+        del paquete es escaneado en la entrega.
+    </div>
+
+
+    @if (!string.IsNullOrWhiteSpace(mensaje))
+    {
+        <div class="dosif-mensaje @(tipoMensaje == "error" ? "error" : "")">
+            @mensaje
+        </div>
+    }
+
+
+    <div class="dosif-grid">
+
+        <div class="dosif-panel">
+
+            <h2>Nueva programación</h2>
+
+
+            <form asp-controller="Home"
+                  asp-action="GuardarDosificacionProgramada"
+                  method="post"
+                  id="formDosificacion">
+
+                @Html.AntiForgeryToken()
+
+
+                <div class="campo">
+                    <label>Clínica</label>
+
+                    <select name="idUbicacion"
+                            id="clinicaDosif"
+                            required>
+
+                        <option value="">
+                            Seleccione una Clínica...
+                        </option>
+
+                        @foreach (var clinica in clinicas)
+                        {
+                            <option value="@clinica.id_ubicacion">
+                                @clinica.nombre_sector
+                            </option>
+                        }
+
+                    </select>
+                </div>
+
+
+                <div class="campo">
+                    <label>Medicamento</label>
+
+                    <select name="idProducto"
+                            id="productoDosif"
+                            disabled
+                            required>
+
+                        <option value="">
+                            Primero seleccione una Clínica...
+                        </option>
+
+                    </select>
+
+                    <small>
+                        Solo aparecen medicamentos con stock útil en esa Clínica.
+                    </small>
+                </div>
+
+
+                <div class="campo">
+                    <label>Cantidad por paquete</label>
+
+                    <input type="number"
+                           name="cantidad"
+                           id="cantidadDosif"
+                           min="1"
+                           placeholder="Ej.: 3, 7, 8..."
+                           required />
+                </div>
+
+
+                <div class="campo">
+                    <label>Etiquetas a imprimir ahora</label>
+
+                    <input type="number"
+                           name="copias"
+                           id="copiasDosif"
+                           min="1"
+                           max="500"
+                           value="1"
+                           required />
+
+                    <small>
+                        Puede imprimir hasta 500 copias iguales.
+                    </small>
+                </div>
+
+
+                <div class="resumen"
+                     id="resumenDosif">
+
+                    Seleccione Clínica, medicamento y cantidad.
+
+                </div>
+
+
+                <button type="submit"
+                        class="btn-principal"
+                        id="btnCrearDosif"
+                        disabled>
+
+                    Guardar programación e imprimir
+
+                </button>
+
+            </form>
+
+        </div>
+
+
+
+        <div class="dosif-panel">
+
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;">
+                <h2 style="margin:0;">
+                    Programaciones guardadas
+                </h2>
+
+                <a asp-controller="Home"
+                   asp-action="EntregaDosificacion"
+                   class="btn-scan">
+                    ▥ Ir al escáner
+                </a>
+            </div>
+
+
+            @if (programaciones.Count == 0)
+            {
+                <div class="sin-programaciones">
+                    Todavía no existen programaciones guardadas.
+                </div>
+            }
+            else
+            {
+                @foreach (var item in programaciones)
+                {
+                    <div class="programacion">
+
+                        <div>
+                            <strong>
+                                @item.nombre_producto
+                                @if (!string.IsNullOrWhiteSpace(item.concentracion))
+                                {
+                                    <text> @item.concentracion</text>
+                                }
+                            </strong>
+
+                            <div class="programacion-meta">
+                                @item.cantidad @item.unidad_medida
+                                · @item.nombre_clinica
+                            </div>
+
+                            <span class="programacion-codigo">
+                                @item.codigo
+                            </span>
+                        </div>
+
+
+                        <form asp-controller="Home"
+                              asp-action="ImprimirDosificacion"
+                              method="get"
+                              class="reimpresion">
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@item.id_dosificacion" />
+
+                            <input type="number"
+                                   name="copias"
+                                   min="1"
+                                   max="500"
+                                   value="1"
+                                   title="Cantidad de copias" />
+
+                            <button type="submit"
+                                    class="btn-reimprimir">
+                                Reimprimir
+                            </button>
+
+                        </form>
+
+                    </div>
+                }
+            }
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<script>
+    const clinicaDosif =
+        document.getElementById("clinicaDosif");
+
+    const productoDosif =
+        document.getElementById("productoDosif");
+
+    const cantidadDosif =
+        document.getElementById("cantidadDosif");
+
+    const copiasDosif =
+        document.getElementById("copiasDosif");
+
+    const resumenDosif =
+        document.getElementById("resumenDosif");
+
+    const btnCrearDosif =
+        document.getElementById("btnCrearDosif");
+
+
+    async function cargarProductos() {
+
+        const idUbicacion =
+            clinicaDosif.value;
+
+        productoDosif.disabled = true;
+
+        productoDosif.innerHTML =
+            '<option value="">Cargando medicamentos...</option>';
+
+
+        if (!idUbicacion) {
+
+            productoDosif.innerHTML =
+                '<option value="">Primero seleccione una Clínica...</option>';
+
+            actualizarResumen();
+
+            return;
+        }
+
+
+        try {
+
+            const respuesta =
+                await fetch(
+                    '@Url.Action("ProductosDisponiblesClinica", "Home")'
+                    + '?idUbicacion='
+                    + encodeURIComponent(idUbicacion)
+                );
+
+
+            const datos =
+                await respuesta.json();
+
+
+            productoDosif.innerHTML =
+                '<option value="">Seleccione un medicamento...</option>';
+
+
+            const productos =
+                datos.productos
+                ?? [];
+
+
+            for (const producto of productos) {
+
+                const opcion =
+                    document.createElement("option");
+
+
+                opcion.value =
+                    producto.id_producto;
+
+
+                opcion.dataset.nombre =
+                    producto.nombre
+                    ?? "";
+
+
+                opcion.dataset.unidad =
+                    producto.unidad_medida
+                    || "Unidades";
+
+
+                opcion.dataset.forma =
+                    producto.forma_farmaceutica
+                    || "";
+
+
+                opcion.dataset.concentracion =
+                    producto.concentracion
+                    || "";
+
+
+                opcion.textContent =
+                    (producto.nombre ?? "")
+                    +
+                    (producto.concentracion
+                        ? " " + producto.concentracion
+                        : "")
+                    +
+                    (producto.forma_farmaceutica
+                        ? " - " + producto.forma_farmaceutica
+                        : "");
+
+
+                productoDosif.appendChild(
+                    opcion
+                );
+            }
+
+
+            if (productos.length > 0) {
+                productoDosif.disabled = false;
+            }
+            else {
+                productoDosif.innerHTML =
+                    '<option value="">Sin medicamentos disponibles</option>';
+            }
+
+        }
+        catch {
+            productoDosif.innerHTML =
+                '<option value="">Error al cargar medicamentos</option>';
+        }
+
+
+        actualizarResumen();
+    }
+
+
+    function actualizarResumen() {
+
+        const opcion =
+            productoDosif.options[
+                productoDosif.selectedIndex
+            ];
+
+
+        const cantidad =
+            parseInt(
+                cantidadDosif.value
+                || "0"
+            );
+
+
+        const copias =
+            parseInt(
+                copiasDosif.value
+                || "0"
+            );
+
+
+        const nombre =
+            opcion?.dataset?.nombre
+            ?? "";
+
+
+        const unidad =
+            opcion?.dataset?.unidad
+            ?? "Unidades";
+
+
+        if (
+            nombre
+            &&
+            cantidad > 0
+            &&
+            copias > 0
+        ) {
+            resumenDosif.innerHTML =
+                "<strong>"
+                + nombre
+                + "</strong><br>"
+                + cantidad
+                + " "
+                + unidad
+                + " por paquete"
+                + "<br>"
+                + copias
+                + " etiqueta(s) a imprimir"
+                + "<br><strong>Stock descontado ahora: 0</strong>";
+        }
+        else {
+            resumenDosif.textContent =
+                "Seleccione Clínica, medicamento y cantidad.";
+        }
+
+
+        btnCrearDosif.disabled =
+            !clinicaDosif.value
+            ||
+            !productoDosif.value
+            ||
+            cantidad <= 0
+            ||
+            copias <= 0;
+    }
+
+
+    clinicaDosif.addEventListener(
+        "change",
+        cargarProductos
+    );
+
+    productoDosif.addEventListener(
+        "change",
+        actualizarResumen
+    );
+
+    cantidadDosif.addEventListener(
+        "input",
+        actualizarResumen
+    );
+
+    copiasDosif.addEventListener(
+        "input",
+        actualizarResumen
+    );
+</script>

@@ -116,9 +116,11 @@
             <label>Forma farmacéutica</label>
 
             <select asp-for="forma_farmaceutica"
-                    id="formaFarmaceutica">
+                    id="formaFarmaceutica"
+                    onchange="sugerirUnidadSegunForma()">
                 <option value="">Seleccione</option>
                 <option value="Comprimido">Comprimido</option>
+                <option value="Comprimido recubierto">Comprimido recubierto</option>
                 <option value="Cápsula">Cápsula</option>
                 <option value="Solución oral">Solución oral</option>
                 <option value="Jarabe">Jarabe</option>
@@ -145,7 +147,12 @@
 
             <input asp-for="concentracion"
                    id="concentracion"
-                   placeholder="Ej.: 500 mg + 50 mg" />
+                   placeholder="Ej.: 500 mg / 400 mg" />
+
+            <small class="texto-ayuda">
+                Aquí van los mg, g, mg/mL, etc. Ej.: 500 mg / 400 mg.
+                La concentración NO indica cuántos comprimidos trae el envase.
+            </small>
         </div>
 
         <div>
@@ -189,17 +196,22 @@
         </div>
 
         <div>
-            <label>Cantidad contenida</label>
+            <label>Cantidad por envase</label>
 
             <input asp-for="contenido_por_envase"
                    id="contenidoPorEnvase"
                    type="number"
                    min="1"
+                   placeholder="Ej.: 60"
                    oninput="actualizarResumenStock()" />
+
+            <small class="texto-ayuda">
+                Ejemplo: si la caja trae 60 comprimidos, escriba 60 y seleccione Comprimidos como unidad de inventario.
+            </small>
         </div>
 
         <div>
-            <label>Unidad de medida</label>
+            <label>Unidad de inventario / contenido</label>
 
             <input asp-for="unidad_medida"
                    id="unidadMedidaReal"
@@ -208,15 +220,38 @@
             <select id="unidadSelector"
                     onchange="cambiarUnidad()">
                 <option value="">Seleccione</option>
-                <option value="Unidades">Unidades</option>
-                <option value="mg">mg</option>
-                <option value="g">g</option>
-                <option value="kg">kg</option>
-                <option value="mL">mL</option>
-                <option value="L">L</option>
+
+                <optgroup label="Unidades físicas">
+                    <option value="Comprimidos">Comprimidos</option>
+                    <option value="Cápsulas">Cápsulas</option>
+                    <option value="Ampollas">Ampollas</option>
+                    <option value="Sobres">Sobres</option>
+                    <option value="Supositorios">Supositorios</option>
+                    <option value="Inhaladores">Inhaladores</option>
+                    <option value="Frascos">Frascos</option>
+                    <option value="Unidades">Unidades</option>
+                </optgroup>
+
+                <optgroup label="Peso / volumen">
+                    <option value="mg">mg</option>
+                    <option value="g">g</option>
+                    <option value="kg">kg</option>
+                    <option value="mL">mL</option>
+                    <option value="L">L</option>
+                </optgroup>
+
                 <option value="Otro">Otro</option>
                 <option value="Omitir">Omitir</option>
             </select>
+
+            <small class="texto-ayuda">
+                Para comprimidos use <strong>Comprimidos</strong>.
+                Los <strong>mg</strong> normalmente corresponden a la concentración; use mg/g aquí solo si el stock se controla físicamente por peso.
+            </small>
+
+            <div id="advertenciaUnidad"
+                 class="ayuda-stock"
+                 style="display:none; margin-top:8px;"></div>
 
             <div id="unidadOtroContenedor"
                  class="unidad-otro"
@@ -765,6 +800,37 @@
     }
 
 
+    function sugerirUnidadSegunForma() {
+        const forma = document.getElementById("formaFarmaceutica");
+        const selector = document.getElementById("unidadSelector");
+
+        if (!forma || !selector) {
+            return;
+        }
+
+        const sugerencias = {
+            "Comprimido": "Comprimidos",
+            "Comprimido recubierto": "Comprimidos",
+            "Cápsula": "Cápsulas",
+            "Ampolla": "Ampollas",
+            "Sobre": "Sobres",
+            "Supositorio": "Supositorios",
+            "Inhalador": "Inhaladores",
+            "Solución oral": "mL",
+            "Jarabe": "mL",
+            "Gotas": "mL",
+            "Crema": "g"
+        };
+
+        const sugerida = sugerencias[forma.value];
+
+        if (sugerida) {
+            selector.value = sugerida;
+            cambiarUnidad();
+        }
+    }
+
+
     function cambiarUnidad() {
         const selector = document.getElementById("unidadSelector");
         const real = document.getElementById("unidadMedidaReal");
@@ -812,6 +878,24 @@
 
         const unidad = real.value.trim();
         const minimo = stock.value.trim();
+        const advertencia = document.getElementById("advertenciaUnidad");
+        const forma = document.getElementById("formaFarmaceutica");
+
+        if (advertencia) {
+            advertencia.style.display = "none";
+            advertencia.innerHTML = "";
+
+            const esComprimido =
+                forma
+                && (forma.value === "Comprimido" || forma.value === "Comprimido recubierto");
+
+            if (esComprimido && ["mg", "g", "kg"].includes(unidad)) {
+                advertencia.style.display = "block";
+                advertencia.innerHTML =
+                    "⚠ Para un medicamento en comprimidos normalmente la unidad de inventario debe ser <strong>Comprimidos</strong>. "
+                    + "Los mg/g deben registrarse arriba en <strong>Concentración</strong>, salvo que realmente controle el stock por peso.";
+            }
+        }
 
         if (selector.value === "Omitir") {
             label.innerText = "Alerta de stock bajo";
@@ -926,7 +1010,7 @@
 
         if (unidadSelector.value === "") {
             mostrarError(
-                "Seleccione una unidad de medida o elija Omitir.",
+                "Seleccione una unidad de inventario o elija Omitir.",
                 unidadSelector
             );
             return false;
@@ -937,7 +1021,7 @@
             && unidadOtro.value.trim() === ""
         ) {
             mostrarError(
-                "Especifique la unidad de medida.",
+                "Especifique la unidad de inventario.",
                 unidadOtro
             );
             return false;
@@ -1002,7 +1086,21 @@
         const contenedorOtro = document.getElementById("unidadOtroContenedor");
         const valorGuardado = real.value.trim();
 
-        const opciones = ["Unidades", "mg", "g", "kg", "mL", "L"];
+        const opciones = [
+            "Comprimidos",
+            "Cápsulas",
+            "Ampollas",
+            "Sobres",
+            "Supositorios",
+            "Inhaladores",
+            "Frascos",
+            "Unidades",
+            "mg",
+            "g",
+            "kg",
+            "mL",
+            "L"
+        ];
 
         if (valorGuardado === "") {
             selector.value = "";

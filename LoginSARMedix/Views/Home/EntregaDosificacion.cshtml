@@ -1,0 +1,587 @@
+﻿@{
+    ViewData["Title"] = "Entrega por escáner";
+    ViewData["TituloBarra"] = "Entrega por escáner";
+}
+
+<style>
+    .scan-pagina {
+        width: min(900px, 94%);
+        margin: 40px auto 60px;
+    }
+
+    .scan-encabezado {
+        text-align: center;
+        margin-bottom: 22px;
+    }
+
+    .scan-encabezado h1 {
+        margin: 0 0 7px;
+        color: #17324d;
+        font-size: 32px;
+        font-weight: 900;
+    }
+
+    .scan-encabezado p {
+        margin: 0;
+        color: #607487;
+    }
+
+    .scan-panel {
+        padding: 25px;
+        border-radius: 18px;
+        background: rgba(255,255,255,.97);
+        box-shadow: 0 14px 32px rgba(36,76,105,.15);
+    }
+
+    .scan-caja {
+        padding: 22px;
+        border: 2px dashed #77b9d8;
+        border-radius: 14px;
+        background: #f5fbff;
+        text-align: center;
+    }
+
+    .scan-caja label {
+        display: block;
+        margin-bottom: 10px;
+        color: #245777;
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .scan-input {
+        width: 100%;
+        min-height: 56px;
+        padding: 12px 16px;
+        border: 2px solid #0b82bd;
+        border-radius: 11px;
+        outline: none;
+        text-align: center;
+        font-size: 21px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: #17324d;
+        background: white;
+    }
+
+    .scan-ayuda {
+        margin-top: 9px;
+        color: #7890a1;
+        font-size: 13px;
+    }
+
+    .btn-procesar-scan {
+        margin-top: 14px;
+        min-height: 42px;
+        padding: 9px 18px;
+        border: 0;
+        border-radius: 9px;
+        background: #087bc2;
+        color: white;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .btn-procesar-scan:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+    }
+
+    .resultado {
+        display: none;
+        margin-top: 20px;
+        padding: 18px;
+        border-radius: 13px;
+    }
+
+    .resultado.ok {
+        display: block;
+        background: #eaf8ef;
+        border: 1px solid #b8dfc5;
+        color: #21633a;
+    }
+
+    .resultado.error {
+        display: block;
+        background: #fff0f0;
+        border: 1px solid #efc1c1;
+        color: #9d2f2f;
+    }
+
+    .resultado.alerta {
+        display: block;
+        background: #fff7dc;
+        border: 1px solid #eed38a;
+        color: #795c09;
+    }
+
+    .resultado h2 {
+        margin: 0 0 10px;
+        font-size: 20px;
+    }
+
+    .resultado-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px 16px;
+        margin-top: 12px;
+    }
+
+    .dato {
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(0,0,0,.08);
+    }
+
+    .dato small {
+        display: block;
+        opacity: .72;
+    }
+
+    .dato strong {
+        display: block;
+        margin-top: 3px;
+    }
+
+    .scan-acciones {
+        margin-top: 18px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn-historial-turno {
+        padding: 10px 15px;
+        border: 1px solid #0b82bd;
+        border-radius: 9px;
+        background: #087bc2;
+        color: white;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .btn-historial-turno:hover {
+        background: #066da4;
+        color: white;
+    }
+
+    .btn-volver {
+        padding: 10px 15px;
+        border: 1px solid #cbd9e4;
+        border-radius: 9px;
+        background: white;
+        color: #496273;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    @@media (max-width: 650px) {
+        .resultado-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+
+<section class="scan-pagina">
+
+    <div class="scan-encabezado">
+        <h1>Entrega por escáner</h1>
+
+        <p>
+            Escanee el código DOS del paquete.
+            Cada lectura confirmada descuenta una entrega.
+        </p>
+    </div>
+
+
+    <div class="scan-panel">
+
+        <form id="formScan">
+            @Html.AntiForgeryToken()
+
+            <div class="scan-caja">
+
+                <label for="codigoScan">
+                    ▥ Escanee la dosificación
+                </label>
+
+                <input type="text"
+                       id="codigoScan"
+                       class="scan-input"
+                       autocomplete="off"
+                       autofocus
+                       placeholder="DOS-000001" />
+
+                <div class="scan-ayuda">
+                    El lector funciona como teclado.
+                    Al recibir Enter, SARMedix aplica FEFO,
+                    descuenta stock y genera historial.
+                    También puede escribir el código y presionar Procesar.
+                    SARMedix corrige automáticamente guiones leídos como apóstrofes por el lector.
+                </div>
+
+                <button type="button"
+                        id="btnProcesarScan"
+                        class="btn-procesar-scan">
+                    Procesar código
+                </button>
+
+            </div>
+        </form>
+
+
+        <div id="resultadoScan"
+             class="resultado">
+        </div>
+
+
+        <div class="scan-acciones">
+            <a asp-controller="Home"
+               asp-action="HistorialSalidasTurno"
+               class="btn-historial-turno">
+                📊 Salidas del turno
+            </a>
+
+            <a asp-controller="Home"
+               asp-action="Dosificaciones"
+               class="btn-volver">
+                Volver a Dosificaciones
+            </a>
+        </div>
+
+    </div>
+
+</section>
+
+
+<script>
+    const input =
+        document.getElementById(
+            "codigoScan"
+        );
+
+
+    const resultado =
+        document.getElementById(
+            "resultadoScan"
+        );
+
+
+    const btnProcesarScan =
+        document.getElementById(
+            "btnProcesarScan"
+        );
+
+
+    const token =
+        document.querySelector(
+            'input[name="__RequestVerificationToken"]'
+        ).value;
+
+
+    let procesando =
+        false;
+
+
+    function normalizarCodigoDosificacion(
+        valor
+    ) {
+
+        let codigo =
+            (valor ?? "")
+                .trim()
+                .toUpperCase();
+
+
+        const posicionDos =
+            codigo.indexOf(
+                "DOS"
+            );
+
+
+        if (
+            codigo.startsWith("]A")
+            &&
+            posicionDos >= 0
+        ) {
+            codigo =
+                codigo.substring(
+                    posicionDos
+                );
+        }
+
+
+        codigo =
+            codigo
+                .replaceAll("*", "")
+                .replaceAll(" ", "")
+                .replaceAll("\r", "")
+                .replaceAll("\n", "")
+                .replaceAll("\t", "")
+                .replaceAll("–", "-")
+                .replaceAll("—", "-")
+                .replaceAll("−", "-")
+                .replaceAll("'", "-")
+                .replaceAll("’", "-")
+                .replaceAll("´", "-")
+                .replaceAll("`", "-");
+
+
+        if (
+            codigo.startsWith("DOS")
+            &&
+            !codigo.startsWith("DOS-")
+        ) {
+            const resto =
+                codigo
+                    .substring(3)
+                    .replace(/^-+/, "");
+
+
+            if (/^\d+$/.test(resto)) {
+                codigo =
+                    "DOS-"
+                    +
+                    resto;
+            }
+        }
+
+
+        return codigo;
+    }
+
+
+
+    async function procesarCodigo() {
+
+        if (procesando) {
+            return;
+        }
+
+
+        const codigo =
+            normalizarCodigoDosificacion(
+                input.value
+            );
+
+
+        input.value =
+            codigo;
+
+
+        if (!codigo) {
+            return;
+        }
+
+
+        procesando =
+            true;
+
+
+        input.disabled =
+            true;
+
+
+        btnProcesarScan.disabled =
+            true;
+
+
+        resultado.className =
+            "resultado";
+
+
+        resultado.innerHTML =
+            "Procesando entrega...";
+
+
+        try {
+
+            const body =
+                new URLSearchParams();
+
+
+            body.append(
+                "__RequestVerificationToken",
+                token
+            );
+
+
+            body.append(
+                "codigo",
+                codigo
+            );
+
+
+            const respuesta =
+                await fetch(
+                    '@Url.Action("ProcesarEntregaDosificacion", "Home")',
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type":
+                                "application/x-www-form-urlencoded;charset=UTF-8"
+                        },
+                        body:
+                            body.toString()
+                    }
+                );
+
+
+            const datos =
+                await respuesta.json();
+
+
+            if (!datos.exito) {
+
+                resultado.className =
+                    "resultado error";
+
+
+                resultado.innerHTML =
+                    "<h2>✖ No se registró la entrega</h2>"
+                    +
+                    "<div>"
+                    + (datos.mensaje ?? "Error desconocido.")
+                    + "</div>";
+
+                return;
+            }
+
+
+            const clase =
+                datos.stockBajo
+                    ? "resultado alerta"
+                    : "resultado ok";
+
+
+            const titulo =
+                datos.stockBajo
+                    ? "⚠ Entrega registrada · STOCK BAJO"
+                    : "✓ Entrega registrada";
+
+
+            resultado.className =
+                clase;
+
+
+            resultado.innerHTML =
+                "<h2>"
+                + titulo
+                + "</h2>"
+                +
+                '<div class="resultado-grid">'
+                +
+                '<div class="dato"><small>Código</small><strong>'
+                + datos.codigo
+                + "</strong></div>"
+                +
+                '<div class="dato"><small>Medicamento</small><strong>'
+                + datos.producto
+                + (datos.concentracion
+                    ? " " + datos.concentracion
+                    : "")
+                + "</strong></div>"
+                +
+                '<div class="dato"><small>Entrega</small><strong>'
+                + datos.cantidad
+                + " "
+                + datos.unidad
+                + "</strong></div>"
+                +
+                '<div class="dato"><small>Clínica</small><strong>'
+                + datos.clinica
+                + "</strong></div>"
+                +
+                '<div class="dato"><small>Stock</small><strong>'
+                + datos.stockAnterior
+                + " → "
+                + datos.stockResultante
+                + " "
+                + datos.unidad
+                + "</strong></div>"
+                +
+                '<div class="dato"><small>FEFO</small><strong>'
+                + (datos.detalleLotes ?? "")
+                + "</strong></div>"
+                +
+                "</div>"
+                +
+                (
+                    datos.stockBajo
+                        ? '<div style="margin-top:12px;font-weight:800;">Mínimo configurado: '
+                            + datos.stockMinimo
+                            + " "
+                            + datos.unidad
+                            + ". Se recomienda reponer la Clínica.</div>"
+                        : ""
+                );
+
+        }
+        catch {
+
+            resultado.className =
+                "resultado error";
+
+
+            resultado.innerHTML =
+                "<h2>✖ Error</h2>"
+                +
+                "<div>No fue posible procesar el código.</div>";
+        }
+        finally {
+
+            input.value =
+                "";
+
+
+            input.disabled =
+                false;
+
+
+            btnProcesarScan.disabled =
+                false;
+
+
+            procesando =
+                false;
+
+
+            setTimeout(
+                function () {
+                    input.focus();
+                },
+                80
+            );
+        }
+    }
+
+
+    input.addEventListener(
+        "keydown",
+        function (evento) {
+
+            if (evento.key === "Enter") {
+
+                evento.preventDefault();
+
+                procesarCodigo();
+            }
+        }
+    );
+
+
+    btnProcesarScan.addEventListener(
+        "click",
+        function () {
+            procesarCodigo();
+        }
+    );
+
+
+    window.addEventListener(
+        "load",
+        function () {
+            input.focus();
+        }
+    );
+</script>

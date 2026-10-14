@@ -98,6 +98,126 @@ namespace LoginSARMedix.Repository
 
 
         // =========================================================
+        // PRODUCTOS DISPONIBLES EN UNA CLINICA
+        // Solo medicamentos con stock útil en la clínica seleccionada.
+        // Excluye vencidos y medicamentos controlados.
+        // =========================================================
+        public async Task<List<Producto>> ListadoProductosDisponiblesClinica(
+            int idUbicacion)
+        {
+            List<Producto> productos =
+                new List<Producto>();
+
+            if (idUbicacion <= 0)
+            {
+                return productos;
+            }
+
+            using MySqlConnection conexion =
+                new MySqlConnection(_conexion);
+
+            await conexion.OpenAsync();
+
+            string consulta = @"
+                SELECT DISTINCT
+                    p.id_producto,
+                    p.codigo_interno,
+                    p.nombre,
+                    p.unidad_medida,
+                    p.stock_minimo,
+                    m.forma_farmaceutica,
+                    m.concentracion
+
+                FROM lote l
+
+                INNER JOIN producto p
+                    ON p.id_producto = l.id_producto
+
+                INNER JOIN medicamento m
+                    ON m.id_producto = p.id_producto
+
+                INNER JOIN ubicacion u
+                    ON u.id_ubicacion = l.id_ubicacion
+
+                WHERE
+                    l.id_ubicacion = @idUbicacion
+
+                    AND u.activo = 1
+
+                    AND LOWER(TRIM(u.tipo_sector)) = 'clinica'
+
+                    AND l.cantidad_actual > 0
+
+                    AND
+                    (
+                        l.fecha_vencimiento IS NULL
+                        OR DATE(l.fecha_vencimiento) >= CURDATE()
+                    )
+
+                    AND COALESCE(m.requiere_control, 0) = 0
+
+                ORDER BY p.nombre";
+
+            using MySqlCommand comando =
+                new MySqlCommand(
+                    consulta,
+                    conexion
+                );
+
+            comando.Parameters.AddWithValue(
+                "@idUbicacion",
+                idUbicacion
+            );
+
+            using MySqlDataReader lector =
+                await comando.ExecuteReaderAsync();
+
+            while (await lector.ReadAsync())
+            {
+                productos.Add(
+                    new Producto()
+                    {
+                        id_producto =
+                            Convert.ToInt32(
+                                lector["id_producto"]
+                            ),
+
+                        codigo_interno =
+                            lector["codigo_interno"]?.ToString(),
+
+                        nombre =
+                            lector["nombre"]?.ToString(),
+
+                        unidad_medida =
+                            lector["unidad_medida"] == DBNull.Value
+                                ? null
+                                : lector["unidad_medida"].ToString(),
+
+                        stock_minimo =
+                            Convert.ToInt32(
+                                lector["stock_minimo"]
+                            ),
+
+                        forma_farmaceutica =
+                            lector["forma_farmaceutica"] == DBNull.Value
+                                ? null
+                                : lector["forma_farmaceutica"].ToString(),
+
+                        concentracion =
+                            lector["concentracion"] == DBNull.Value
+                                ? null
+                                : lector["concentracion"].ToString(),
+
+                        tipo = "Medicamento"
+                    }
+                );
+            }
+
+            return productos;
+        }
+
+
+        // =========================================================
         // LISTADO DE UBICACIONES
         // =========================================================
 
@@ -118,6 +238,7 @@ namespace LoginSARMedix.Repository
                 @"SELECT
               id_ubicacion,
               nombre_sector,
+              tipo_sector,
               activo
           FROM ubicacion
           ORDER BY nombre_sector";
@@ -146,6 +267,10 @@ namespace LoginSARMedix.Repository
 
                         nombre_sector =
                             lector["nombre_sector"]
+                                .ToString(),
+
+                        tipo_sector =
+                            lector["tipo_sector"]
                                 .ToString(),
 
                         activo =
@@ -182,6 +307,7 @@ namespace LoginSARMedix.Repository
                 @"SELECT
               id_ubicacion,
               nombre_sector,
+              tipo_sector,
               activo
           FROM ubicacion
           WHERE activo = 1
@@ -211,6 +337,10 @@ namespace LoginSARMedix.Repository
 
                         nombre_sector =
                             lector["nombre_sector"]
+                                .ToString(),
+
+                        tipo_sector =
+                            lector["tipo_sector"]
                                 .ToString(),
 
                         activo =
@@ -275,7 +405,8 @@ namespace LoginSARMedix.Repository
         // =========================================================
 
         public async Task<bool> CrearUbicacion(
-            string nombreSector)
+            string nombreSector,
+            string tipoSector)
         {
             using MySqlConnection conexion =
                 new MySqlConnection(_conexion);
@@ -285,10 +416,10 @@ namespace LoginSARMedix.Repository
 
             string consulta =
                 @"INSERT INTO ubicacion
-          (nombre_sector)
+          (nombre_sector, tipo_sector)
 
           VALUES
-          (@nombreSector)";
+          (@nombreSector, @tipoSector)";
 
 
             using MySqlCommand comando =
@@ -301,6 +432,11 @@ namespace LoginSARMedix.Repository
             comando.Parameters.AddWithValue(
                 "@nombreSector",
                 nombreSector
+            );
+
+            comando.Parameters.AddWithValue(
+                "@tipoSector",
+                tipoSector
             );
 
 
@@ -571,7 +707,8 @@ namespace LoginSARMedix.Repository
 
         public async Task<bool> ActualizarUbicacion(
             int idUbicacion,
-            string nombreSector)
+            string nombreSector,
+            string tipoSector)
         {
             using MySqlConnection conexion =
                 new MySqlConnection(_conexion);
@@ -581,7 +718,8 @@ namespace LoginSARMedix.Repository
 
             string consulta =
                 @"UPDATE ubicacion
-          SET nombre_sector = @nombreSector
+          SET nombre_sector = @nombreSector,
+              tipo_sector = @tipoSector
           WHERE id_ubicacion = @idUbicacion";
 
 
@@ -595,6 +733,11 @@ namespace LoginSARMedix.Repository
             comando.Parameters.AddWithValue(
                 "@nombreSector",
                 nombreSector
+            );
+
+            comando.Parameters.AddWithValue(
+                "@tipoSector",
+                tipoSector
             );
 
 

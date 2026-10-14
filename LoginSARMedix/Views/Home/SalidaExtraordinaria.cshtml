@@ -1,0 +1,298 @@
+﻿@using LoginSARMedix.Models
+@model SalidaExtraordinaria
+
+@{
+    ViewData["Title"] = "Salida extraordinaria";
+    ViewData["TituloBarra"] = "Salida extraordinaria";
+
+    var clinicas =
+        ViewBag.Clinicas as List<Ubicacion>
+        ?? new List<Ubicacion>();
+
+    string mensaje =
+        TempData["Mensaje"]?.ToString()
+        ?? "";
+
+    string tipoMensaje =
+        TempData["TipoMensaje"]?.ToString()
+        ?? "";
+}
+
+<style>
+    .extra-pagina{width:min(1040px,94%);margin:34px auto 48px}
+    .extra-titulo h1{margin:0 0 6px;color:#123451;font-size:30px;font-weight:850}
+    .extra-titulo p{margin:0;color:#5f788c}
+    .aviso{margin:18px 0;padding:14px 16px;border:1px solid #bcddeb;border-radius:10px;background:#edf8fd;color:#24536e}
+    .mensaje{padding:13px 16px;border-radius:10px;margin-bottom:18px;font-weight:750}
+    .ok{background:#eaf8ef;border:1px solid #b8dfc5;color:#21633a}
+    .error{background:#fff0f0;border:1px solid #efc1c1;color:#9d2f2f}
+    .panel{background:rgba(255,255,255,.96);border-radius:16px;padding:24px;box-shadow:0 12px 30px rgba(30,72,103,.14)}
+    .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:22px}
+    .bloque{border:1px solid #dae7ef;border-radius:13px;padding:20px;background:#fbfdff}
+    .campo{margin-bottom:17px}
+    label{display:block;margin-bottom:7px;color:#29465d;font-weight:750;font-size:14px}
+    select,input,textarea{width:100%;padding:11px 12px;border:1px solid #c7d8e4;border-radius:9px;background:white;color:#17324d;font-size:14px}
+    textarea{min-height:95px;resize:vertical}
+    .resumen{border-radius:13px;padding:21px;background:linear-gradient(145deg,#0c718e,#11889a);color:white}
+    .fila{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.2);display:flex;justify-content:space-between;gap:16px}
+    .acciones{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+    .btn{padding:10px 18px;border-radius:9px;font-weight:800;text-decoration:none;cursor:pointer}
+    .volver{border:1px solid #cad9e4;background:white;color:#435f72}
+    .confirmar{border:0;background:#087bc2;color:white}
+    .confirmar:disabled{opacity:.45;cursor:not-allowed}
+    @@media(max-width:800px){.grid{grid-template-columns:1fr}}
+</style>
+
+<section class="extra-pagina">
+
+    <div class="extra-titulo">
+        <h1>Salida extraordinaria</h1>
+        <p>Entrega excepcional de medicamentos a otro servicio.</p>
+    </div>
+
+    <div class="aviso">
+        🏥 Solo Enfermera o Administrador puede registrar esta salida.
+        SARMedix descuenta desde una Clínica, aplica FEFO y deja el servicio de destino y motivo en la trazabilidad.
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(mensaje))
+    {
+        <div class="mensaje @(tipoMensaje == "exito" ? "ok" : "error")">
+            @mensaje
+        </div>
+    }
+
+    <form asp-controller="Home"
+          asp-action="RegistrarSalidaExtraordinaria"
+          method="post"
+          id="formExtra">
+
+        @Html.AntiForgeryToken()
+
+        <div class="panel">
+            <div class="grid">
+
+                <div class="bloque">
+
+                    <div class="campo">
+                        <label asp-for="id_ubicacion">Clínica de origen</label>
+
+                        <select asp-for="id_ubicacion"
+                                id="clinicaExtra"
+                                required>
+                            <option value="">Seleccione una Clínica...</option>
+
+                            @foreach (var clinica in clinicas)
+                            {
+                                <option value="@clinica.id_ubicacion"
+                                        data-nombre="@clinica.nombre_sector">
+                                    @clinica.nombre_sector
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="campo">
+                        <label asp-for="id_producto">Medicamento</label>
+
+                        <select asp-for="id_producto"
+                                id="productoExtra"
+                                disabled
+                                required>
+                            <option value="">Primero seleccione una Clínica...</option>
+                        </select>
+                    </div>
+
+                    <div class="campo">
+                        <label asp-for="cantidad">Cantidad</label>
+
+                        <input asp-for="cantidad"
+                               id="cantidadExtra"
+                               type="number"
+                               min="1"
+                               placeholder="Ej.: 5"
+                               required />
+                    </div>
+
+                    <div class="campo">
+                        <label asp-for="servicio_destino">Servicio de destino</label>
+
+                        <input asp-for="servicio_destino"
+                               id="servicioExtra"
+                               maxlength="80"
+                               placeholder="Ej.: SAPU, CESFAM, ambulancia, otro servicio..."
+                               required />
+                    </div>
+
+                    <div class="campo">
+                        <label asp-for="motivo">Motivo</label>
+
+                        <textarea asp-for="motivo"
+                                  maxlength="120"
+                                  placeholder="Explique brevemente por qué se realiza la entrega."
+                                  required></textarea>
+                    </div>
+
+                </div>
+
+                <aside class="resumen">
+                    <h2 style="margin-top:0;font-size:19px;">Resumen</h2>
+
+                    <div class="fila">
+                        <span>Clínica</span>
+                        <strong id="rClinica">—</strong>
+                    </div>
+
+                    <div class="fila">
+                        <span>Medicamento</span>
+                        <strong id="rProducto">—</strong>
+                    </div>
+
+                    <div class="fila">
+                        <span>Destino</span>
+                        <strong id="rDestino">—</strong>
+                    </div>
+
+                    <div class="fila">
+                        <span>Cantidad</span>
+                        <strong id="rCantidad">0 unidades</strong>
+                    </div>
+
+                    <div style="margin-top:18px;padding:13px;border-radius:9px;background:rgba(255,255,255,.12);font-size:13px;line-height:1.45;">
+                        🔒 Al confirmar se valida nuevamente el stock y se descuentan los lotes mediante FEFO.
+                    </div>
+                </aside>
+
+            </div>
+
+            <div class="acciones">
+                <a asp-controller="Home"
+                   asp-action="MovimientoHistorial"
+                   class="btn volver">Volver</a>
+
+                <button type="submit"
+                        id="btnExtra"
+                        class="btn confirmar"
+                        disabled>
+                    Confirmar salida
+                </button>
+            </div>
+        </div>
+    </form>
+</section>
+
+<script>
+    const clinica = document.getElementById("clinicaExtra");
+    const producto = document.getElementById("productoExtra");
+    const cantidad = document.getElementById("cantidadExtra");
+    const destino = document.getElementById("servicioExtra");
+    const boton = document.getElementById("btnExtra");
+
+    function actualizarResumen() {
+        const opClinica = clinica.options[clinica.selectedIndex];
+        const opProducto = producto.options[producto.selectedIndex];
+
+        const unidad = opProducto?.dataset?.unidad || "unidades";
+        const cant = parseInt(cantidad.value || "0");
+
+        document.getElementById("rClinica").textContent =
+            opClinica?.dataset?.nombre || "—";
+
+        document.getElementById("rProducto").textContent =
+            opProducto?.dataset?.nombre || "—";
+
+        document.getElementById("rDestino").textContent =
+            destino.value.trim() || "—";
+
+        document.getElementById("rCantidad").textContent =
+            `${cant > 0 ? cant : 0} ${unidad}`;
+
+        boton.disabled = !(
+            clinica.value
+            &&
+            producto.value
+            &&
+            cant > 0
+            &&
+            destino.value.trim()
+        );
+    }
+
+    async function cargarProductos() {
+        const idUbicacion = clinica.value;
+
+        producto.innerHTML =
+            '<option value="">Cargando medicamentos...</option>';
+
+        producto.disabled = true;
+
+        actualizarResumen();
+
+        if (!idUbicacion) {
+            producto.innerHTML =
+                '<option value="">Primero seleccione una Clínica...</option>';
+            return;
+        }
+
+        try {
+            const respuesta = await fetch(
+                '@Url.Action("ProductosDisponiblesClinica", "Home")'
+                + '?idUbicacion='
+                + encodeURIComponent(idUbicacion)
+            );
+
+            const datos = await respuesta.json();
+
+            producto.innerHTML =
+                '<option value="">Seleccione un medicamento...</option>';
+
+            const lista = datos.productos ?? [];
+
+            if (lista.length === 0) {
+                producto.innerHTML =
+                    '<option value="">Sin medicamentos disponibles</option>';
+                return;
+            }
+
+            for (const p of lista) {
+                const op = document.createElement("option");
+
+                op.value = p.id_producto;
+                op.dataset.nombre = p.nombre ?? "";
+                op.dataset.unidad = p.unidad_medida || "unidades";
+
+                const concentracion =
+                    p.concentracion
+                        ? " " + p.concentracion
+                        : "";
+
+                op.textContent =
+                    (p.nombre ?? "")
+                    + concentracion;
+
+                producto.appendChild(op);
+            }
+
+            producto.disabled = false;
+        }
+        catch {
+            producto.innerHTML =
+                '<option value="">Error al cargar medicamentos</option>';
+        }
+
+        actualizarResumen();
+    }
+
+    clinica.addEventListener("change", cargarProductos);
+    producto.addEventListener("change", actualizarResumen);
+    cantidad.addEventListener("input", actualizarResumen);
+    destino.addEventListener("input", actualizarResumen);
+
+    document.getElementById("formExtra").addEventListener("submit", function(e) {
+        if (!confirm("¿Confirma esta salida extraordinaria?")) {
+            e.preventDefault();
+        }
+    });
+
+    actualizarResumen();
+</script>

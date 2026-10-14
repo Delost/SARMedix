@@ -1,0 +1,878 @@
+@using LoginSARMedix.Models
+@model TrasladoStock
+
+@{
+    ViewData["Title"] = "Trasladar stock";
+    ViewData["TituloBarra"] = "Trasladar stock";
+
+    var lotes =
+        ViewBag.LotesOrigen as List<Lote>
+        ?? new List<Lote>();
+
+    var ubicaciones =
+        ViewBag.Ubicaciones as List<Ubicacion>
+        ?? new List<Ubicacion>();
+
+    var productos =
+        ViewBag.Productos as List<Producto>
+        ?? new List<Producto>();
+
+    string mensaje =
+        TempData["Mensaje"]?.ToString()
+        ?? "";
+
+    string tipoMensaje =
+        TempData["TipoMensaje"]?.ToString()
+        ?? "";
+}
+
+<style>
+    .traslado-pagina {
+        width: min(1120px, 94%);
+        margin: 28px auto 45px;
+    }
+
+    .traslado-encabezado {
+        margin-bottom: 22px;
+    }
+
+    .traslado-encabezado h1 {
+        margin: 0 0 7px;
+        color: #17324d;
+        font-size: 31px;
+        font-weight: 800;
+    }
+
+    .traslado-encabezado p {
+        margin: 0;
+        color: #607487;
+        font-size: 15px;
+    }
+
+    .traslado-aviso {
+        margin: 18px 0 24px;
+        padding: 14px 16px;
+        border: 1px solid #b9d9ee;
+        border-radius: 10px;
+        background: rgba(235, 247, 255, 0.92);
+        color: #245777;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .traslado-mensaje {
+        margin-bottom: 18px;
+        padding: 13px 16px;
+        border-radius: 10px;
+        font-weight: 700;
+    }
+
+    .traslado-mensaje-exito {
+        background: #eaf8ef;
+        border: 1px solid #b8dfc5;
+        color: #21633a;
+    }
+
+    .traslado-mensaje-error {
+        background: #fff0f0;
+        border: 1px solid #efc1c1;
+        color: #9d2f2f;
+    }
+
+    .traslado-panel {
+        padding: 24px;
+        border-radius: 16px;
+        background: rgba(255,255,255,.95);
+        box-shadow: 0 12px 28px rgba(36, 76, 105, .14);
+    }
+
+    .traslado-grid {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: 24px;
+    }
+
+    .traslado-bloque {
+        padding: 20px;
+        border: 1px solid #dce8f1;
+        border-radius: 13px;
+        background: #fbfdff;
+    }
+
+    .traslado-bloque h2 {
+        margin: 0 0 16px;
+        color: #0b76b7;
+        font-size: 19px;
+    }
+
+    .campo {
+        margin-bottom: 17px;
+    }
+
+    .campo:last-child {
+        margin-bottom: 0;
+    }
+
+    .campo label {
+        display: block;
+        margin-bottom: 7px;
+        color: #314c63;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .campo select,
+    .campo input {
+        width: 100%;
+        min-height: 45px;
+        padding: 10px 12px;
+        border: 1px solid #c9d9e5;
+        border-radius: 9px;
+        background: white;
+        color: #17324d;
+        outline: none;
+        font-size: 14px;
+    }
+
+    .campo select:focus,
+    .campo input:focus {
+        border-color: #1591c8;
+        box-shadow: 0 0 0 3px rgba(21, 145, 200, .12);
+    }
+
+    .campo-ayuda {
+        display: block;
+        margin-top: 6px;
+        color: #7890a1;
+        font-size: 12px;
+    }
+
+    .resumen {
+        min-height: 100%;
+        padding: 22px;
+        border-radius: 13px;
+        background: linear-gradient(145deg, #0b6f99, #0c8894);
+        color: white;
+    }
+
+    .resumen h2 {
+        margin: 0 0 18px;
+        font-size: 20px;
+    }
+
+    .resumen-fila {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255,255,255,.18);
+        font-size: 14px;
+    }
+
+    .resumen-fila span:first-child {
+        opacity: .82;
+    }
+
+    .resumen-fila strong {
+        text-align: right;
+    }
+
+    .resumen-destacado {
+        margin-top: 18px;
+        padding: 14px;
+        border-radius: 10px;
+        background: rgba(255,255,255,.13);
+    }
+
+    .resumen-destacado small {
+        display: block;
+        margin-bottom: 5px;
+        opacity: .82;
+    }
+
+    .resumen-destacado strong {
+        font-size: 21px;
+    }
+
+    .traslado-advertencia {
+        display: none;
+        margin-top: 14px;
+        padding: 11px 13px;
+        border-radius: 9px;
+        background: #fff2cf;
+        color: #77560b;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .traslado-acciones {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 22px;
+    }
+
+    .btn-volver,
+    .btn-trasladar {
+        min-height: 43px;
+        padding: 10px 18px;
+        border-radius: 9px;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .btn-volver {
+        border: 1px solid #cbd9e4;
+        background: white;
+        color: #496273;
+    }
+
+    .btn-trasladar {
+        border: 0;
+        background: #087bc2;
+        color: white;
+    }
+
+    .btn-trasladar:disabled {
+        opacity: .45;
+        cursor: not-allowed;
+    }
+
+    .sin-stock {
+        padding: 22px;
+        border: 1px dashed #b8cad7;
+        border-radius: 12px;
+        background: rgba(255,255,255,.8);
+        text-align: center;
+        color: #647b8d;
+    }
+
+    @@media (max-width: 850px) {
+        .traslado-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<section class="traslado-pagina">
+
+    <div class="traslado-encabezado">
+        <h1>Trasladar stock</h1>
+        <p>
+            Mueve existencias entre Bodega y Clínica sin perder la trazabilidad del lote.
+        </p>
+    </div>
+
+    <div class="traslado-aviso">
+        ↔ El traslado mueve físicamente stock de un sector a otro. No corresponde a una entrega a paciente.
+        Los medicamentos controlados continúan usando su módulo restringido.
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(mensaje))
+    {
+        <div class="traslado-mensaje @(tipoMensaje == "exito" ? "traslado-mensaje-exito" : "traslado-mensaje-error")">
+            @mensaje
+        </div>
+    }
+
+    @if (lotes.Count == 0)
+    {
+        <div class="sin-stock">
+            <strong>No hay lotes disponibles para trasladar.</strong>
+            <div>Debe existir stock en un sector activo antes de registrar un traslado.</div>
+        </div>
+    }
+    else
+    {
+        <form asp-controller="Home"
+              asp-action="RegistrarTraslado"
+              method="post"
+              id="formTraslado">
+
+            @Html.AntiForgeryToken()
+
+            <div class="traslado-panel">
+
+                <div class="traslado-grid">
+
+                    <div class="traslado-bloque">
+
+                        <h2>1. Origen y destino</h2>
+
+                        <div class="campo">
+                            <label asp-for="id_lote_origen">
+                                Lote de origen
+                            </label>
+
+                            <select asp-for="id_lote_origen"
+                                    id="loteOrigen"
+                                    required>
+
+                                <option value="">
+                                    Seleccione producto, lote y sector...
+                                </option>
+
+                                @foreach (var lote in lotes)
+                                {
+                                    var ubicacion =
+                                        ubicaciones.FirstOrDefault(
+                                            u =>
+                                                u.id_ubicacion
+                                                ==
+                                                lote.id_ubicacion
+                                        );
+
+                                    var producto =
+                                        productos.FirstOrDefault(
+                                            p =>
+                                                p.id_producto
+                                                ==
+                                                lote.id_producto
+                                        );
+
+                                    string tipo =
+                                        ubicacion?.tipo_sector
+                                        ?? "";
+
+                                    string unidad =
+                                        string.IsNullOrWhiteSpace(
+                                            producto?.unidad_medida
+                                        )
+                                            ? "unidades"
+                                            : producto!.unidad_medida!;
+
+                                    string vencimiento =
+                                        lote.fecha_vencimiento.HasValue
+                                            ? lote.fecha_vencimiento.Value.ToString("dd/MM/yyyy")
+                                            : "Sin vencimiento";
+
+                                    bool vencido =
+                                        lote.fecha_vencimiento.HasValue
+                                        &&
+                                        lote.fecha_vencimiento.Value.Date
+                                        <
+                                        DateTime.Today;
+
+                                    <option value="@lote.id_lote"
+                                            data-producto="@lote.nombre_producto"
+                                            data-lote="@lote.numero_lote"
+                                            data-sector="@lote.nombre_ubicacion"
+                                            data-sector-id="@lote.id_ubicacion"
+                                            data-tipo="@tipo"
+                                            data-stock="@lote.cantidad_actual"
+                                            data-unidad="@unidad"
+                                            data-vencimiento="@vencimiento"
+                                            data-vencido="@(vencido ? "true" : "false")">
+
+                                        @lote.nombre_producto · Lote @lote.numero_lote · @lote.nombre_ubicacion · Stock @lote.cantidad_actual @unidad
+                                    </option>
+                                }
+
+                            </select>
+
+                            <span class="campo-ayuda">
+                                El stock se descontará de este lote.
+                            </span>
+                        </div>
+
+
+                        <div class="campo">
+                            <label asp-for="id_ubicacion_destino">
+                                Sector de destino
+                            </label>
+
+                            <select asp-for="id_ubicacion_destino"
+                                    id="sectorDestino"
+                                    required
+                                    disabled>
+
+                                <option value="">
+                                    Primero seleccione el lote de origen...
+                                </option>
+
+                                @foreach (var ubicacion in ubicaciones)
+                                {
+                                    <option value="@ubicacion.id_ubicacion"
+                                            data-tipo="@ubicacion.tipo_sector">
+
+                                        @ubicacion.nombre_sector · @(ubicacion.tipo_sector == "Clinica" ? "Clínica" : ubicacion.tipo_sector)
+                                    </option>
+                                }
+
+                            </select>
+
+                            <span class="campo-ayuda" id="ayudaDestino">
+                                Si el origen es Bodega, se mostrarán Clínicas. Si el origen es Clínica, se mostrarán Bodegas.
+                            </span>
+                        </div>
+
+
+                        <div class="campo">
+                            <label asp-for="cantidad">
+                                Cantidad a trasladar
+                            </label>
+
+                            <input asp-for="cantidad"
+                                   id="cantidadTraslado"
+                                   type="number"
+                                   min="1"
+                                   step="1"
+                                   placeholder="Ej.: 50"
+                                   required />
+
+                            <span class="campo-ayuda" id="ayudaCantidad">
+                                Seleccione un lote para conocer el stock disponible.
+                            </span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="resumen">
+
+                        <h2>Resumen del traslado</h2>
+
+                        <div class="resumen-fila">
+                            <span>Producto</span>
+                            <strong id="resProducto">—</strong>
+                        </div>
+
+                        <div class="resumen-fila">
+                            <span>Lote</span>
+                            <strong id="resLote">—</strong>
+                        </div>
+
+                        <div class="resumen-fila">
+                            <span>Origen</span>
+                            <strong id="resOrigen">—</strong>
+                        </div>
+
+                        <div class="resumen-fila">
+                            <span>Destino</span>
+                            <strong id="resDestino">—</strong>
+                        </div>
+
+                        <div class="resumen-fila">
+                            <span>Vencimiento</span>
+                            <strong id="resVencimiento">—</strong>
+                        </div>
+
+                        <div class="resumen-destacado">
+                            <small>Cantidad a mover</small>
+                            <strong id="resCantidad">0 unidades</strong>
+                        </div>
+
+                        <div id="advertenciaTraslado"
+                             class="traslado-advertencia">
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="traslado-acciones">
+
+                    <a asp-controller="Home"
+                       asp-action="MovimientoHistorial"
+                       class="btn-volver">
+                        Volver
+                    </a>
+
+                    <button type="submit"
+                            id="btnTrasladar"
+                            class="btn-trasladar"
+                            disabled>
+                        Confirmar traslado
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+    }
+
+</section>
+
+
+<script>
+    const loteOrigen =
+        document.getElementById("loteOrigen");
+
+    const sectorDestino =
+        document.getElementById("sectorDestino");
+
+    const cantidadTraslado =
+        document.getElementById("cantidadTraslado");
+
+    const btnTrasladar =
+        document.getElementById("btnTrasladar");
+
+    const advertencia =
+        document.getElementById("advertenciaTraslado");
+
+
+    function textoTipo(tipo) {
+
+        if (
+            (tipo || "").toLowerCase()
+            ===
+            "clinica"
+        ) {
+            return "Clínica";
+        }
+
+        return tipo || "";
+    }
+
+
+    function opcionOrigenSeleccionada() {
+
+        if (!loteOrigen) {
+            return null;
+        }
+
+        return loteOrigen.options[
+            loteOrigen.selectedIndex
+        ];
+    }
+
+
+    function actualizarDestinos() {
+
+        if (
+            !loteOrigen
+            ||
+            !sectorDestino
+        ) {
+            return;
+        }
+
+
+        const opcionOrigen =
+            opcionOrigenSeleccionada();
+
+
+        const tipoOrigen =
+            (
+                opcionOrigen?.dataset.tipo
+                ||
+                ""
+            )
+                .toLowerCase();
+
+
+        const idSectorOrigen =
+            opcionOrigen?.dataset.sectorId
+            ||
+            "";
+
+
+        sectorDestino.value =
+            "";
+
+
+        if (!tipoOrigen) {
+
+            sectorDestino.disabled =
+                true;
+
+            return;
+        }
+
+
+        const tipoDestinoEsperado =
+            tipoOrigen === "bodega"
+                ? "clinica"
+                : "bodega";
+
+
+        Array.from(
+            sectorDestino.options
+        )
+        .forEach(
+            function (opcion, indice) {
+
+                if (indice === 0) {
+                    opcion.hidden = false;
+                    opcion.disabled = false;
+                    return;
+                }
+
+
+                const tipoDestino =
+                    (
+                        opcion.dataset.tipo
+                        ||
+                        ""
+                    )
+                        .toLowerCase();
+
+
+                const esMismoSector =
+                    opcion.value
+                    ===
+                    idSectorOrigen;
+
+
+                const mostrar =
+                    tipoDestino
+                    ===
+                    tipoDestinoEsperado
+                    &&
+                    !esMismoSector;
+
+
+                opcion.hidden =
+                    !mostrar;
+
+
+                opcion.disabled =
+                    !mostrar;
+            }
+        );
+
+
+        sectorDestino.disabled =
+            false;
+    }
+
+
+    function actualizarResumen() {
+
+        if (!loteOrigen) {
+            return;
+        }
+
+
+        const opcion =
+            opcionOrigenSeleccionada();
+
+
+        const producto =
+            opcion?.dataset.producto
+            ||
+            "—";
+
+
+        const lote =
+            opcion?.dataset.lote
+            ||
+            "—";
+
+
+        const origen =
+            opcion?.dataset.sector
+            ||
+            "—";
+
+
+        const vencimiento =
+            opcion?.dataset.vencimiento
+            ||
+            "—";
+
+
+        const stock =
+            parseInt(
+                opcion?.dataset.stock
+                ||
+                "0"
+            );
+
+
+        const unidad =
+            opcion?.dataset.unidad
+            ||
+            "unidades";
+
+
+        const tipoOrigen =
+            opcion?.dataset.tipo
+            ||
+            "";
+
+
+        const vencido =
+            opcion?.dataset.vencido
+            ===
+            "true";
+
+
+        const cantidad =
+            parseInt(
+                cantidadTraslado?.value
+                ||
+                "0"
+            );
+
+
+        const destino =
+            sectorDestino
+            &&
+            sectorDestino.selectedIndex > 0
+                ? sectorDestino.options[
+                    sectorDestino.selectedIndex
+                  ].text
+                : "—";
+
+
+        document.getElementById(
+            "resProducto"
+        ).textContent =
+            producto;
+
+
+        document.getElementById(
+            "resLote"
+        ).textContent =
+            lote;
+
+
+        document.getElementById(
+            "resOrigen"
+        ).textContent =
+            origen;
+
+
+        document.getElementById(
+            "resDestino"
+        ).textContent =
+            destino;
+
+
+        document.getElementById(
+            "resVencimiento"
+        ).textContent =
+            vencimiento;
+
+
+        document.getElementById(
+            "resCantidad"
+        ).textContent =
+            `${cantidad > 0 ? cantidad : 0} ${unidad}`;
+
+
+        const ayudaCantidad =
+            document.getElementById(
+                "ayudaCantidad"
+            );
+
+
+        if (opcion?.value) {
+
+            ayudaCantidad.textContent =
+                `Stock disponible: ${stock} ${unidad}.`;
+        }
+        else {
+
+            ayudaCantidad.textContent =
+                "Seleccione un lote para conocer el stock disponible.";
+        }
+
+
+        let mensaje =
+            "";
+
+
+        if (
+            opcion?.value
+            &&
+            vencido
+            &&
+            tipoOrigen.toLowerCase()
+            ===
+            "bodega"
+        ) {
+            mensaje =
+                "Este lote está vencido y no puede trasladarse desde Bodega hacia una Clínica.";
+        }
+        else if (
+            cantidad > stock
+            &&
+            opcion?.value
+        ) {
+            mensaje =
+                `Stock insuficiente. Solo hay ${stock} ${unidad} disponibles.`;
+        }
+
+
+        if (mensaje) {
+
+            advertencia.textContent =
+                mensaje;
+
+
+            advertencia.style.display =
+                "block";
+        }
+        else {
+
+            advertencia.textContent =
+                "";
+
+
+            advertencia.style.display =
+                "none";
+        }
+
+
+        const valido =
+            !!opcion?.value
+            &&
+            !!sectorDestino?.value
+            &&
+            cantidad > 0
+            &&
+            cantidad <= stock
+            &&
+            !(
+                vencido
+                &&
+                tipoOrigen.toLowerCase()
+                ===
+                "bodega"
+            );
+
+
+        btnTrasladar.disabled =
+            !valido;
+    }
+
+
+    if (loteOrigen) {
+
+        loteOrigen.addEventListener(
+            "change",
+            function () {
+
+                actualizarDestinos();
+
+                actualizarResumen();
+            }
+        );
+    }
+
+
+    if (sectorDestino) {
+
+        sectorDestino.addEventListener(
+            "change",
+            actualizarResumen
+        );
+    }
+
+
+    if (cantidadTraslado) {
+
+        cantidadTraslado.addEventListener(
+            "input",
+            actualizarResumen
+        );
+    }
+
+
+    actualizarResumen();
+</script>

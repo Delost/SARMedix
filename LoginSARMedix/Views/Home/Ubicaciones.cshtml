@@ -2,8 +2,8 @@
 @model List<Ubicacion>
 
 @{
-    ViewData["Title"] = "Ubicaciones";
-    ViewData["TituloBarra"] = "Ubicaciones";
+    ViewData["Title"] = "Sectores";
+    ViewData["TituloBarra"] = "Sectores";
 
 
     string mensaje =
@@ -48,8 +48,8 @@
 <style>
 
     /* =========================================================
-           PAGINA GENERAL
-           ========================================================= */
+       PAGINA GENERAL
+       ========================================================= */
 
     .ubicaciones-pagina {
         width: 100%;
@@ -60,32 +60,32 @@
 
 
     /* =========================================================
-           ENCABEZADO
-           ========================================================= */
+       ENCABEZADO
+       ========================================================= */
 
     .ubicaciones-encabezado {
         margin-bottom: 25px;
     }
 
 
-        .ubicaciones-encabezado h1 {
-            margin: 0;
-            color: #093b62;
-            font-size: 34px;
-            font-weight: 750;
-        }
+    .ubicaciones-encabezado h1 {
+        margin: 0;
+        color: #093b62;
+        font-size: 34px;
+        font-weight: 750;
+    }
 
 
-        .ubicaciones-encabezado p {
-            margin: 7px 0 0;
-            color: #657d90;
-            font-size: 16px;
-        }
+    .ubicaciones-encabezado p {
+        margin: 7px 0 0;
+        color: #657d90;
+        font-size: 16px;
+    }
 
 
     /* =========================================================
-           MENSAJES
-           ========================================================= */
+       MENSAJES
+       ========================================================= */
 
     .ubicaciones-mensaje {
         margin-bottom: 18px;
@@ -118,11 +118,11 @@
     }
 
 
-        .ubicaciones-mensaje-exito
-        .ubicaciones-mensaje-icono {
-            background: #17733a;
-            color: white;
-        }
+    .ubicaciones-mensaje-exito
+    .ubicaciones-mensaje-icono {
+        background: #17733a;
+        color: white;
+    }
 
 
     .ubicaciones-mensaje-error {
@@ -132,16 +132,16 @@
     }
 
 
-        .ubicaciones-mensaje-error
-        .ubicaciones-mensaje-icono {
-            background: #b42318;
-            color: white;
-        }
+    .ubicaciones-mensaje-error
+    .ubicaciones-mensaje-icono {
+        background: #b42318;
+        color: white;
+    }
 
 
     /* =========================================================
-           BARRA DE HERRAMIENTAS
-           ========================================================= */
+       BARRA DE HERRAMIENTAS
+       ========================================================= */
 
     .ubicaciones-herramientas {
         display: grid;
@@ -157,33 +157,33 @@
     }
 
 
-        .ubicaciones-buscador span {
-            position: absolute;
-            top: 50%;
-            left: 16px;
-            transform: translateY(-50%);
-            color: #7890a3;
-            font-size: 18px;
-        }
+    .ubicaciones-buscador span {
+        position: absolute;
+        top: 50%;
+        left: 16px;
+        transform: translateY(-50%);
+        color: #7890a3;
+        font-size: 18px;
+    }
 
 
-        .ubicaciones-buscador input {
-            width: 100%;
-            height: 48px;
-            padding: 0 15px 0 46px;
-            border: 1px solid #c9d9e3;
-            border-radius: 9px;
-            background: rgba(255, 255, 255, 0.96);
-            color: #17324d;
-            font-size: 15px;
-            outline: none;
-        }
+    .ubicaciones-buscador input {
+        width: 100%;
+        height: 48px;
+        padding: 0 15px 0 46px;
+        border: 1px solid #c9d9e3;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.96);
+        color: #17324d;
+        font-size: 15px;
+        outline: none;
+    }
 
 
-            .ubicaciones-buscador input:focus {
-                border-color: #0d7898;
-                box-shadow: 0 0 0 3px rgba(13, 120, 152, 0.10);
-            }
+    .ubicaciones-buscador input:focus {
+        border-color: #0d7898;
+        box-shadow: 0 0 0 3px rgba(13, 120, 152, 0.10);
+    }
 
 
     .ubicaciones-select {
@@ -199,11 +199,11 @@
     }
 
 
-        .ubicaciones-select:disabled {
-            background: #eef2f5;
-            color: #8293a0;
-            cursor: not-allowed;
-        }
+    .ubicaciones-select:disabled {
+        background: #eef2f5;
+        color: #8293a0;
+        cursor: not-allowed;
+    }
 
 
     .ubicaciones-alertas-filtro {
@@ -224,11 +224,11 @@
     }
 
 
-        .ubicaciones-alertas-filtro input {
-            width: 17px;
-            height: 17px;
-            cursor: pointer;
-        }
+    .ubicaciones-alertas-filtro input {
+        width: 17px;
+        height: 17px;
+        cursor: pointer;
+    }
 
 
     .btn-agregar-ubicacion {
@@ -252,11 +252,11 @@
     }
 
 
-        .btn-agregar-ubicacion:hover {
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 22px rgba(7, 89, 133, 0.24);
-        }
+    .btn-agregar-ubicacion:hover {
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(7, 89, 133, 0.24);
+    }
 
 
     .btn-agregar-icono {
@@ -267,8 +267,8 @@
 
 
     /* =========================================================
-           GRID
-           ========================================================= */
+       GRID
+       ========================================================= */
 
     .ubicaciones-grid {
         display: grid;
@@ -278,8 +278,8 @@
 
 
     /* =========================================================
-           TARJETA
-           ========================================================= */
+       TARJETA
+       ========================================================= */
 
     .ubicacion-card {
         min-height: 330px;
@@ -294,10 +294,10 @@
     }
 
 
-        .ubicacion-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 16px 35px rgba(16, 65, 95, 0.16);
-        }
+    .ubicacion-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 35px rgba(16, 65, 95, 0.16);
+    }
 
 
     .ubicacion-card-superior {
@@ -325,12 +325,12 @@
     }
 
 
-        .ubicacion-datos-principales h2 {
-            margin: 2px 0 4px;
-            color: #123a5d;
-            font-size: 20px;
-            font-weight: 700;
-        }
+    .ubicacion-datos-principales h2 {
+        margin: 2px 0 4px;
+        color: #123a5d;
+        font-size: 20px;
+        font-weight: 700;
+    }
 
 
     .ubicacion-tipo {
@@ -378,8 +378,8 @@
     }
 
     /* =========================================================
-           MENU DE OPCIONES DE UBICACION
-           ========================================================= */
+       MENU DE OPCIONES DE UBICACION
+       ========================================================= */
 
     .ubicacion-menu-contenedor {
         position: relative;
@@ -426,8 +426,8 @@
 
 
     /* =========================================================
-           RESUMEN
-           ========================================================= */
+       RESUMEN
+       ========================================================= */
 
     .ubicacion-resumen {
         margin-top: 20px;
@@ -471,8 +471,8 @@
 
 
     /* =========================================================
-           ALERTAS
-           ========================================================= */
+       ALERTAS
+       ========================================================= */
 
     .ubicacion-alertas {
         margin-top: 16px;
@@ -518,8 +518,8 @@
 
 
     /* =========================================================
-           BOTON INVENTARIO
-           ========================================================= */
+       BOTON INVENTARIO
+       ========================================================= */
 
     .ubicacion-acciones {
         margin-top: auto;
@@ -545,15 +545,15 @@
     }
 
 
-        .btn-ver-inventario:hover {
-            background: #e2f0fc;
-            color: #0b5797;
-        }
+    .btn-ver-inventario:hover {
+        background: #e2f0fc;
+        color: #0b5797;
+    }
 
 
     /* =========================================================
-           TARJETA AGREGAR
-           ========================================================= */
+       TARJETA AGREGAR
+       ========================================================= */
 
     .ubicacion-card-agregar {
         min-height: 330px;
@@ -567,10 +567,10 @@
     }
 
 
-        .ubicacion-card-agregar:hover {
-            background: rgba(255, 255, 255, 0.92);
-            border-color: #6daed0;
-        }
+    .ubicacion-card-agregar:hover {
+        background: rgba(255, 255, 255, 0.92);
+        border-color: #6daed0;
+    }
 
 
     .ubicacion-agregar-contenido {
@@ -609,8 +609,8 @@
 
 
     /* =========================================================
-           INFORMACION INFERIOR
-           ========================================================= */
+       INFORMACION INFERIOR
+       ========================================================= */
 
     .ubicaciones-info {
         margin-top: 24px;
@@ -641,8 +641,8 @@
 
 
     /* =========================================================
-           SIN UBICACIONES
-           ========================================================= */
+       SIN UBICACIONES
+       ========================================================= */
 
     .ubicaciones-vacio {
         grid-column: 1 / -1;
@@ -656,29 +656,29 @@
     }
 
 
-        .ubicaciones-vacio h3 {
-            margin: 0 0 7px;
-            color: #123a5d;
-            font-size: 20px;
-        }
+    .ubicaciones-vacio h3 {
+        margin: 0 0 7px;
+        color: #123a5d;
+        font-size: 20px;
+    }
 
 
-        .ubicaciones-vacio p {
-            margin: 0;
-        }
+    .ubicaciones-vacio p {
+        margin: 0;
+    }
 
 
     /* =========================================================
-           OCULTAR POR FILTROS
-           ========================================================= */
+       OCULTAR POR FILTROS
+       ========================================================= */
 
     .ubicacion-oculta {
         display: none !important;
     }
 
     /* =========================================================
-           MODAL AGREGAR UBICACION
-           ========================================================= */
+       MODAL AGREGAR UBICACION
+       ========================================================= */
 
     .ubicacion-modal-fondo {
         position: fixed;
@@ -757,23 +757,31 @@
         }
 
 
-        .ubicacion-modal-cuerpo input {
+        .ubicacion-modal-cuerpo input,
+        .ubicacion-modal-cuerpo select {
             width: 100%;
             height: 46px;
             padding: 0 13px;
             box-sizing: border-box;
             border: 1px solid #c9d9e3;
             border-radius: 8px;
+            background: white;
             color: #17324d;
             font-size: 15px;
             outline: none;
         }
 
 
-            .ubicacion-modal-cuerpo input:focus {
+            .ubicacion-modal-cuerpo input:focus,
+            .ubicacion-modal-cuerpo select:focus {
                 border-color: #0d7898;
                 box-shadow: 0 0 0 3px rgba(13, 120, 152, 0.10);
             }
+
+
+        .ubicacion-modal-grupo + .ubicacion-modal-grupo {
+            margin-top: 18px;
+        }
 
 
     .ubicacion-modal-ayuda {
@@ -823,8 +831,8 @@
 
 
     /* =========================================================
-           RESPONSIVE
-           ========================================================= */
+       RESPONSIVE
+       ========================================================= */
 
     @@media (max-width: 1200px) {
 
@@ -836,6 +844,7 @@
         .ubicaciones-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
+
     }
 
 
@@ -854,6 +863,7 @@
         .ubicaciones-encabezado h1 {
             font-size: 28px;
         }
+
     }
 
     .ubicacion-menu-opcion-reactivar {
@@ -864,43 +874,6 @@
         .ubicacion-menu-opcion-reactivar:hover {
             background: #e8f7ed;
         }
-
-    .ubicacion-menu-opcion-eliminar {
-        color: #b42318;
-    }
-
-
-        .ubicacion-menu-opcion-eliminar:hover {
-            background: #fff0f0;
-        }
-
-
-    /* =========================================================
-       UBICACION INACTIVA
-       ========================================================= */
-
-    .ubicacion-card-inactiva {
-        opacity: 0.78;
-        background: rgba(245, 247, 249, 0.97);
-        border-color: #cbd4da;
-    }
-
-
-        .ubicacion-card-inactiva:hover {
-            opacity: 1;
-        }
-
-
-    .ubicacion-estado-inactiva {
-        display: inline-block;
-        margin-left: 6px;
-        padding: 3px 9px;
-        border-radius: 6px;
-        background: #eceff1;
-        color: #64717a;
-        font-size: 12px;
-        font-weight: 700;
-    }
 
 </style>
 
@@ -916,12 +889,11 @@
     <section class="ubicaciones-encabezado">
 
         <h1>
-            Ubicaciones
+            Sectores
         </h1>
 
         <p>
-            Monitorea y administra las áreas de almacenamiento
-            donde se encuentran los medicamentos.
+            Administra las bodegas y clínicas donde se almacena y utiliza el stock de SARMedix.
         </p>
 
     </section>
@@ -930,12 +902,13 @@
     <!-- =========================================================
          MENSAJE GENERAL
          ========================================================= -->
+
     @if (!string.IsNullOrWhiteSpace(mensaje))
     {
         <div class="ubicaciones-mensaje
-            @(tipoMensaje == "exito"
-                ? "ubicaciones-mensaje-exito"
-                : "ubicaciones-mensaje-error")">
+                    @(tipoMensaje == "exito"
+                        ? "ubicaciones-mensaje-exito"
+                        : "ubicaciones-mensaje-error")">
 
             <span class="ubicaciones-mensaje-icono">
 
@@ -970,7 +943,7 @@
 
             <input type="text"
                    id="buscarUbicacion"
-                   placeholder="Buscar ubicación..."
+                   placeholder="Buscar sector..."
                    oninput="filtrarUbicaciones()" />
 
         </div>
@@ -999,18 +972,22 @@
 
 
 
-        <!-- =====================================================
-             FILTRO TIPO
+        <!-- FILTRO TIPO DE SECTOR -->
 
-             TODAVIA NO LO USAMOS PORQUE LA TABLA UBICACION
-             ACTUAL SOLO TIENE ID Y NOMBRE_SECTOR.
-             ===================================================== -->
+        <select id="filtroTipo"
+                class="ubicaciones-select"
+                onchange="filtrarUbicaciones()">
 
-        <select class="ubicaciones-select"
-                disabled>
+            <option value="todos">
+                Todos los tipos
+            </option>
 
-            <option>
-                Tipo: por definir
+            <option value="bodega">
+                Bodegas
+            </option>
+
+            <option value="clinica">
+                Clínicas
             </option>
 
         </select>
@@ -1044,7 +1021,7 @@
             </span>
 
             <span>
-                Agregar ubicación
+                Agregar sector
             </span>
 
         </button>
@@ -1065,6 +1042,7 @@
         <!-- =====================================================
              UBICACIONES REALES DESDE MYSQL
              ===================================================== -->
+
         @if (Model != null && Model.Any())
         {
 
@@ -1172,8 +1150,9 @@
                     stockBajo > 0;
 
 
-                <article class="ubicacion-card @(ubicacion.activo ? "" : "ubicacion-card-inactiva")"
+                <article class="ubicacion-card"
                          data-nombre="@(ubicacion.nombre_sector?.ToLower())"
+                         data-tipo="@(ubicacion.tipo_sector?.ToLower())"
                          data-activa="@(ubicacion.activo ? "true" : "false")"
                          data-alertas="@(tieneAlertas ? "true" : "false")">
 
@@ -1182,7 +1161,7 @@
 
 
                         <div class="ubicacion-icono">
-                            📍
+                            @(ubicacion.tipo_sector == "Bodega" ? "🏬" : "🏥")
                         </div>
 
 
@@ -1193,17 +1172,8 @@
                             </h2>
 
                             <span class="ubicacion-tipo">
-                                Ubicación
+                                @(ubicacion.tipo_sector == "Clinica" ? "Clínica" : "Bodega")
                             </span>
-
-                            @if (!ubicacion.activo)
-                            {
-                                <span class="ubicacion-estado-inactiva">
-
-                                    ● Inactiva
-
-                                </span>
-                            }
 
                         </div>
 
@@ -1226,9 +1196,10 @@
                                         class="ubicacion-menu-opcion"
                                         data-id="@ubicacion.id_ubicacion"
                                         data-nombre="@ubicacion.nombre_sector"
+                                        data-tipo="@ubicacion.tipo_sector"
                                         onclick="abrirModalEditarUbicacion(this)">
 
-                                    ✏️ Editar ubicación
+                                    ✏️ Editar sector
 
                                 </button>
 
@@ -1256,7 +1227,7 @@
                                         <button type="submit"
                                                 class="ubicacion-menu-opcion ubicacion-menu-opcion-inactivar">
 
-                                            ⏸ Inactivar ubicación
+                                            ⏸ Inactivar sector
 
                                         </button>
 
@@ -1285,40 +1256,12 @@
                                         <button type="submit"
                                                 class="ubicacion-menu-opcion ubicacion-menu-opcion-reactivar">
 
-                                            ▶ Reactivar ubicación
+                                            ▶ Reactivar sector
 
                                         </button>
 
                                     </form>
                                 }
-                                <form asp-controller="Home"
-                                      asp-action="EliminarUbicacion"
-                                      method="post"
-                                      onsubmit="return confirmarEliminarUbicacion('@ubicacion.nombre_sector');">
-
-                                    @Html.AntiForgeryToken()
-
-
-                                    <input type="hidden"
-                                           name="idUbicacion"
-                                           value="@ubicacion.id_ubicacion" />
-
-
-                                    <input type="hidden"
-                                           name="nombreUbicacion"
-                                           value="@ubicacion.nombre_sector" />
-
-
-                                    <button type="submit"
-                                            class="ubicacion-menu-opcion ubicacion-menu-opcion-eliminar">
-
-                                        🗑 Eliminar ubicación
-
-                                    </button>
-
-                                </form>
-
-
 
 
 
@@ -1431,17 +1374,17 @@
                     <div class="ubicacion-acciones">
 
                         <a asp-controller="Home"
-                           asp-action="InventarioUbicacion"
-                           asp-route-idUbicacion="@ubicacion.id_ubicacion"
-                           class="btn-ver-inventario">
+   asp-action="InventarioUbicacion"
+   asp-route-idUbicacion="@ubicacion.id_ubicacion"
+   class="btn-ver-inventario">
 
-                            <span>
-                                ≡
-                            </span>
+    <span>
+        ≡
+    </span>
 
-                            Ver inventario
+    Ver inventario
 
-                        </a>
+</a>
 
                     </div>
 
@@ -1460,12 +1403,12 @@
             <div class="ubicaciones-vacio">
 
                 <h3>
-                    No existen ubicaciones registradas
+                    No existen sectores registrados
                 </h3>
 
                 <p>
-                    Puedes registrar la primera ubicación
-                    utilizando el botón Agregar ubicación.
+                    Puedes registrar el primer sector
+                    utilizando el botón Agregar sector.
                 </p>
 
             </div>
@@ -1492,13 +1435,12 @@
 
 
                 <h3>
-                    Agregar ubicación
+                    Agregar sector
                 </h3>
 
 
                 <p>
-                    Registra una nueva área
-                    de almacenamiento.
+                    Registra una nueva bodega o clínica.
                 </p>
 
 
@@ -1525,11 +1467,11 @@
                 <div>
 
                     <h2>
-                        Agregar ubicación
+                        Agregar sector
                     </h2>
 
                     <p>
-                        Registra una nueva área de almacenamiento.
+                        Registra una nueva bodega o clínica.
                     </p>
 
                 </div>
@@ -1556,28 +1498,55 @@
 
                 <div class="ubicacion-modal-cuerpo">
 
+                    <div class="ubicacion-modal-grupo">
 
-                    <label for="nombreSector">
-                        Nombre de la ubicación
-                    </label>
+                        <label for="nombreSector">
+                            Nombre del sector
+                        </label>
 
+                        <input type="text"
+                               id="nombreSector"
+                               name="nombreSector"
+                               maxlength="100"
+                               placeholder="Ej: Clínica Adulto"
+                               autocomplete="off"
+                               required />
 
-                    <input type="text"
-                           id="nombreSector"
-                           name="nombreSector"
-                           maxlength="100"
-                           placeholder="Ej: Estante A"
-                           autocomplete="off"
-                           required />
+                        <span class="ubicacion-modal-ayuda">
+                            Ingresa un nombre que permita identificar claramente el sector.
+                        </span>
 
+                    </div>
 
-                    <span class="ubicacion-modal-ayuda">
+                    <div class="ubicacion-modal-grupo">
 
-                        Ingresa un nombre que permita identificar
-                        claramente el área.
+                        <label for="tipoSector">
+                            Tipo de sector
+                        </label>
 
-                    </span>
+                        <select id="tipoSector"
+                                name="tipoSector"
+                                required>
 
+                            <option value="" selected disabled>
+                                Seleccione un tipo
+                            </option>
+
+                            <option value="Bodega">
+                                Bodega
+                            </option>
+
+                            <option value="Clinica">
+                                Clínica
+                            </option>
+
+                        </select>
+
+                        <span class="ubicacion-modal-ayuda">
+                            Bodega almacena stock general. Clínica corresponde a sectores desde donde se realizarán entregas a pacientes.
+                        </span>
+
+                    </div>
 
                 </div>
 
@@ -1598,7 +1567,7 @@
                     <button type="submit"
                             class="btn-ubicacion-guardar">
 
-                        Guardar ubicación
+                        Guardar sector
 
                     </button>
 
@@ -1630,11 +1599,11 @@
                 <div>
 
                     <h2>
-                        Editar ubicación
+                        Editar sector
                     </h2>
 
                     <p>
-                        Modifica el nombre del área seleccionada.
+                        Modifica el nombre y tipo del sector seleccionado.
                     </p>
 
                 </div>
@@ -1666,27 +1635,46 @@
 
                 <div class="ubicacion-modal-cuerpo">
 
+                    <div class="ubicacion-modal-grupo">
 
-                    <label for="editarNombreSector">
-                        Nombre de la ubicación
-                    </label>
+                        <label for="editarNombreSector">
+                            Nombre del sector
+                        </label>
 
+                        <input type="text"
+                               id="editarNombreSector"
+                               name="nombreSector"
+                               maxlength="100"
+                               autocomplete="off"
+                               required />
 
-                    <input type="text"
-                           id="editarNombreSector"
-                           name="nombreSector"
-                           maxlength="100"
-                           autocomplete="off"
-                           required />
+                    </div>
 
+                    <div class="ubicacion-modal-grupo">
 
-                    <span class="ubicacion-modal-ayuda">
+                        <label for="editarTipoSector">
+                            Tipo de sector
+                        </label>
 
-                        Cambiar el nombre no modifica
-                        los lotes almacenados en esta ubicación.
+                        <select id="editarTipoSector"
+                                name="tipoSector"
+                                required>
 
-                    </span>
+                            <option value="Bodega">
+                                Bodega
+                            </option>
 
+                            <option value="Clinica">
+                                Clínica
+                            </option>
+
+                        </select>
+
+                        <span class="ubicacion-modal-ayuda">
+                            El tipo solo puede cambiarse si el sector nunca ha tenido lotes asociados.
+                        </span>
+
+                    </div>
 
                 </div>
 
@@ -1740,7 +1728,7 @@
         <span>
 
             Este módulo permite visualizar stock,
-            vencimientos y alertas de todas las ubicaciones.
+            vencimientos y alertas de todos los sectores.
 
         </span>
 
@@ -1938,6 +1926,10 @@
                 boton.dataset.nombre;
 
 
+            const tipoUbicacion =
+                boton.dataset.tipo;
+
+
             const modal =
                 document.getElementById(
                     "modalEditarUbicacion"
@@ -1956,12 +1948,20 @@
                 );
 
 
+            const selectTipo =
+                document.getElementById(
+                    "editarTipoSector"
+                );
+
+
             if (
                 !modal
                 ||
                 !inputId
                 ||
                 !inputNombre
+                ||
+                !selectTipo
             ) {
 
                 return;
@@ -1975,6 +1975,10 @@
 
             inputNombre.value =
                 nombreUbicacion;
+
+
+            selectTipo.value =
+                tipoUbicacion;
 
 
             modal.classList.add(
@@ -2063,6 +2067,18 @@
                     .value;
 
 
+            // =====================================================
+            // FILTRO TIPO DE SECTOR
+            // =====================================================
+
+            const tipo =
+                document
+                    .getElementById(
+                        "filtroTipo"
+                    )
+                    .value;
+
+
 
             // =====================================================
             // FILTRO CON ALERTAS
@@ -2110,6 +2126,12 @@
                         tarjeta.dataset.activa
                         ===
                         "true";
+
+
+                    const tipoSector =
+                        tarjeta.dataset.tipo
+                        ??
+                        "";
 
 
                     const tieneAlertas =
@@ -2177,6 +2199,23 @@
 
 
                     // =============================================
+                    // FILTRO POR TIPO
+                    // =============================================
+
+                    if (
+                        tipo !== "todos"
+                        &&
+                        tipoSector !== tipo
+                    ) {
+
+                        mostrar =
+                            false;
+
+                    }
+
+
+
+                    // =============================================
                     // FILTRO SOLO CON ALERTAS
                     // =============================================
 
@@ -2219,7 +2258,7 @@
         ) {
 
             return confirm(
-                "¿Deseas inactivar la ubicación \"" +
+                "¿Deseas inactivar el sector \"" +
                 nombre +
                 "\"?\n\n" +
                 "Solo se podrá inactivar si no contiene stock."
@@ -2236,30 +2275,12 @@
         ) {
 
             return confirm(
-                "¿Deseas reactivar la ubicación \"" +
+                "¿Deseas reactivar el sector \"" +
                 nombre +
                 "\"?"
             );
 
         }
-
-        // =========================================================
-        // CONFIRMAR ELIMINAR UBICACION
-        // =========================================================
-
-        function confirmarEliminarUbicacion(
-            nombre
-        ) {
-
-            return confirm(
-                "¿Deseas eliminar permanentemente la ubicación \"" +
-                nombre +
-                "\"?\n\n" +
-                "Solo podrá eliminarse si está vacía y nunca ha tenido lotes asociados."
-            );
-
-        }
-
 
     </script>
 

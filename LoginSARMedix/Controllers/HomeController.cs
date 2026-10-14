@@ -1,8 +1,10 @@
-using LoginSARMedix.Models;
+﻿using LoginSARMedix.Models;
 using LoginSARMedix.Repository;
 using LoginSARMedix.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using System.Text;
+using System.Net;
 
 namespace LoginSARMedix.Controllers
 {
@@ -22,6 +24,7 @@ namespace LoginSARMedix.Controllers
 
         private readonly HistorialRepository _historialRepository;
         private readonly MovimientoRepository _movimientoRepository;
+        private readonly DosificacionRepository _dosificacionRepository;
 
 
         public HomeController(
@@ -31,7 +34,8 @@ namespace LoginSARMedix.Controllers
             PermisoRepository permisoRepository,
             EmailService emailService,
             HistorialRepository historialRepository,
-            MovimientoRepository movimientoRepository)
+            MovimientoRepository movimientoRepository,
+            DosificacionRepository dosificacionRepository)
         {
             _usuarioRepository = usuarioRepository;
             _productoRepository = productoRepository;
@@ -42,6 +46,7 @@ namespace LoginSARMedix.Controllers
 
             _historialRepository = historialRepository;
             _movimientoRepository = movimientoRepository;
+            _dosificacionRepository = dosificacionRepository;
         }
 
 
@@ -634,7 +639,12 @@ namespace LoginSARMedix.Controllers
         public async Task<IActionResult> MovimientoHistorial()
         {
             if (!TieneAlgunPermiso(
-                    "Registrar movimientos",
+                    "Registrar entradas de inventario",
+                    "Trasladar stock",
+                    "Preparar dosificaciones",
+                    "Entregar dosificaciones",
+                    "Registrar bajas de inventario",
+                    "Registrar salidas extraordinarias",
                     "Consultar historial"))
             {
                 return AccesoNoAutorizado();
@@ -649,6 +659,1871 @@ namespace LoginSARMedix.Controllers
             return View(
                 "~/Views/Home/Modulos/MovimientoHistorial.cshtml"
             );
+        }
+
+
+
+        // =========================================================
+        // TRASLADAR STOCK ENTRE BODEGA Y CLINICA
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult> TrasladarStock()
+        {
+            if (!TienePermiso(
+                    "Trasladar stock"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var ubicaciones =
+                await _loteRepository
+                    .ListadoUbicacionesActivas();
+
+
+            var productos =
+                await _productoRepository
+                    .ListadoProductos();
+
+
+            var lotes =
+                await _loteRepository
+                    .ListadoLotes();
+
+
+            var idsUbicacionesActivas =
+                ubicaciones
+                    .Select(
+                        u => u.id_ubicacion
+                    )
+                    .ToHashSet();
+
+
+            var idsControlados =
+                productos
+                    .Where(
+                        p => p.requiere_control
+                    )
+                    .Select(
+                        p => p.id_producto
+                    )
+                    .ToHashSet();
+
+
+            var lotesOrigen =
+                lotes
+                    .Where(
+                        l =>
+                            l.cantidad_actual > 0
+                            &&
+                            idsUbicacionesActivas
+                                .Contains(
+                                    l.id_ubicacion
+                                )
+                            &&
+                            !idsControlados
+                                .Contains(
+                                    l.id_producto
+                                )
+                    )
+                    .OrderBy(
+                        l => l.nombre_ubicacion
+                    )
+                    .ThenBy(
+                        l => l.nombre_producto
+                    )
+                    .ThenBy(
+                        l => l.fecha_vencimiento
+                    )
+                    .ToList();
+
+
+            ViewBag.Ubicaciones =
+                ubicaciones;
+
+
+            ViewBag.Productos =
+                productos;
+
+
+            ViewBag.LotesOrigen =
+                lotesOrigen;
+
+
+            await RegistrarAccionHistorial(
+                "Ingresó a Trasladar Stock"
+            );
+
+
+            return View(
+                "TrasladarStock",
+                new TrasladoStock()
+            );
+        }
+
+
+
+        // =========================================================
+        // REGISTRAR TRASLADO
+        // =========================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegistrarTraslado(
+            TrasladoStock reg)
+        {
+            if (!TienePermiso(
+                    "Trasladar stock"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            int? idUsuario =
+                HttpContext.Session.GetInt32(
+                    "IdUsuario"
+                );
+
+
+            if (!idUsuario.HasValue)
+            {
+                return RedirectToAction(
+                    "Index"
+                );
+            }
+
+
+            var resultado =
+                await _movimientoRepository
+                    .RegistrarTrasladoInventario(
+                        reg.id_lote_origen,
+                        reg.id_ubicacion_destino,
+                        reg.cantidad,
+                        idUsuario.Value
+                    );
+
+
+            if (resultado.exito)
+            {
+                await RegistrarAccionHistorial(
+                    $"Trasladó {reg.cantidad} {resultado.unidadMedida} de {resultado.nombreProducto}, lote {resultado.numeroLote}, desde {resultado.origen} hacia {resultado.destino}. Stock origen: {resultado.stockOrigenAnterior} → {resultado.stockOrigenResultante}. Stock destino: {resultado.stockDestinoAnterior} → {resultado.stockDestinoResultante}."
+                );
+
+
+                TempData["Mensaje"] =
+                    resultado.mensaje;
+
+
+                TempData["TipoMensaje"] =
+                    "exito";
+            }
+            else
+            {
+                TempData["Mensaje"] =
+                    resultado.mensaje;
+
+
+                TempData["TipoMensaje"] =
+                    "error";
+            }
+
+
+            return RedirectToAction(
+                "TrasladarStock"
+            );
+        }
+
+
+
+
+        // =========================================================
+        // ENTREGA A PACIENTE - VISTA
+        // =========================================================
+
+        // =========================================================
+        // PRODUCTOS DISPONIBLES EN LA CLINICA SELECCIONADA
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult> ProductosDisponiblesClinica(
+            int idUbicacion)
+        {
+            if (!TieneAlgunPermiso(
+                    "Preparar dosificaciones",
+                    "Entregar dosificaciones",
+                    "Registrar salidas extraordinarias"))
+            {
+                return Unauthorized();
+            }
+
+            if (idUbicacion <= 0)
+            {
+                return Json(
+                    new
+                    {
+                        exito = true,
+                        productos = Array.Empty<object>()
+                    }
+                );
+            }
+
+            var productos =
+                await _loteRepository
+                    .ListadoProductosDisponiblesClinica(
+                        idUbicacion
+                    );
+
+            return Json(
+                new
+                {
+                    exito = true,
+
+                    productos =
+                        productos.Select(
+                            p => new
+                            {
+                                id_producto =
+                                    p.id_producto,
+
+                                nombre =
+                                    p.nombre,
+
+                                unidad_medida =
+                                    p.unidad_medida,
+
+                                forma_farmaceutica =
+                                    p.forma_farmaceutica,
+
+                                concentracion =
+                                    p.concentracion,
+
+                                tipo =
+                                    p.tipo
+                            }
+                        )
+                }
+            );
+        }
+
+
+
+        // =========================================================
+        // REGISTRAR ENTREGA A PACIENTE
+        // =========================================================
+
+        // =========================================================
+        // DOSIFICACIONES PROGRAMADAS
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult> Dosificaciones()
+        {
+            if (!TienePermiso(
+                    "Preparar dosificaciones"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var ubicaciones =
+                await _loteRepository
+                    .ListadoUbicacionesActivas();
+
+
+            ViewBag.Clinicas =
+                ubicaciones
+                    .Where(
+                        u =>
+                            (u.tipo_sector ?? "")
+                                .Equals(
+                                    "Clinica",
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                    )
+                    .OrderBy(
+                        u => u.nombre_sector
+                    )
+                    .ToList();
+
+
+            ViewBag.Programaciones =
+                await _dosificacionRepository
+                    .ListarProgramaciones();
+
+
+            await RegistrarAccionHistorial(
+                "Ingresó a Dosificaciones"
+            );
+
+
+            return View(
+                "Dosificaciones"
+            );
+        }
+
+
+
+        // =========================================================
+        // GUARDAR / REUTILIZAR PROGRAMACION
+        // =========================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult>
+            GuardarDosificacionProgramada(
+                int idUbicacion,
+                int idProducto,
+                int cantidad,
+                int copias)
+        {
+            if (!TienePermiso(
+                    "Preparar dosificaciones"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            int? idUsuario =
+                HttpContext.Session.GetInt32(
+                    "IdUsuario"
+                );
+
+
+            if (!idUsuario.HasValue)
+            {
+                return RedirectToAction(
+                    "Index"
+                );
+            }
+
+
+            copias =
+                Math.Clamp(
+                    copias,
+                    1,
+                    500
+                );
+
+
+            var resultado =
+                await _dosificacionRepository
+                    .CrearOObtenerProgramacion(
+                        idUbicacion,
+                        idProducto,
+                        cantidad,
+                        idUsuario.Value
+                    );
+
+
+            if (
+                !resultado.exito
+                ||
+                resultado.dosificacion == null
+            )
+            {
+                TempData["Mensaje"] =
+                    resultado.mensaje;
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "Dosificaciones"
+                );
+            }
+
+
+            string accion =
+                resultado.reutilizada
+                    ? "Reutilizó"
+                    : "Creó";
+
+
+            await RegistrarAccionHistorial(
+                $"{accion} programación "
+                +
+                $"{resultado.dosificacion.codigo}: "
+                +
+                $"{resultado.dosificacion.nombre_producto}, "
+                +
+                $"{resultado.dosificacion.cantidad} "
+                +
+                $"{resultado.dosificacion.unidad_medida}, "
+                +
+                $"Clínica {resultado.dosificacion.nombre_clinica}."
+            );
+
+
+            return RedirectToAction(
+                "ImprimirDosificacion",
+                new
+                {
+                    id =
+                        resultado.dosificacion
+                            .id_dosificacion,
+
+                    copias
+                }
+            );
+        }
+
+
+
+        // =========================================================
+        // IMPRIMIR / REIMPRIMIR PROGRAMACION
+        // NO DESCUENTA STOCK
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult>
+            ImprimirDosificacion(
+                int id,
+                int copias = 1)
+        {
+            if (!TienePermiso(
+                    "Preparar dosificaciones"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            var dosificacion =
+                await _dosificacionRepository
+                    .ObtenerPorId(
+                        id
+                    );
+
+
+            if (
+                dosificacion == null
+                ||
+                !dosificacion.activo
+            )
+            {
+                TempData["Mensaje"] =
+                    "No se encontró la programación solicitada.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "Dosificaciones"
+                );
+            }
+
+
+            copias =
+                Math.Clamp(
+                    copias,
+                    1,
+                    500
+                );
+
+
+            string nombre =
+                HttpContext.Session.GetString(
+                    "Nombre"
+                )
+                ?? "";
+
+
+            string apellido =
+                HttpContext.Session.GetString(
+                    "Apellido"
+                )
+                ?? "";
+
+
+            string rol =
+                HttpContext.Session.GetString(
+                    "Rol"
+                )
+                ?? "";
+
+
+            string responsable =
+                $"{rol} {nombre} {apellido}"
+                    .Trim();
+
+
+            ViewBag.Copias =
+                copias;
+
+
+            ViewBag.Responsable =
+                responsable;
+
+
+            await RegistrarAccionHistorial(
+                $"Preparó impresión de {copias} etiqueta(s) "
+                +
+                $"para {dosificacion.codigo}: "
+                +
+                $"{dosificacion.nombre_producto}, "
+                +
+                $"{dosificacion.cantidad} "
+                +
+                $"{dosificacion.unidad_medida}. "
+                +
+                $"La impresión no modifica stock."
+            );
+
+
+            return View(
+                "ImprimirDosificacion",
+                dosificacion
+            );
+        }
+
+
+
+        // =========================================================
+        // ENTREGA MEDIANTE CODIGO DE DOSIFICACION
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult>
+            EntregaDosificacion()
+        {
+            if (!TienePermiso(
+                    "Entregar dosificaciones"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            await RegistrarAccionHistorial(
+                "Ingresó a Entrega por escáner"
+            );
+
+
+            return View(
+                "EntregaDosificacion"
+            );
+        }
+
+
+
+        // =========================================================
+        // SCAN -> FEFO -> DESCUENTO -> HISTORIAL
+        // =========================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult>
+            ProcesarEntregaDosificacion(
+                string codigo)
+        {
+            if (!TienePermiso(
+                    "Entregar dosificaciones"))
+            {
+                return Json(
+                    new
+                    {
+                        exito = false,
+                        mensaje =
+                            "No tiene permiso para entregar dosificaciones."
+                    }
+                );
+            }
+
+
+            int? idUsuario =
+                HttpContext.Session.GetInt32(
+                    "IdUsuario"
+                );
+
+
+            if (!idUsuario.HasValue)
+            {
+                return Json(
+                    new
+                    {
+                        exito = false,
+                        mensaje =
+                            "La sesión ha finalizado."
+                    }
+                );
+            }
+
+
+            string codigoNormalizado =
+                NormalizarCodigoDosificacionController(
+                    codigo
+                );
+
+
+            if (string.IsNullOrWhiteSpace(
+                    codigoNormalizado))
+            {
+                return Json(
+                    new
+                    {
+                        exito = false,
+                        mensaje =
+                            "Escanee o ingrese un código."
+                    }
+                );
+            }
+
+
+
+            // =====================================================
+            // USAMOS EL MISMO LISTADO QUE MUESTRA LAS
+            // PROGRAMACIONES GUARDADAS.
+            //
+            // Si DOS-000001 aparece en la pantalla Dosificaciones,
+            // necesariamente podrá encontrarse aquí.
+            // =====================================================
+
+            var programaciones =
+                await _dosificacionRepository
+                    .ListarProgramaciones();
+
+
+            int idDesdeCodigo =
+                0;
+
+
+            if (
+                codigoNormalizado.StartsWith(
+                    "DOS-",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                int.TryParse(
+                    codigoNormalizado.Substring(4),
+                    out idDesdeCodigo
+                );
+            }
+
+
+            var dosificacion =
+                programaciones
+                    .FirstOrDefault(
+                        d =>
+                            d.activo
+                            &&
+                            (
+                                string.Equals(
+                                    NormalizarCodigoDosificacionController(
+                                        d.codigo
+                                    ),
+                                    codigoNormalizado,
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                                ||
+                                (
+                                    idDesdeCodigo > 0
+                                    &&
+                                    d.id_dosificacion
+                                        ==
+                                        idDesdeCodigo
+                                )
+                            )
+                    );
+
+
+            if (dosificacion == null)
+            {
+                return Json(
+                    new
+                    {
+                        exito = false,
+                        codigoRecibido =
+                            codigoNormalizado,
+                        mensaje =
+                            $"No se encontró la programación {codigoNormalizado}. Revise que aparezca en Dosificaciones guardadas."
+                    }
+                );
+            }
+
+
+
+            // =====================================================
+            // SCAN CONFIRMADO -> FEFO -> DESCUENTO
+            // =====================================================
+
+            var resultado =
+                await _movimientoRepository
+                    .RegistrarEntregaPaciente(
+                        dosificacion.id_ubicacion,
+                        dosificacion.id_producto,
+                        dosificacion.cantidad,
+                        idUsuario.Value
+                    );
+
+
+            if (!resultado.exito)
+            {
+                return Json(
+                    new
+                    {
+                        exito = false,
+
+                        codigo =
+                            dosificacion.codigo,
+
+                        producto =
+                            dosificacion.nombre_producto,
+
+                        cantidad =
+                            dosificacion.cantidad,
+
+                        unidad =
+                            dosificacion.unidad_medida,
+
+                        clinica =
+                            dosificacion.nombre_clinica,
+
+                        mensaje =
+                            resultado.mensaje
+                    }
+                );
+            }
+
+
+            bool stockBajo =
+                resultado.stockResultante
+                <=
+                dosificacion.stock_minimo;
+
+
+            await RegistrarAccionHistorial(
+                $"Entrega dosificada por escáner "
+                +
+                $"{dosificacion.codigo}: "
+                +
+                $"{dosificacion.cantidad} "
+                +
+                $"{dosificacion.unidad_medida} "
+                +
+                $"de {dosificacion.nombre_producto} "
+                +
+                $"desde {dosificacion.nombre_clinica}. "
+                +
+                $"Stock: "
+                +
+                $"{resultado.stockAnterior} "
+                +
+                $"→ "
+                +
+                $"{resultado.stockResultante}. "
+                +
+                $"FEFO: "
+                +
+                $"{resultado.detalleLotes}"
+            );
+
+
+            return Json(
+                new
+                {
+                    exito = true,
+
+                    codigo =
+                        dosificacion.codigo,
+
+                    producto =
+                        dosificacion.nombre_producto,
+
+                    concentracion =
+                        dosificacion.concentracion,
+
+                    cantidad =
+                        dosificacion.cantidad,
+
+                    unidad =
+                        dosificacion.unidad_medida,
+
+                    clinica =
+                        dosificacion.nombre_clinica,
+
+                    stockAnterior =
+                        resultado.stockAnterior,
+
+                    stockResultante =
+                        resultado.stockResultante,
+
+                    stockMinimo =
+                        dosificacion.stock_minimo,
+
+                    stockBajo,
+
+                    detalleLotes =
+                        resultado.detalleLotes,
+
+                    mensaje =
+                        "Entrega registrada correctamente."
+                }
+            );
+        }
+
+
+
+
+        // =========================================================
+        // BAJA / MERMA DE INVENTARIO
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult> BajaInventario()
+        {
+            if (
+                !EsEnfermeraOAdministrador()
+                ||
+                !TienePermiso(
+                    "Registrar bajas de inventario"
+                )
+            )
+            {
+                return AccesoNoAutorizado();
+            }
+
+            var ubicaciones =
+                await _loteRepository
+                    .ListadoUbicacionesActivas();
+
+            var idsBodegas =
+                ubicaciones
+                    .Where(
+                        u =>
+                            (u.tipo_sector ?? "")
+                                .Equals(
+                                    "Bodega",
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                    )
+                    .Select(
+                        u => u.id_ubicacion
+                    )
+                    .ToHashSet();
+
+            var productos =
+                await _productoRepository
+                    .ListadoProductos();
+
+            var idsControlados =
+                productos
+                    .Where(
+                        p => p.requiere_control
+                    )
+                    .Select(
+                        p => p.id_producto
+                    )
+                    .ToHashSet();
+
+            var lotes =
+                await _loteRepository
+                    .ListadoLotes();
+
+            ViewBag.LotesBodega =
+                lotes
+                    .Where(
+                        l =>
+                            l.cantidad_actual > 0
+                            &&
+                            idsBodegas.Contains(
+                                l.id_ubicacion
+                            )
+                            &&
+                            !idsControlados.Contains(
+                                l.id_producto
+                            )
+                    )
+                    .OrderBy(
+                        l => l.nombre_ubicacion
+                    )
+                    .ThenBy(
+                        l => l.nombre_producto
+                    )
+                    .ThenBy(
+                        l => l.fecha_vencimiento
+                    )
+                    .ToList();
+
+            ViewBag.UnidadesProductos =
+                productos
+                    .GroupBy(
+                        p => p.id_producto
+                    )
+                    .ToDictionary(
+                        g => g.Key,
+                        g =>
+                            string.IsNullOrWhiteSpace(
+                                g.First().unidad_medida
+                            )
+                                ? "unidades"
+                                : g.First().unidad_medida!
+                    );
+
+            return View(
+                "BajaInventario",
+                new BajaInventario()
+            );
+        }
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegistrarBajaInventario(
+            BajaInventario reg)
+        {
+            if (
+                !EsEnfermeraOAdministrador()
+                ||
+                !TienePermiso(
+                    "Registrar bajas de inventario"
+                )
+            )
+            {
+                return AccesoNoAutorizado();
+            }
+
+            int? idUsuario =
+                HttpContext.Session.GetInt32(
+                    "IdUsuario"
+                );
+
+            if (!idUsuario.HasValue)
+            {
+                return RedirectToAction(
+                    "Index"
+                );
+            }
+
+            var resultado =
+                await _movimientoRepository
+                    .RegistrarBajaInventario(
+                        reg.id_lote,
+                        reg.cantidad,
+                        reg.motivo ?? "",
+                        idUsuario.Value
+                    );
+
+            TempData["Mensaje"] =
+                resultado.mensaje;
+
+            TempData["TipoMensaje"] =
+                resultado.exito
+                    ? "exito"
+                    : "error";
+
+            if (resultado.exito)
+            {
+                await RegistrarAccionHistorial(
+                    $"Registró baja de {reg.cantidad} {resultado.unidadMedida} de {resultado.nombreProducto}, lote {resultado.numeroLote}, desde {resultado.nombreSector}. Stock: {resultado.stockAnterior} → {resultado.stockResultante}. Motivo: {(reg.motivo ?? "").Trim()}"
+                );
+
+                if (
+                    resultado.stockResultante
+                    <=
+                    resultado.stockMinimo
+                )
+                {
+                    TempData["Mensaje"] =
+                        resultado.mensaje
+                        +
+                        " ⚠ El producto quedó en nivel de stock bajo.";
+                }
+            }
+
+            return RedirectToAction(
+                "BajaInventario"
+            );
+        }
+
+
+
+        // =========================================================
+        // SALIDA EXTRAORDINARIA A OTRO SERVICIO
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult> SalidaExtraordinaria()
+        {
+            if (
+                !EsEnfermeraOAdministrador()
+                ||
+                !TienePermiso(
+                    "Registrar salidas extraordinarias"
+                )
+            )
+            {
+                return AccesoNoAutorizado();
+            }
+
+            var ubicaciones =
+                await _loteRepository
+                    .ListadoUbicacionesActivas();
+
+            ViewBag.Clinicas =
+                ubicaciones
+                    .Where(
+                        u =>
+                            (u.tipo_sector ?? "")
+                                .Equals(
+                                    "Clinica",
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                    )
+                    .OrderBy(
+                        u => u.nombre_sector
+                    )
+                    .ToList();
+
+            return View(
+                "SalidaExtraordinaria",
+                new SalidaExtraordinaria()
+            );
+        }
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegistrarSalidaExtraordinaria(
+            SalidaExtraordinaria reg)
+        {
+            if (
+                !EsEnfermeraOAdministrador()
+                ||
+                !TienePermiso(
+                    "Registrar salidas extraordinarias"
+                )
+            )
+            {
+                return AccesoNoAutorizado();
+            }
+
+            int? idUsuario =
+                HttpContext.Session.GetInt32(
+                    "IdUsuario"
+                );
+
+            if (!idUsuario.HasValue)
+            {
+                return RedirectToAction(
+                    "Index"
+                );
+            }
+
+            var resultado =
+                await _movimientoRepository
+                    .RegistrarSalidaExtraordinaria(
+                        reg.id_ubicacion,
+                        reg.id_producto,
+                        reg.cantidad,
+                        reg.servicio_destino ?? "",
+                        reg.motivo ?? "",
+                        idUsuario.Value
+                    );
+
+            TempData["Mensaje"] =
+                resultado.mensaje;
+
+            TempData["TipoMensaje"] =
+                resultado.exito
+                    ? "exito"
+                    : "error";
+
+            if (resultado.exito)
+            {
+                await RegistrarAccionHistorial(
+                    $"Registró salida extraordinaria de {reg.cantidad} {resultado.unidadMedida} de {resultado.nombreProducto} desde {resultado.nombreSector} hacia {(reg.servicio_destino ?? "").Trim()}. Stock: {resultado.stockAnterior} → {resultado.stockResultante}. FEFO: {resultado.detalleLotes}. Motivo: {(reg.motivo ?? "").Trim()}"
+                );
+
+                if (
+                    resultado.stockResultante
+                    <=
+                    resultado.stockMinimo
+                )
+                {
+                    TempData["Mensaje"] =
+                        resultado.mensaje
+                        +
+                        " ⚠ El producto quedó en nivel de stock bajo.";
+                }
+            }
+
+            return RedirectToAction(
+                "SalidaExtraordinaria"
+            );
+        }
+
+
+
+        // =========================================================
+        // HISTORIAL OPERACIONAL POR SECTOR
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult> HistorialSectores(
+            int? idUbicacion = null)
+        {
+            if (!TienePermiso(
+                    "Consultar historial"))
+            {
+                return AccesoNoAutorizado();
+            }
+
+            var ubicaciones =
+                await _loteRepository
+                    .ListadoUbicaciones();
+
+            ViewBag.Ubicaciones =
+                ubicaciones;
+
+            ViewBag.IdUbicacion =
+                idUbicacion;
+
+            List<MovimientoSectorHistorial> movimientos =
+                new List<MovimientoSectorHistorial>();
+
+            if (
+                idUbicacion.HasValue
+                &&
+                idUbicacion.Value > 0
+            )
+            {
+                movimientos =
+                    await _movimientoRepository
+                        .ListadoMovimientosSector(
+                            idUbicacion.Value
+                        );
+
+                string nombreSector =
+                    ubicaciones
+                        .FirstOrDefault(
+                            u =>
+                                u.id_ubicacion
+                                ==
+                                idUbicacion.Value
+                        )
+                        ?.nombre_sector
+                    ?? "sector";
+
+                await RegistrarAccionHistorial(
+                    $"Consultó el historial operacional del sector {nombreSector}"
+                );
+            }
+
+            return View(
+                "HistorialSectores",
+                movimientos
+            );
+        }
+
+
+
+        // =========================================================
+        // SALIDAS DEL TURNO / RANGO HORARIO
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult> HistorialSalidasTurno(
+            DateTime? fecha = null,
+            string horaInicio = "08:00",
+            string horaFin = "00:00")
+        {
+            bool puedeVer =
+                TienePermiso(
+                    "Entregar dosificaciones"
+                )
+                ||
+                TienePermiso(
+                    "Gestionar medicamentos controlados"
+                )
+                ||
+                TienePermiso(
+                    "Registrar salidas extraordinarias"
+                );
+
+
+            if (!puedeVer)
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            HistorialSalidasTurnoViewModel modelo =
+                await ConstruirModeloSalidasTurno(
+                    fecha,
+                    horaInicio,
+                    horaFin
+                );
+
+
+            await RegistrarAccionHistorial(
+                $"Consultó salidas del turno desde "
+                +
+                $"{modelo.inicio_real:dd/MM/yyyy HH:mm} "
+                +
+                $"hasta "
+                +
+                $"{modelo.fin_real:dd/MM/yyyy HH:mm}"
+            );
+
+
+            return View(
+                "HistorialSalidasTurno",
+                modelo
+            );
+        }
+
+
+
+        // =========================================================
+        // INFORME PRESENTACION DE SALIDAS DEL TURNO
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult> InformeSalidasTurno(
+            DateTime? fecha = null,
+            string horaInicio = "08:00",
+            string horaFin = "00:00")
+        {
+            bool puedeVer =
+                TienePermiso(
+                    "Entregar dosificaciones"
+                )
+                ||
+                TienePermiso(
+                    "Gestionar medicamentos controlados"
+                )
+                ||
+                TienePermiso(
+                    "Registrar salidas extraordinarias"
+                );
+
+
+            if (!puedeVer)
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            HistorialSalidasTurnoViewModel modelo =
+                await ConstruirModeloSalidasTurno(
+                    fecha,
+                    horaInicio,
+                    horaFin
+                );
+
+
+            string nombre =
+                HttpContext.Session.GetString(
+                    "Nombre"
+                )
+                ?? "";
+
+
+            string apellido =
+                HttpContext.Session.GetString(
+                    "Apellido"
+                )
+                ?? "";
+
+
+            string rol =
+                HttpContext.Session.GetString(
+                    "Rol"
+                )
+                ?? "";
+
+
+            ViewBag.GeneradoPor =
+                $"{nombre} {apellido}"
+                    .Trim();
+
+
+            ViewBag.RolGenerador =
+                rol;
+
+
+            ViewBag.FechaGeneracion =
+                DateTime.Now;
+
+
+            await RegistrarAccionHistorial(
+                $"Generó informe de salidas del turno desde "
+                +
+                $"{modelo.inicio_real:dd/MM/yyyy HH:mm} "
+                +
+                $"hasta "
+                +
+                $"{modelo.fin_real:dd/MM/yyyy HH:mm}"
+            );
+
+
+            return View(
+                "InformeSalidasTurno",
+                modelo
+            );
+        }
+
+
+
+        // =========================================================
+        // DESCARGAR INFORME DE SALIDAS DEL TURNO
+        // Genera el archivo HTML directamente desde el servidor.
+        // No depende de JavaScript del navegador.
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult> DescargarInformeSalidasTurno(
+            DateTime? fecha = null,
+            string horaInicio = "08:00",
+            string horaFin = "00:00")
+        {
+            bool puedeVer =
+                TienePermiso(
+                    "Entregar dosificaciones"
+                )
+                ||
+                TienePermiso(
+                    "Gestionar medicamentos controlados"
+                )
+                ||
+                TienePermiso(
+                    "Registrar salidas extraordinarias"
+                );
+
+
+            if (!puedeVer)
+            {
+                return AccesoNoAutorizado();
+            }
+
+
+            HistorialSalidasTurnoViewModel modelo =
+                await ConstruirModeloSalidasTurno(
+                    fecha,
+                    horaInicio,
+                    horaFin
+                );
+
+
+            string nombre =
+                HttpContext.Session.GetString(
+                    "Nombre"
+                )
+                ?? "";
+
+
+            string apellido =
+                HttpContext.Session.GetString(
+                    "Apellido"
+                )
+                ?? "";
+
+
+            string rol =
+                HttpContext.Session.GetString(
+                    "Rol"
+                )
+                ?? "";
+
+
+            string responsable =
+                $"{nombre} {apellido}"
+                    .Trim();
+
+
+            string E(
+                string? valor)
+            {
+                return WebUtility.HtmlEncode(
+                    valor ?? ""
+                );
+            }
+
+
+            var detalles =
+                modelo.resumen
+                    .SelectMany(
+                        r => r.detalles
+                    )
+                    .OrderBy(
+                        d => d.fecha_hora
+                    )
+                    .ThenBy(
+                        d => d.nombre_producto
+                    )
+                    .ToList();
+
+
+            int totalMovimientos =
+                detalles
+                    .Select(
+                        d => d.id_movimiento
+                    )
+                    .Distinct()
+                    .Count();
+
+
+            StringBuilder html =
+                new StringBuilder();
+
+
+            html.Append(
+                """
+                <!DOCTYPE html>
+                <html lang="es">
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>Informe de salidas por turno</title>
+                    <style>
+                        *{box-sizing:border-box}
+                        body{margin:0;padding:28px;background:#eef3f6;color:#20384a;font-family:Arial,Helvetica,sans-serif}
+                        .documento{width:min(1050px,100%);margin:0 auto;padding:38px 42px;background:#fff}
+                        .cabecera{display:flex;justify-content:space-between;gap:25px;padding-bottom:20px;border-bottom:3px solid #0c7898}
+                        .marca{color:#087bc2;font-size:15px;font-weight:900;letter-spacing:.5px}
+                        h1{margin:7px 0 4px;color:#17324d;font-size:28px}
+                        .subtitulo{margin:0;color:#667d8d;font-size:13px}
+                        .folio{min-width:210px;text-align:right;color:#5e7484;font-size:12px;line-height:1.6}
+                        .datos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:22px 0}
+                        .dato{padding:12px 13px;border:1px solid #d9e5ec;border-radius:9px;background:#f8fbfd}
+                        .dato small{display:block;color:#738897;font-size:10px;font-weight:800;text-transform:uppercase}
+                        .dato strong{display:block;margin-top:4px;color:#17324d;font-size:13px}
+                        .seccion{margin-top:28px}
+                        .seccion h2{margin:0 0 4px;color:#17324d;font-size:19px}
+                        .seccion p{margin:0 0 10px;color:#718493;font-size:11px}
+                        table{width:100%;border-collapse:collapse}
+                        th{padding:10px 9px;background:#0d6d8e;color:#fff;text-align:left;font-size:10px;text-transform:uppercase}
+                        td{padding:10px 9px;border-bottom:1px solid #e4ebef;color:#314c5f;font-size:11px;vertical-align:top}
+                        tbody tr:nth-child(even){background:#f8fbfc}
+                        .med{font-weight:900;color:#17324d}
+                        .conc{display:block;margin-top:2px;color:#788d9a;font-size:10px}
+                        .total{font-size:15px;font-weight:900;color:#0d7189}
+                        .controlado{font-weight:800;color:#ae3a49}
+                        .normal{font-weight:800;color:#3c714a}
+                        .nota{margin-top:10px;padding:10px 12px;border-left:4px solid #0b8098;background:#eff8fb;color:#4d6879;font-size:10px;line-height:1.45}
+                        .pie{display:flex;justify-content:space-between;gap:20px;margin-top:34px;padding-top:15px;border-top:1px solid #dce6eb;color:#71828e;font-size:9px}
+                        @media(max-width:800px){body{padding:12px}.documento{padding:22px}.cabecera{flex-direction:column}.folio{text-align:left}.datos{grid-template-columns:repeat(2,minmax(0,1fr))}}
+                        @media print{body{padding:0;background:#fff}.documento{width:100%;padding:20px}.seccion{break-inside:avoid}tr{page-break-inside:avoid}}
+                    </style>
+                </head>
+                <body>
+                    <main class="documento">
+                        <header class="cabecera">
+                            <div>
+                                <div class="marca">SARMedix · SAR de Chiguay</div>
+                                <h1>Informe de salidas por turno</h1>
+                                <p class="subtitulo">Consolidado de medicamentos entregados durante el periodo seleccionado.</p>
+                            </div>
+                            <div class="folio">
+                """
+            );
+
+
+            html.Append(
+                $"<div><strong>Generado:</strong> {DateTime.Now:dd/MM/yyyy HH:mm}</div>"
+            );
+
+            html.Append(
+                $"<div><strong>Responsable:</strong> {E(string.IsNullOrWhiteSpace(responsable) ? "-" : responsable)}</div>"
+            );
+
+            html.Append(
+                $"<div><strong>Perfil:</strong> {E(string.IsNullOrWhiteSpace(rol) ? "-" : rol)}</div>"
+            );
+
+
+            html.Append(
+                """
+                            </div>
+                        </header>
+                        <section class="datos">
+                """
+            );
+
+
+            html.Append(
+                $"<div class=\"dato\"><small>Inicio del corte</small><strong>{modelo.inicio_real:dd/MM/yyyy HH:mm}</strong></div>"
+            );
+
+            html.Append(
+                $"<div class=\"dato\"><small>Fin del corte</small><strong>{modelo.fin_real:dd/MM/yyyy HH:mm}</strong></div>"
+            );
+
+            html.Append(
+                $"<div class=\"dato\"><small>Medicamentos distintos</small><strong>{modelo.resumen.Count}</strong></div>"
+            );
+
+            html.Append(
+                $"<div class=\"dato\"><small>Registros de salida</small><strong>{totalMovimientos}</strong></div>"
+            );
+
+
+            html.Append(
+                """
+                        </section>
+                        <section class="seccion">
+                            <h2>1. Resumen total de salidas</h2>
+                            <p>Totales consolidados por medicamento.</p>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Medicamento</th>
+                                        <th>Total</th>
+                                        <th>Unidad</th>
+                                        <th>Tipo</th>
+                                        <th>Registros</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                """
+            );
+
+
+            int numero =
+                1;
+
+
+            foreach (
+                var item in modelo.resumen
+            )
+            {
+                string concentracion =
+                    string.IsNullOrWhiteSpace(
+                        item.concentracion
+                    )
+                        ? ""
+                        : $"<span class=\"conc\">{E(item.concentracion)}</span>";
+
+
+                string tipo =
+                    item.es_controlado
+                        ? "<span class=\"controlado\">Controlado</span>"
+                        : "<span class=\"normal\">Salida clínica</span>";
+
+
+                html.Append(
+                    $"""
+                    <tr>
+                        <td>{numero}</td>
+                        <td>
+                            <span class="med">{E(item.nombre_producto)}</span>
+                            {concentracion}
+                        </td>
+                        <td><span class="total">{item.cantidad_total}</span></td>
+                        <td>{E(item.unidad_medida)}</td>
+                        <td>{tipo}</td>
+                        <td>{item.detalles.Count}</td>
+                    </tr>
+                    """
+                );
+
+
+                numero++;
+            }
+
+
+            if (modelo.resumen.Count == 0)
+            {
+                html.Append(
+                    """
+                    <tr>
+                        <td colspan="6">
+                            No existen salidas para el periodo consultado.
+                        </td>
+                    </tr>
+                    """
+                );
+            }
+
+
+            html.Append(
+                """
+                                </tbody>
+                            </table>
+                            <div class="nota">
+                                Los totales representan la suma de las cantidades entregadas dentro del horario seleccionado.
+                            </div>
+                        </section>
+
+                        <section class="seccion">
+                            <h2>2. Detalle cronológico por hora</h2>
+                            <p>Respaldo de cada salida registrada durante el corte.</p>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Hora</th>
+                                        <th>Medicamento</th>
+                                        <th>Cantidad</th>
+                                        <th>Tipo</th>
+                                        <th>Sector</th>
+                                        <th>Responsable</th>
+                                        <th>Lote(s)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                """
+            );
+
+
+            foreach (
+                var detalle in detalles
+            )
+            {
+                string concentracion =
+                    string.IsNullOrWhiteSpace(
+                        detalle.concentracion
+                    )
+                        ? ""
+                        : $"<span class=\"conc\">{E(detalle.concentracion)}</span>";
+
+
+                html.Append(
+                    $"""
+                    <tr>
+                        <td>{detalle.fecha_hora:dd/MM HH:mm}</td>
+                        <td>
+                            <span class="med">{E(detalle.nombre_producto)}</span>
+                            {concentracion}
+                        </td>
+                        <td>{detalle.cantidad} {E(detalle.unidad_medida)}</td>
+                        <td>{E(detalle.tipo_salida)}</td>
+                        <td>{E(detalle.sector)}</td>
+                        <td>{E(detalle.responsable)}</td>
+                        <td>{E(detalle.lotes)}</td>
+                    </tr>
+                    """
+                );
+            }
+
+
+            if (detalles.Count == 0)
+            {
+                html.Append(
+                    """
+                    <tr>
+                        <td colspan="7">
+                            No existen movimientos para mostrar.
+                        </td>
+                    </tr>
+                    """
+                );
+            }
+
+
+            html.Append(
+                $"""
+                                </tbody>
+                            </table>
+                        </section>
+
+                        <footer class="pie">
+                            <span>Informe generado automáticamente por SARMedix.</span>
+                            <span>
+                                Periodo:
+                                {modelo.inicio_real:dd/MM/yyyy HH:mm}
+                                →
+                                {modelo.fin_real:dd/MM/yyyy HH:mm}
+                            </span>
+                        </footer>
+                    </main>
+                </body>
+                </html>
+                """
+            );
+
+
+            string nombreArchivo =
+                $"Informe_Salidas_{modelo.fecha:yyyy-MM-dd}_"
+                +
+                $"{modelo.hora_inicio.Replace(":", "")}-"
+                +
+                $"{modelo.hora_fin.Replace(":", "")}.html";
+
+
+            await RegistrarAccionHistorial(
+                $"Descargó informe de salidas del turno desde "
+                +
+                $"{modelo.inicio_real:dd/MM/yyyy HH:mm} "
+                +
+                $"hasta "
+                +
+                $"{modelo.fin_real:dd/MM/yyyy HH:mm}"
+            );
+
+
+            return File(
+                Encoding.UTF8.GetBytes(
+                    html.ToString()
+                ),
+                "text/html; charset=utf-8",
+                nombreArchivo
+            );
+        }
+
+
+
+        // =========================================================
+        // CONSTRUIR MODELO COMUN PARA PANTALLA E INFORME
+        // =========================================================
+
+        private async Task<HistorialSalidasTurnoViewModel>
+            ConstruirModeloSalidasTurno(
+                DateTime? fecha,
+                string horaInicio,
+                string horaFin)
+        {
+            DateTime dia =
+                (fecha ?? DateTime.Today)
+                    .Date;
+
+
+            if (!TimeSpan.TryParse(
+                    horaInicio,
+                    out TimeSpan horaInicioValor))
+            {
+                horaInicioValor =
+                    new TimeSpan(
+                        8,
+                        0,
+                        0
+                    );
+
+                horaInicio =
+                    "08:00";
+            }
+
+
+            if (!TimeSpan.TryParse(
+                    horaFin,
+                    out TimeSpan horaFinValor))
+            {
+                horaFinValor =
+                    TimeSpan.Zero;
+
+                horaFin =
+                    "00:00";
+            }
+
+
+            DateTime inicio =
+                dia.Add(
+                    horaInicioValor
+                );
+
+
+            DateTime fin =
+                dia.Add(
+                    horaFinValor
+                );
+
+
+            // Ejemplo:
+            // 08:00 -> 00:00 significa medianoche del día siguiente.
+            if (fin <= inicio)
+            {
+                fin =
+                    fin.AddDays(
+                        1
+                    );
+            }
+
+
+            bool puedeVerControlados =
+                TienePermiso(
+                    "Gestionar medicamentos controlados"
+                );
+
+
+            var detalles =
+                await _movimientoRepository
+                    .ListadoSalidasTurno(
+                        inicio,
+                        fin,
+                        puedeVerControlados
+                    );
+
+
+            var resumen =
+                detalles
+                    .GroupBy(
+                        d => new
+                        {
+                            d.id_producto,
+                            d.nombre_producto,
+                            d.concentracion,
+                            d.unidad_medida,
+                            d.es_controlado
+                        }
+                    )
+                    .Select(
+                        grupo =>
+                            new ResumenSalidaTurno()
+                            {
+                                id_producto =
+                                    grupo.Key.id_producto,
+
+                                nombre_producto =
+                                    grupo.Key.nombre_producto,
+
+                                concentracion =
+                                    grupo.Key.concentracion,
+
+                                unidad_medida =
+                                    grupo.Key.unidad_medida,
+
+                                es_controlado =
+                                    grupo.Key.es_controlado,
+
+                                cantidad_total =
+                                    grupo.Sum(
+                                        d => d.cantidad
+                                    ),
+
+                                detalles =
+                                    grupo
+                                        .OrderBy(
+                                            d => d.fecha_hora
+                                        )
+                                        .ToList()
+                            }
+                    )
+                    .OrderByDescending(
+                        r => r.cantidad_total
+                    )
+                    .ThenBy(
+                        r => r.nombre_producto
+                    )
+                    .ToList();
+
+
+            return new HistorialSalidasTurnoViewModel()
+            {
+                fecha =
+                    dia,
+
+                hora_inicio =
+                    horaInicio,
+
+                hora_fin =
+                    horaFin,
+
+                inicio_real =
+                    inicio,
+
+                fin_real =
+                    fin,
+
+                puede_ver_controlados =
+                    puedeVerControlados,
+
+                resumen =
+                    resumen
+            };
         }
 
 
@@ -1040,7 +2915,7 @@ namespace LoginSARMedix.Controllers
             int pagina = 1)
         {
             if (!TienePermiso(
-                    "Consultar historial"))
+                    "Gestionar usuarios y permisos"))
             {
                 return AccesoNoAutorizado();
             }
@@ -1867,7 +3742,8 @@ namespace LoginSARMedix.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CrearUbicacion(
-            string nombreSector)
+            string nombreSector,
+            string tipoSector)
         {
             string rolActual =
                 HttpContext.Session.GetString("Rol") ?? "";
@@ -1886,11 +3762,16 @@ namespace LoginSARMedix.Controllers
                     .Trim();
 
 
+            tipoSector =
+                (tipoSector ?? "")
+                    .Trim();
+
+
             if (string.IsNullOrWhiteSpace(
                     nombreSector))
             {
                 TempData["Mensaje"] =
-                    "Debe ingresar un nombre para la ubicación.";
+                    "Debe ingresar un nombre para el sector.";
 
                 TempData["TipoMensaje"] =
                     "error";
@@ -1900,6 +3781,42 @@ namespace LoginSARMedix.Controllers
                     "Ubicaciones"
                 );
             }
+
+
+            bool tipoValido =
+                tipoSector.Equals(
+                    "Bodega",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                ||
+                tipoSector.Equals(
+                    "Clinica",
+                    StringComparison.OrdinalIgnoreCase
+                );
+
+
+            if (!tipoValido)
+            {
+                TempData["Mensaje"] =
+                    "Debe seleccionar un tipo de sector válido.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "Ubicaciones"
+                );
+            }
+
+
+            tipoSector =
+                tipoSector.Equals(
+                    "Bodega",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                    ? "Bodega"
+                    : "Clinica";
 
 
             bool existe =
@@ -1912,7 +3829,7 @@ namespace LoginSARMedix.Controllers
             if (existe)
             {
                 TempData["Mensaje"] =
-                    "Ya existe una ubicación con ese nombre.";
+                    "Ya existe un sector con ese nombre.";
 
                 TempData["TipoMensaje"] =
                     "error";
@@ -1927,19 +3844,26 @@ namespace LoginSARMedix.Controllers
             bool creada =
                 await _loteRepository
                     .CrearUbicacion(
-                        nombreSector
+                        nombreSector,
+                        tipoSector
                     );
 
 
             if (creada)
             {
+                string tipoVisible =
+                    tipoSector == "Clinica"
+                        ? "Clínica"
+                        : "Bodega";
+
+
                 await RegistrarAccionHistorial(
-                    $"Creó la ubicación {nombreSector}"
+                    $"Creó el sector {nombreSector} de tipo {tipoVisible}"
                 );
 
 
                 TempData["Mensaje"] =
-                    "Ubicación creada correctamente.";
+                    "Sector creado correctamente.";
 
                 TempData["TipoMensaje"] =
                     "exito";
@@ -1947,7 +3871,7 @@ namespace LoginSARMedix.Controllers
             else
             {
                 TempData["Mensaje"] =
-                    "No se pudo crear la ubicación.";
+                    "No se pudo crear el sector.";
 
                 TempData["TipoMensaje"] =
                     "error";
@@ -1968,7 +3892,8 @@ namespace LoginSARMedix.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditarUbicacion(
             int idUbicacion,
-            string nombreSector)
+            string nombreSector,
+            string tipoSector)
         {
             string rolActual =
                 HttpContext.Session.GetString("Rol") ?? "";
@@ -1987,11 +3912,16 @@ namespace LoginSARMedix.Controllers
                     .Trim();
 
 
+            tipoSector =
+                (tipoSector ?? "")
+                    .Trim();
+
+
             if (string.IsNullOrWhiteSpace(
                     nombreSector))
             {
                 TempData["Mensaje"] =
-                    "Debe ingresar un nombre para la ubicación.";
+                    "Debe ingresar un nombre para el sector.";
 
                 TempData["TipoMensaje"] =
                     "error";
@@ -2000,6 +3930,106 @@ namespace LoginSARMedix.Controllers
                 return RedirectToAction(
                     "Ubicaciones"
                 );
+            }
+
+
+            bool tipoValido =
+                tipoSector.Equals(
+                    "Bodega",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                ||
+                tipoSector.Equals(
+                    "Clinica",
+                    StringComparison.OrdinalIgnoreCase
+                );
+
+
+            if (!tipoValido)
+            {
+                TempData["Mensaje"] =
+                    "Debe seleccionar un tipo de sector válido.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "Ubicaciones"
+                );
+            }
+
+
+            tipoSector =
+                tipoSector.Equals(
+                    "Bodega",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                    ? "Bodega"
+                    : "Clinica";
+
+
+            var ubicaciones =
+                await _loteRepository
+                    .ListadoUbicaciones();
+
+
+            var ubicacionActual =
+                ubicaciones.FirstOrDefault(
+                    u =>
+                        u.id_ubicacion == idUbicacion
+                );
+
+
+            if (ubicacionActual == null)
+            {
+                TempData["Mensaje"] =
+                    "El sector seleccionado no existe.";
+
+                TempData["TipoMensaje"] =
+                    "error";
+
+
+                return RedirectToAction(
+                    "Ubicaciones"
+                );
+            }
+
+
+            string tipoActual =
+                (ubicacionActual.tipo_sector ?? "")
+                    .Trim();
+
+
+            bool cambiaTipo =
+                !tipoActual.Equals(
+                    tipoSector,
+                    StringComparison.OrdinalIgnoreCase
+                );
+
+
+            if (cambiaTipo)
+            {
+                bool tieneLotes =
+                    await _loteRepository
+                        .TieneLotesUbicacion(
+                            idUbicacion
+                        );
+
+
+                if (tieneLotes)
+                {
+                    TempData["Mensaje"] =
+                        "No se puede cambiar el tipo del sector porque tiene lotes asociados. Esto protege la trazabilidad histórica.";
+
+                    TempData["TipoMensaje"] =
+                        "error";
+
+
+                    return RedirectToAction(
+                        "Ubicaciones"
+                    );
+                }
             }
 
 
@@ -2014,7 +4044,7 @@ namespace LoginSARMedix.Controllers
             if (existe)
             {
                 TempData["Mensaje"] =
-                    "Ya existe otra ubicación con ese nombre.";
+                    "Ya existe otro sector con ese nombre.";
 
                 TempData["TipoMensaje"] =
                     "error";
@@ -2030,19 +4060,26 @@ namespace LoginSARMedix.Controllers
                 await _loteRepository
                     .ActualizarUbicacion(
                         idUbicacion,
-                        nombreSector
+                        nombreSector,
+                        tipoSector
                     );
 
 
             if (actualizado)
             {
+                string tipoVisible =
+                    tipoSector == "Clinica"
+                        ? "Clínica"
+                        : "Bodega";
+
+
                 await RegistrarAccionHistorial(
-                    $"Actualizó la ubicación {nombreSector}"
+                    $"Actualizó el sector {nombreSector}. Tipo: {tipoVisible}"
                 );
 
 
                 TempData["Mensaje"] =
-                    "Ubicación actualizada correctamente.";
+                    "Sector actualizado correctamente.";
 
                 TempData["TipoMensaje"] =
                     "exito";
@@ -2050,7 +4087,7 @@ namespace LoginSARMedix.Controllers
             else
             {
                 TempData["Mensaje"] =
-                    "No se pudo actualizar la ubicación.";
+                    "No se pudo actualizar el sector.";
 
                 TempData["TipoMensaje"] =
                     "error";
@@ -3915,6 +5952,33 @@ namespace LoginSARMedix.Controllers
 
 
         // =========================================================
+        // AUTORIZACION CLINICA SUPERIOR
+        // SOLO ENFERMERA O ADMINISTRADOR
+        // =========================================================
+
+        private bool EsEnfermeraOAdministrador()
+        {
+            string rolActual =
+                HttpContext.Session.GetString(
+                    "Rol"
+                )
+                ?? "";
+
+            return
+                rolActual.Equals(
+                    "Administrador",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                ||
+                rolActual.Equals(
+                    "Enfermera",
+                    StringComparison.OrdinalIgnoreCase
+                );
+        }
+
+
+
+        // =========================================================
         // ACCESO NO AUTORIZADO
         // =========================================================
 
@@ -4395,7 +6459,7 @@ namespace LoginSARMedix.Controllers
         public async Task<IActionResult> CrearLote()
         {
             if (!TienePermiso(
-                    "Registrar productos"))
+                    "Registrar entradas de inventario"))
             {
                 return AccesoNoAutorizado();
             }
@@ -4430,7 +6494,7 @@ namespace LoginSARMedix.Controllers
             Lote reg)
         {
             if (!TienePermiso(
-                    "Registrar productos"))
+                    "Registrar entradas de inventario"))
             {
                 return AccesoNoAutorizado();
             }
@@ -4549,76 +6613,36 @@ namespace LoginSARMedix.Controllers
 
 
 
-            // GUARDAMOS LA CANTIDAD DE ENTRADA
-            // ANTES DE PREPARAR EL LOTE
+            // =====================================================
+            // REGISTRAR ENTRADA COMPLETA EN UNA SOLA TRANSACCION
+            // =====================================================
 
             int cantidadEntrada =
                 reg.cantidad_actual;
 
-
-
-            // =====================================================
-            // BUSCAR O CREAR EL LOTE
-            // =====================================================
-
-            var preparacion =
-                await _loteRepository
-                    .PrepararLoteEntrada(
-                        reg
+            var resultado =
+                await _movimientoRepository
+                    .RegistrarEntradaInventarioCompleta(
+                        reg,
+                        idUsuario.Value
                     );
 
-
-            if (!preparacion.exito)
+            if (!resultado.exito)
             {
                 ViewBag.Mensaje =
-                    preparacion.mensaje;
-
+                    resultado.mensaje;
 
                 ViewBag.Productos =
                     await _loteRepository
                         .ListadoProductos();
 
-
                 ViewBag.Ubicaciones =
                     await _loteRepository
                         .ListadoUbicacionesActivas();
 
-
                 return View(
                     "CrearLote",
                     reg
-                );
-            }
-
-
-
-            // =====================================================
-            // REGISTRAR MOVIMIENTO REAL DE ENTRADA
-            // =====================================================
-
-            var resultado =
-                await _movimientoRepository
-                    .RegistrarEntradaInventario(
-                        preparacion.idLote,
-                        cantidadEntrada,
-                        "Entrada de inventario",
-                        idUsuario.Value
-                    );
-
-
-
-            if (!resultado.exito)
-            {
-                TempData["Mensaje"] =
-                    resultado.mensaje;
-
-
-                TempData["TipoMensaje"] =
-                    "error";
-
-
-                return RedirectToAction(
-                    "Lotes"
                 );
             }
 
@@ -5040,5 +7064,98 @@ namespace LoginSARMedix.Controllers
                 reg
             );
         }
+
+        // =========================================================
+        // NORMALIZAR CODIGO DE DOSIFICACION
+        // =========================================================
+
+        private string NormalizarCodigoDosificacionController(
+            string? codigo)
+        {
+            string limpio =
+                (codigo ?? "")
+                    .Trim()
+                    .ToUpperInvariant();
+
+
+            int posicionDos =
+                limpio.IndexOf(
+                    "DOS",
+                    StringComparison.OrdinalIgnoreCase
+                );
+
+
+            // Prefijos AIM que algunos lectores agregan.
+            if (
+                posicionDos > 0
+                &&
+                limpio.StartsWith(
+                    "]",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                limpio =
+                    limpio.Substring(
+                        posicionDos
+                    );
+            }
+
+
+            limpio =
+                limpio
+                    .Replace("*", "")
+                    .Replace(" ", "")
+                    .Replace("\r", "")
+                    .Replace("\n", "")
+                    .Replace("\t", "")
+                    .Replace("–", "-")
+                    .Replace("—", "-")
+                    .Replace("−", "-")
+                    .Replace("'", "-")
+                    .Replace("’", "-")
+                    .Replace("´", "-")
+                    .Replace("`", "-");
+
+
+            // DOS000001 -> DOS-000001
+            if (
+                limpio.StartsWith(
+                    "DOS",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                &&
+                !limpio.StartsWith(
+                    "DOS-",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                string resto =
+                    limpio.Substring(3)
+                        .TrimStart('-');
+
+
+                if (
+                    !string.IsNullOrWhiteSpace(
+                        resto
+                    )
+                    &&
+                    resto.All(
+                        char.IsDigit
+                    )
+                )
+                {
+                    limpio =
+                        "DOS-"
+                        +
+                        resto;
+                }
+            }
+
+
+            return limpio;
+        }
+
     }
 }

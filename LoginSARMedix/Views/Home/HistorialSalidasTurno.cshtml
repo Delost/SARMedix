@@ -1,0 +1,596 @@
+﻿@using LoginSARMedix.Models
+@model HistorialSalidasTurnoViewModel
+
+@{
+    ViewData["Title"] = "Salidas del turno";
+    ViewData["TituloBarra"] = "Salidas del turno";
+
+    int totalMovimientos =
+        Model.resumen
+            .SelectMany(r => r.detalles)
+            .Select(d => d.id_movimiento)
+            .Distinct()
+            .Count();
+}
+
+<style>
+    .turno-pagina {
+        width: min(1180px, 94%);
+        margin: 32px auto 55px;
+    }
+
+    .turno-encabezado {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 18px;
+        margin-bottom: 18px;
+    }
+
+    .turno-encabezado h1 {
+        margin: 0 0 6px;
+        color: #17324d;
+        font-size: 31px;
+        font-weight: 900;
+    }
+
+    .turno-encabezado p {
+        margin: 0;
+        color: #607487;
+    }
+
+    .btn-volver-scan {
+        padding: 10px 15px;
+        border: 1px solid #c9d9e4;
+        border-radius: 9px;
+        background: white;
+        color: #456175;
+        text-decoration: none;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .filtro-turno {
+        padding: 18px;
+        border-radius: 15px;
+        background: rgba(255,255,255,.97);
+        box-shadow: 0 10px 28px rgba(35,76,105,.12);
+        margin-bottom: 18px;
+    }
+
+    .filtro-grid {
+        display: grid;
+        grid-template-columns: 1.15fr .8fr .8fr auto;
+        gap: 12px;
+        align-items: end;
+    }
+
+    .campo label {
+        display: block;
+        margin-bottom: 6px;
+        color: #29465d;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .campo input {
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 11px;
+        border: 1px solid #c8d8e4;
+        border-radius: 9px;
+        background: white;
+        color: #17324d;
+    }
+
+    .btn-aplicar {
+        min-height: 42px;
+        padding: 9px 18px;
+        border: 0;
+        border-radius: 9px;
+        background: #087bc2;
+        color: white;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+    .presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .preset {
+        padding: 7px 11px;
+        border: 1px solid #c7dbe8;
+        border-radius: 999px;
+        background: #f4faff;
+        color: #236486;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .periodo {
+        margin-top: 13px;
+        padding: 11px 13px;
+        border-radius: 9px;
+        background: #eef8fd;
+        color: #245b78;
+        font-size: 13px;
+    }
+
+    .controlados-info {
+        margin-top: 9px;
+        color: #6d7f8d;
+        font-size: 12px;
+    }
+
+    .metricas {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0,1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .metrica {
+        padding: 16px 18px;
+        border: 1px solid #d7e6ef;
+        border-radius: 13px;
+        background: rgba(255,255,255,.95);
+    }
+
+    .metrica small {
+        display: block;
+        color: #6b8294;
+        font-weight: 700;
+    }
+
+    .metrica strong {
+        display: block;
+        margin-top: 3px;
+        color: #17324d;
+        font-size: 24px;
+    }
+
+    .informe-sugerencia {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 18px;
+        padding: 17px 18px;
+        border: 1px solid #b9ddc6;
+        border-radius: 14px;
+        background: linear-gradient(135deg,#f2fbf5,#eef8ff);
+        box-shadow: 0 8px 20px rgba(40,99,70,.08);
+    }
+
+    .informe-sugerencia strong {
+        display: block;
+        color: #20573a;
+        font-size: 15px;
+    }
+
+    .informe-sugerencia span {
+        display: block;
+        margin-top: 4px;
+        color: #60796b;
+        font-size: 13px;
+    }
+
+    .btn-informe {
+        padding: 11px 17px;
+        border-radius: 9px;
+        background: #1c8a55;
+        color: white;
+        text-decoration: none;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+
+    .tabla-panel {
+        overflow: hidden;
+        border: 1px solid #d6e5ee;
+        border-radius: 15px;
+        background: rgba(255,255,255,.98);
+        box-shadow: 0 10px 28px rgba(37,76,103,.10);
+    }
+
+    .tabla-titulo {
+        padding: 17px 19px;
+        border-bottom: 1px solid #dde9ef;
+        background: linear-gradient(135deg,#0c668c,#0b8795);
+        color: white;
+    }
+
+    .tabla-titulo h2 {
+        margin: 0 0 3px;
+        font-size: 19px;
+    }
+
+    .tabla-titulo p {
+        margin: 0;
+        opacity: .9;
+        font-size: 12px;
+    }
+
+    .tabla-wrap {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 780px;
+    }
+
+    th {
+        padding: 12px 14px;
+        background: #f3f8fb;
+        border-bottom: 1px solid #dbe7ee;
+        color: #557083;
+        text-align: left;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+    }
+
+    td {
+        padding: 14px;
+        border-bottom: 1px solid #edf2f5;
+        color: #29465d;
+        font-size: 13px;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    tbody tr:hover {
+        background: #f8fcfe;
+    }
+
+    .producto {
+        color: #17324d;
+        font-weight: 900;
+        font-size: 14px;
+    }
+
+    .concentracion {
+        display: block;
+        margin-top: 3px;
+        color: #718797;
+        font-size: 11px;
+    }
+
+    .cantidad-total {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 5px;
+        padding: 7px 11px;
+        border-radius: 10px;
+        background: #eaf7fa;
+        color: #0c7188;
+        font-weight: 900;
+    }
+
+    .cantidad-total strong {
+        font-size: 20px;
+    }
+
+    .badge-controlado {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #fff0f2;
+        color: #b23b4b;
+        font-size: 11px;
+        font-weight: 850;
+    }
+
+    .badge-normal {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #edf7ef;
+        color: #38724a;
+        font-size: 11px;
+        font-weight: 850;
+    }
+
+    .sin-salidas {
+        padding: 42px 20px;
+        border: 1px dashed #b9d3e3;
+        border-radius: 14px;
+        background: rgba(255,255,255,.9);
+        color: #637d90;
+        text-align: center;
+    }
+
+    @@media (max-width: 850px) {
+        .filtro-grid,
+        .metricas {
+            grid-template-columns: 1fr;
+        }
+
+        .turno-encabezado,
+        .informe-sugerencia {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+</style>
+
+<section class="turno-pagina">
+
+    <div class="turno-encabezado">
+        <div>
+            <h1>Salidas del turno</h1>
+            <p>
+                Consolidado de medicamentos entregados dentro del rango horario seleccionado.
+            </p>
+        </div>
+
+        <a asp-controller="Home"
+           asp-action="EntregaDosificacion"
+           class="btn-volver-scan">
+            ← Volver al escáner
+        </a>
+    </div>
+
+
+    <form asp-controller="Home"
+          asp-action="HistorialSalidasTurno"
+          method="get"
+          class="filtro-turno"
+          id="formTurno">
+
+        <div class="filtro-grid">
+
+            <div class="campo">
+                <label for="fecha">Día del turno</label>
+                <input type="date"
+                       id="fecha"
+                       name="fecha"
+                       value="@Model.fecha.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <div class="campo">
+                <label for="horaInicio">Desde</label>
+                <input type="time"
+                       id="horaInicio"
+                       name="horaInicio"
+                       value="@Model.hora_inicio" />
+            </div>
+
+            <div class="campo">
+                <label for="horaFin">Hasta</label>
+                <input type="time"
+                       id="horaFin"
+                       name="horaFin"
+                       value="@Model.hora_fin" />
+            </div>
+
+            <button type="submit"
+                    class="btn-aplicar">
+                Aplicar corte
+            </button>
+
+        </div>
+
+        <div class="presets">
+            <button type="button"
+                    class="preset"
+                    data-inicio="08:00"
+                    data-fin="00:00">
+                08:00 → 00:00
+            </button>
+
+            <button type="button"
+                    class="preset"
+                    data-inicio="08:00"
+                    data-fin="20:00">
+                08:00 → 20:00
+            </button>
+
+            <button type="button"
+                    class="preset"
+                    data-inicio="20:00"
+                    data-fin="08:00">
+                20:00 → 08:00
+            </button>
+        </div>
+
+        <div class="periodo">
+            <strong>Periodo consultado:</strong>
+            @Model.inicio_real.ToString("dd/MM/yyyy HH:mm")
+            →
+            @Model.fin_real.ToString("dd/MM/yyyy HH:mm")
+
+            @if (Model.fin_real.Date > Model.inicio_real.Date)
+            {
+                <span>
+                    · el corte cruza medianoche
+                </span>
+            }
+        </div>
+
+        <div class="controlados-info">
+            @if (Model.puede_ver_controlados)
+            {
+                <span>
+                    🔐 Las salidas de medicamentos controlados están incluidas en este resumen.
+                </span>
+            }
+            else
+            {
+                <span>
+                    🔒 Los medicamentos controlados no se muestran con este perfil.
+                </span>
+            }
+        </div>
+
+    </form>
+
+
+    <div class="metricas">
+
+        <div class="metrica">
+            <small>Medicamentos distintos</small>
+            <strong>@Model.resumen.Count</strong>
+        </div>
+
+        <div class="metrica">
+            <small>Registros de salida</small>
+            <strong>@totalMovimientos</strong>
+        </div>
+
+    </div>
+
+
+    @if (Model.resumen.Count > 0)
+    {
+        <div class="informe-sugerencia">
+
+            <div>
+                <strong>
+                    ¿Desea descargar o presentar el informe de este corte?
+                </strong>
+
+                <span>
+                    El informe muestra primero los totales por medicamento y al final el detalle cronológico por hora.
+                </span>
+            </div>
+
+            <a asp-controller="Home"
+               asp-action="InformeSalidasTurno"
+               asp-route-fecha="@Model.fecha.ToString("yyyy-MM-dd")"
+               asp-route-horaInicio="@Model.hora_inicio"
+               asp-route-horaFin="@Model.hora_fin"
+               target="_blank"
+               class="btn-informe">
+                📄 Generar informe
+            </a>
+
+        </div>
+    }
+
+
+    @if (Model.resumen.Count == 0)
+    {
+        <div class="sin-salidas">
+            No se registraron salidas dentro de este rango horario.
+        </div>
+    }
+    else
+    {
+        <section class="tabla-panel">
+
+            <div class="tabla-titulo">
+                <h2>Resumen total del corte</h2>
+                <p>
+                    Cantidad total entregada por medicamento durante el periodo seleccionado.
+                </p>
+            </div>
+
+            <div class="tabla-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Medicamento</th>
+                            <th>Total entregado</th>
+                            <th>Unidad</th>
+                            <th>Tipo</th>
+                            <th>Registros</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @{
+                            int numeroFila = 1;
+                        }
+
+                        @foreach (var item in Model.resumen)
+                        {
+                            <tr>
+                                <td>
+                                    @numeroFila
+                                </td>
+
+                                <td>
+                                    <span class="producto">
+                                        @item.nombre_producto
+                                    </span>
+
+                                    @if (!string.IsNullOrWhiteSpace(item.concentracion))
+                                    {
+                                        <span class="concentracion">
+                                            @item.concentracion
+                                        </span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <span class="cantidad-total">
+                                        <strong>@item.cantidad_total</strong>
+                                        <span>@item.unidad_medida</span>
+                                    </span>
+                                </td>
+
+                                <td>
+                                    @item.unidad_medida
+                                </td>
+
+                                <td>
+                                    @if (item.es_controlado)
+                                    {
+                                        <span class="badge-controlado">
+                                            🔐 Controlado
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-normal">
+                                            Salida clínica
+                                        </span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @item.detalles.Count
+                                </td>
+                            </tr>
+
+                            numeroFila++;
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+    }
+
+</section>
+
+<script>
+    const inicio = document.getElementById("horaInicio");
+    const fin = document.getElementById("horaFin");
+    const formulario = document.getElementById("formTurno");
+
+    document.querySelectorAll(".preset").forEach(function (boton) {
+        boton.addEventListener("click", function () {
+            inicio.value = boton.dataset.inicio;
+            fin.value = boton.dataset.fin;
+            formulario.submit();
+        });
+    });
+</script>
